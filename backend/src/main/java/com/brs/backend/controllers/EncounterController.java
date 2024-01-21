@@ -5,13 +5,18 @@ import com.brs.backend.core.RankScoreCalculatorProvider;
 import com.brs.backend.dto.EncounterResult;
 import com.brs.backend.model.Encounter;
 import com.brs.backend.repositories.EncounterRepository;
+import com.brs.backend.services.PlayerService;
+import com.brs.backend.util.EncounterUtil;
 import com.brs.backend.util.PlayerUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.regex.Pattern;
 
 @RestController
 @Slf4j
@@ -27,6 +32,12 @@ public class EncounterController {
     @Autowired
     private RankScoreCalculatorProvider rankScoreCalculatorProvider;
 
+    @Autowired
+    private EncounterUtil encounterUtil;
+
+    @Autowired
+    private PlayerService playerService;
+
     @GetMapping("/encounters")
     private List<Encounter> getAllEncounters() {
         return encounterRepository.findAll();
@@ -39,17 +50,43 @@ public class EncounterController {
     ) {
         log.info("Adding team 1 : {} and team 2 : {} for date : {}", result.team1(), result.team2(), date);
 
-        Encounter encounter = Encounter.builder()
-                .encounterDate(date)
-                .team1(playerUtil.getTeamPlayerIdsString(result.team1()))
-                .team2(playerUtil.getTeamPlayerIdsString(result.team2()))
-                .processed(false)
-                .team1SetPoints(result.team1().setPoints())
-                .team2SetPoints(result.team2().setPoints())
-                .build();
+        Encounter saved = persistEncounterResult(date, result);
+        log.info("Saved : {}", saved.getId());
+        return "ok";
+    }
 
-        Encounter saved = encounterRepository.save(encounter);
-        log.info("Saved : {}", saved);
+    @PostMapping(value = "/encounters/add-by-file", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    private String addEncountersByFile(@RequestParam("file") MultipartFile file) {
+
+        // TODO handle these ugly runtime exceptions and replace them with proper exceptions caughtable by a response handler
+        String fileName = file.getOriginalFilename();
+        if (fileName == null) {
+            throw new RuntimeException("File name should not be null");
+        }
+
+        if(!fileName.startsWith("encounter_")) {
+            throw new RuntimeException("Encounter file name should starts with 'encounter_'");
+        }
+
+        String dateSubStr = fileName.substring(10, 20);
+
+        if(!Pattern.compile("20[2-9][0-9]-[0-9][0-2]-[0-3][0-9]").matcher(dateSubStr).find()) {
+            throw new RuntimeException("Encounter file name should starts with 'encounter_' and then should be immediately followed by a date string in the format of yyyy-mm-dd");
+        }
+
+        LocalDate encounterDate = LocalDate.parse(dateSubStr);
+
+        if (!fileName.endsWith(".csv")) {
+            throw new RuntimeException("Encounter file name should have the extension : '.csv'");
+        }
+
+        List<EncounterResult> encounterResults = encounterUtil.parseCsvFileToEncounters(file);
+
+        for (EncounterResult encounterResult : encounterResults) {
+            persistEncounterResult(encounterDate, encounterResult);
+            log.info("Persisted encounter : {} for : {}", encounterResult, encounterDate);
+        }
+
         return "ok";
     }
 
@@ -73,6 +110,23 @@ public class EncounterController {
             rankScoreCalculator.calculateAndPersist(unprocessedEncounter);
         }
 
+        log.info("Updating player ranking once process every encounter for the date : {}", date);
+        playerService.updatePlayerRanking();
+
         return "Done";
+    }
+
+
+    private Encounter persistEncounterResult(LocalDate date, EncounterResult result) {
+        Encounter encounter = Encounter.builder()
+                .encounterDate(date)
+                .team1(playerUtil.getTeamPlayerIdsString(result.team1()))
+                .team2(playerUtil.getTeamPlayerIdsString(result.team2()))
+                .processed(false)
+                .team1SetPoints(result.team1().setPoints())
+                .team2SetPoints(result.team2().setPoints())
+                .build();
+
+        return encounterRepository.save(encounter);
     }
 }
