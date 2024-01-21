@@ -1,0 +1,15 @@
+package com.brs.backend.core;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+@Component
+public class RankScoreCalculatorProvider {
+
+    @Autowired
+    private EloRankScoreCalculator eloRankScoreCalculator;
+
+    public RankScoreCalculator getRankScoreCalculator() {
+        return eloRankScoreCalculator;
+    }
+}
