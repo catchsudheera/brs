@@ -27,7 +27,7 @@ public class JdbcPropertyConfiguration {
     public DataSource dataSource() throws IOException {
         String password = Files.readString(new File(password_file_path).toPath(), StandardCharsets.UTF_8);
         DataSourceBuilder<?> dataSourceBuilder = DataSourceBuilder.create();
-        dataSourceBuilder.url("jdbc:mysql://localhost:3306/brs");
+        dataSourceBuilder.url("jdbc:mysql://mysql:3306/brs");
         dataSourceBuilder.username("brs_user");
         dataSourceBuilder.password(password);
         return dataSourceBuilder.build();
