@@ -34,4 +34,6 @@ public class ScoreHistory {
     private Double oldRankScore;
     @Column(name = "new_rank_score")
     private Double newRankScore;
+    @Column(name = "player_old_rank")
+    private int playerOldRank;
 }

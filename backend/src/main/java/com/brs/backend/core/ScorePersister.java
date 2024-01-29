@@ -59,6 +59,7 @@ public class ScorePersister {
                 .encounterId(encounterId)
                 .oldRankScore(oldScore)
                 .newRankScore(newScore)
+                .playerOldRank(player.getPlayerRank())
                 .build();
 
         scoreHistoryRepository.save(scoreHistory);
