@@ -1,6 +1,7 @@
 ---
 # User
 server_data_dir_user: "{{ gv_local_brs_user }}"
+server_data_dir_user_id: "{{ gv_local_brs_uid }}"
 server_data_dir_group: "{{ gv_local_brs_group }}"
 
 # Container stack

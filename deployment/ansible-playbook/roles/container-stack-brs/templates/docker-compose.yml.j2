@@ -9,6 +9,7 @@ services:
       MYSQL_DATABASE: {{ mysql_db }}
       MYSQL_USER: {{ mysql_user }}
       MYSQL_PASSWORD_FILE: /run/secrets/db_password
+    user: "{{ server_data_dir_user_id }}"
     ports:
       - '3306:3306'
     volumes:
