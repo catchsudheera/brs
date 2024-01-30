@@ -11,7 +11,7 @@ CREATE TABLE `ENCOUNTER` (
   `calculated_score` double DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `team_uniqness` (`team_1`,`team_2`,`encounter_date`)
-) ENGINE=InnoDB AUTO_INCREMENT=35 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 
 -- brs.PLAYER definition
@@ -22,7 +22,7 @@ CREATE TABLE `PLAYER` (
   `rank_score` double NOT NULL DEFAULT '1000',
   `player_rank` int DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=21 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 
 -- brs.SCORE_HISTORY definition
@@ -34,5 +34,6 @@ CREATE TABLE `SCORE_HISTORY` (
   `old_rank_score` double NOT NULL,
   `new_rank_score` double NOT NULL,
   `mysql_inserted_timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `player_old_rank` int DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=149 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
