@@ -1,0 +1,18 @@
+---
+# User
+server_data_dir_user: "{{ gv_local_brs_user }}"
+server_data_dir_group: "{{ gv_local_brs_group }}"
+
+# Container stack
+container_data_root: "{{ gv_container_data_root }}"
+brs_container_stack_location: "{{ gv_local_brs_user_home }}/.container-stack-brs"
+
+docker_network_name: "{{ gv_docker_network_name }}"
+
+# Mysql
+mysql_config_path: "{{ container_data_root }}/mysql/config"
+mysql_db: "{{ gv_mysql_db }}"
+mysql_user: "{{ gv_mysql_user }}"
+mysql_password: "{{ gv_mysql_password }}"
+mysql_root_password: "{{ gv_mysql_root_password }}"
+
