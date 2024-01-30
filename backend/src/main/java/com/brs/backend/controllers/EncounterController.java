@@ -4,6 +4,7 @@ import com.brs.backend.core.RankScoreCalculator;
 import com.brs.backend.core.RankScoreCalculatorProvider;
 import com.brs.backend.dto.EncounterResult;
 import com.brs.backend.model.Encounter;
+import com.brs.backend.model.Player;
 import com.brs.backend.repositories.EncounterRepository;
 import com.brs.backend.services.PlayerService;
 import com.brs.backend.util.EncounterUtil;
@@ -105,10 +106,16 @@ public class EncounterController {
         }
 
         RankScoreCalculator rankScoreCalculator = rankScoreCalculatorProvider.getRankScoreCalculator();
+        List<Player> absentPlayers = playerService.getAllPlayers();
 
         for (Encounter unprocessedEncounter : unprocessedEncounters) {
             rankScoreCalculator.calculateAndPersist(unprocessedEncounter);
+            playerUtil.getPlayersByIdsString(unprocessedEncounter.getTeam1()).forEach(absentPlayers::remove);
+            playerUtil.getPlayersByIdsString(unprocessedEncounter.getTeam2()).forEach(absentPlayers::remove);
         }
+
+        log.info("Following players are absentees : {}", absentPlayers);
+        rankScoreCalculator.calculateAbsenteeScoreAndPersist(absentPlayers);
 
         log.info("Updating player ranking once process every encounter for the date : {}", date);
         playerService.updatePlayerRanking();

@@ -32,11 +32,20 @@ public class EloRankScoreCalculator implements RankScoreCalculator {
         double team1WinExpected = 1 / (1 + Math.pow(10, ((team2AverageRankScore - team1AverageRankScore) / 480)));
         double team1WinActual = encounter.getTeam1SetPoints() > encounter.getTeam2SetPoints() ? 1 : 0;
 
-        double team1Score = BigDecimal.valueOf(32 * (team1WinActual - team1WinExpected)).setScale(2, RoundingMode.HALF_UP).doubleValue();
+        double team1Score = BigDecimal.valueOf(40 * (team1WinActual - team1WinExpected)).setScale(2, RoundingMode.HALF_UP).doubleValue();
         double team2Score =  -1 * team1Score;
 
         scorePersister.persistScores(encounter.getId(), team1Score, team2Score);
 
+    }
+
+    @Override
+    public void calculateAbsenteeScoreAndPersist(List<Player> players) {
+        int demeritPoints = -10;
+
+        for (Player player : players) {
+            scorePersister.updatePlayer(demeritPoints, -1, player);
+        }
     }
 
     private double getTeamAverageRankScore(List<Player> team1Players) {
