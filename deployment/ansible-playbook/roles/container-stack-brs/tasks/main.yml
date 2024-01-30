@@ -1,0 +1,73 @@
+---
+- name: Create stack root directory
+  file:
+    path: "{{ brs_container_stack_location }}"
+    state: directory
+    owner: "{{ server_data_dir_user }}"
+    group: "{{ server_data_dir_group }}"
+
+- name: Create Mysql directories
+  file:
+    path: "{{ mysql_config_path }}"
+    state: directory
+    owner: "{{ server_data_dir_user }}"
+    group: "{{ server_data_dir_group }}"
+
+- name: Create Mysql data directories
+  file:
+    path: "{{ mysql_config_path }}/var-lib-mysql"
+    state: directory
+    owner: "{{ server_data_dir_user }}"
+    group: "{{ server_data_dir_group }}"
+
+- name: Copy Docker compose template
+  template:
+    src: docker-compose.yml.j2
+    dest: "{{ brs_container_stack_location }}/docker-compose.yml"
+    owner: "{{ server_data_dir_user }}"
+    group: "{{ server_data_dir_group }}"
+
+- name: Copy db password template
+  template:
+    src: db_password.j2
+    dest: "{{ brs_container_stack_location }}/db_password"
+    owner: "{{ server_data_dir_user }}"
+    group: "{{ server_data_dir_group }}"
+
+- name: Copy Docker db root password template
+  template:
+    src: db_root_password.j2
+    dest: "{{ brs_container_stack_location }}/db_root_password"
+    owner: "{{ server_data_dir_user }}"
+    group: "{{ server_data_dir_group }}"
+
+- name: Start Docker containers using docker-compose
+  community.docker.docker_compose:
+    project_src: "{{ brs_container_stack_location }}"
+  tags: start-stacks
+
+- name: Adding the Systemd units for docker-compose management
+  import_role:
+    name: docker-compose-systemd
+  vars:
+    docker_compose_dir_path: "{{ brs_container_stack_location }}"
+    stack_name: container-stack-brs
+
+- name: Stop Docker containers if running
+  block:
+    - name: Check wether the docker file exist
+      stat:
+        path: "{{ brs_container_stack_location }}/docker-compose.yml"
+      register: brs_container_stack_location_docker_compose_file
+
+    - name: Check validity of compose file
+      shell: "docker-compose -f {{ brs_container_stack_location }}/docker-compose.yml config"
+      register: brs_container_stack_docker_compose_file_validate
+      ignore_errors: yes
+
+    - name: Stopping using docker compose
+      community.docker.docker_compose:
+        project_src: "{{ brs_container_stack_location }}"
+        state: absent
+      when: brs_container_stack_location_docker_compose_file.stat.exists and brs_container_stack_docker_compose_file_validate.failed|bool != true
+  tags: [ 'never', 'stop-stacks' ]

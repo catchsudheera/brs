@@ -1,0 +1,35 @@
+version: '3.8'
+services:
+  db:
+    image: mysql:8.3.0
+    container_name: mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/db_root_password
+      MYSQL_DATABASE: {{ mysql_db }}
+      MYSQL_USER: {{ mysql_user }}
+      MYSQL_PASSWORD_FILE: /run/secrets/db_password
+    ports:
+      - '3306:3306'
+    volumes:
+      - {{ mysql_config_path }}/var-lib-mysql:/var/lib/mysql
+    secrets:
+      - db_root_password
+      - db_password
+
+  backend:
+    image: catchsudheera/brs-backend:v1.1
+    container_name: backend
+    restart: unless-stopped
+    environment:
+      DB_PASSWORD_FILE: /run/secrets/db_password
+    ports:
+      - "8080:8080"
+    secrets:
+      - db_password
+
+secrets:
+  db_password:
+    file: db_password
+  db_root_password:
+    file: db_root_password
