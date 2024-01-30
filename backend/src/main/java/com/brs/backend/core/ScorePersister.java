@@ -44,13 +44,20 @@ public class ScorePersister {
         List<Player> teamPlayers = playerUtil.getPlayersByIdsString(teamIdsString);
 
         for (Player player : teamPlayers) {
-            Double oldScore = player.getRankScore();
-            Double newScore = oldScore + teamScore;
-            player.setRankScore(newScore);
-            playerRepository.save(player);
-
-            updateScoreHistory(player, encounterId, oldScore, newScore);
+            updatePlayer(teamScore, encounterId, player);
         }
+    }
+
+    @Transactional
+    public void updatePlayer(double playerScore, int encounterId, Player player) {
+        // Loading again in the current transactional context
+        player = playerRepository.findById(player.getId()).orElseThrow();
+        Double oldScore = player.getRankScore();
+        Double newScore = oldScore + playerScore;
+        player.setRankScore(newScore);
+        playerRepository.save(player);
+
+        updateScoreHistory(player, encounterId, oldScore, newScore);
     }
 
     private void updateScoreHistory(Player player, int encounterId, Double oldScore, Double newScore) {
