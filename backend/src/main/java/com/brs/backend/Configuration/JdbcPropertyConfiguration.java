@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Configuration;
 import javax.sql.DataSource;
 import java.io.File;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 
@@ -25,7 +26,8 @@ public class JdbcPropertyConfiguration {
 
     @Bean
     public DataSource dataSource() throws IOException {
-        String password = Files.readString(new File(password_file_path).toPath(), StandardCharsets.UTF_8);
+        String password = Files.readString(new File(password_file_path).toPath(), StandardCharsets.UTF_8).strip();
+        System.out.println(password);
         DataSourceBuilder<?> dataSourceBuilder = DataSourceBuilder.create();
         dataSourceBuilder.url("jdbc:mysql://mysql:3306/brs");
         dataSourceBuilder.username("brs_user");
