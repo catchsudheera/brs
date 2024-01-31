@@ -4,3 +4,5 @@ spring:
       naming:
         physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
 
+host:
+  url: https://brs.aragorn-media-server.duckdns.org
