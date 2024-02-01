@@ -1,22 +1,35 @@
 INSERT INTO PLAYER (name,rank_score,player_rank) VALUES
-	 ('rajith',1000.0,1),
-	 ('nishan k',1000.0,2),
-	 ('shaki',1000.0,3),
-	 ('prabod',1000.0,4),
-	 ('supun',1000.0,5),
-	 ('shashika',1000.0,6),
-	 ('navanji',1000.0,7),
-	 ('chathura',1000.0,8),
-	 ('amila',1000.0,9),
-	 ('gihan',1000.0,10);
-INSERT INTO PLAYER (name,rank_score,player_rank) VALUES
-	 ('niranga',1000.0,11),
-	 ('nadeeshani',1000.0,12),
-	 ('waruni',1000.0,13),
-	 ('nishan w',1000.0,14),
-	 ('umesh',1000.0,15),
-	 ('tharindu',1000.0,16),
-	 ('sudheera',1000.0,17),
-	 ('darshana',1000.0,18),
-	 ('yeshan',1000.0,19),
-	 ('chamika',1000.0,20);
+	 ('chathura',1000.0,1),
+	 ('tharindu',952.24,2),
+	 ('darshana',928.73,3),
+	 ('amila',928.73,4),
+	 ('nishan k',927.95,5),
+	 ('waruni',927.13,6),
+	 ('sudheera',915.81,7),
+	 ('gihan',908.08,8),
+	 ('nishan w',906.09,9),
+	 ('umesh',897.16,10),
+	 ('yeshan',882.56,11),
+	 ('shaki',868.01,12),
+	 ('supun',867.62,13),
+	 ('navanji',862.76,14),
+	 ('shashika',854.26,15),
+	 ('nadeeshani',849.40,16),
+	 ('prabod',842.5,17),
+	 ('niranga',820.26,18),
+	 ('rajith',814.57,19),
+	 ('chamika',800.0,20),
+	 ('nipun',820.26,20);
+
+
+
+
+
+
+
+
+
+
+
+
+
