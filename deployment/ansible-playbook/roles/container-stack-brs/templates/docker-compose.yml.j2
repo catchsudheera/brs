@@ -8,7 +8,7 @@ services:
       MYSQL_ROOT_PASSWORD: {{ mysql_root_password }}
       MYSQL_DATABASE: {{ mysql_db }}
       MYSQL_USER: {{ mysql_user }}
-      MYSQL_PASSWORD_FILE: {{ mysql_password }}
+      MYSQL_PASSWORD: {{ mysql_password }}
     user: "{{ server_data_dir_user_id }}"
     ports:
       - '3306:3306'
