@@ -9,6 +9,8 @@ import com.brs.backend.repositories.EncounterRepository;
 import com.brs.backend.services.PlayerService;
 import com.brs.backend.util.EncounterUtil;
 import com.brs.backend.util.PlayerUtil;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -45,6 +47,7 @@ public class EncounterController {
     }
 
     @PostMapping("/encounters/{date}/add")
+    @Parameter(name = "x-api-key", required = true, example = "sample-api-key", in = ParameterIn.HEADER)
     private String addEncounters(
             @PathVariable LocalDate date,
             @RequestBody EncounterResult result
@@ -57,6 +60,7 @@ public class EncounterController {
     }
 
     @PostMapping(value = "/encounters/add-by-file", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Parameter(name = "x-api-key", required = true, example = "sample-api-key", in = ParameterIn.HEADER)
     private String addEncountersByFile(@RequestParam("file") MultipartFile file) {
 
         // TODO handle these ugly runtime exceptions and replace them with proper exceptions caughtable by a response handler
@@ -92,6 +96,7 @@ public class EncounterController {
     }
 
     @PostMapping("/encounters/{date}/process")
+    @Parameter(name = "x-api-key", required = true, example = "sample-api-key", in = ParameterIn.HEADER)
     private String processEncounter(@PathVariable LocalDate date) {
         List<Encounter> encounters = encounterRepository.findAllByEncounterDate(date);
         log.info("Found {} encounters for date {}", encounters.size(), date);
