@@ -33,3 +33,8 @@ gv_mysql_db: brs
 gv_mysql_user: brs_user
 gv_mysql_password: <password>
 gv_mysql_root_password: <password>
+
+# BACKEND
+gv_backend_host_url: https://whatever-your-hostname.com
+gv_backend_api_key: sample-api-key
+

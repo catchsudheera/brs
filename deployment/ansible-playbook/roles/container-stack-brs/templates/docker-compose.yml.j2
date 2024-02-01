@@ -5,32 +5,23 @@ services:
     container_name: mysql
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/db_root_password
+      MYSQL_ROOT_PASSWORD: {{ mysql_root_password }}
       MYSQL_DATABASE: {{ mysql_db }}
       MYSQL_USER: {{ mysql_user }}
-      MYSQL_PASSWORD_FILE: /run/secrets/db_password
+      MYSQL_PASSWORD_FILE: {{ mysql_password }}
     user: "{{ server_data_dir_user_id }}"
     ports:
       - '3306:3306'
     volumes:
       - {{ mysql_config_path }}/var-lib-mysql:/var/lib/mysql
-    secrets:
-      - db_root_password
-      - db_password
 
   backend:
     image: catchsudheera/brs-backend:v1.1
     container_name: backend
     restart: unless-stopped
     environment:
-      DB_PASSWORD_FILE: /run/secrets/db_password
+      SPRING_DATASOURCE_PASSWORD: {{ mysql_password }}
+      HOST_URL: {{ backend_host_url }}
+      API_KEY: {{ backend_api_key }}
     ports:
       - "8080:8080"
-    secrets:
-      - db_password
-
-secrets:
-  db_password:
-    file: db_password
-  db_root_password:
-    file: db_root_password

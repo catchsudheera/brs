@@ -17,3 +17,8 @@ mysql_user: "{{ gv_mysql_user }}"
 mysql_password: "{{ gv_mysql_password }}"
 mysql_root_password: "{{ gv_mysql_root_password }}"
 
+
+# Backend
+backend_api_key: "{{ gv_backend_api_key }}"
+backend_host_url: "{{ gv_backend_host_url }}"
+
