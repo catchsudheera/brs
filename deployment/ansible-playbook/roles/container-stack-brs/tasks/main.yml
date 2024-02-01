@@ -27,20 +27,6 @@
     owner: "{{ server_data_dir_user }}"
     group: "{{ server_data_dir_group }}"
 
-- name: Copy db password template
-  template:
-    src: db_password.j2
-    dest: "{{ brs_container_stack_location }}/db_password"
-    owner: "{{ server_data_dir_user }}"
-    group: "{{ server_data_dir_group }}"
-
-- name: Copy Docker db root password template
-  template:
-    src: db_root_password.j2
-    dest: "{{ brs_container_stack_location }}/db_root_password"
-    owner: "{{ server_data_dir_user }}"
-    group: "{{ server_data_dir_group }}"
-
 - name: Start Docker containers using docker-compose
   community.docker.docker_compose:
     project_src: "{{ brs_container_stack_location }}"
