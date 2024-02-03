@@ -35,5 +35,7 @@ CREATE TABLE `SCORE_HISTORY` (
   `new_rank_score` double NOT NULL,
   `mysql_inserted_timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `player_old_rank` int DEFAULT NULL,
+  `player_new_rank` int DEFAULT NULL,
+  `encounter_date` date NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
