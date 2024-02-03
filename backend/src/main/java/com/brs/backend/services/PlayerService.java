@@ -17,7 +17,7 @@ public class PlayerService {
     public List<Player> updatePlayerRanking() {
         List<Player> playerList = playerRepository.findAll()
                 .stream()
-                .sorted(Comparator.comparingDouble(Player::getId)) // First with id to keep consistent ranking when scores are the same
+                .sorted(Comparator.comparingInt(Player::getPlayerRank)) // First with the current ranking to keep consistent ranking when scores are the same
                 .sorted((d1, d2) -> Double.compare(d2.getRankScore(), d1.getRankScore())) // Second with the descending order of rank setPoints
                 .toList();
 
