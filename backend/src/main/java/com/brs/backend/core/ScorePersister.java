@@ -11,6 +11,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Component
@@ -36,20 +39,20 @@ public class ScorePersister {
         encounter.setProcessed(true);
         encounterRepository.save(encounter);
 
-        updatePlayers(team1Score, encounter.getTeam1(), encounterId);
-        updatePlayers(team2Score, encounter.getTeam2(), encounterId);
+        updatePlayers(team1Score, encounter.getTeam1(), encounter);
+        updatePlayers(team2Score, encounter.getTeam2(), encounter);
     }
 
-    private void updatePlayers(double teamScore, String teamIdsString, int encounterId) {
+    private void updatePlayers(double teamScore, String teamIdsString, Encounter encounter) {
         List<Player> teamPlayers = playerUtil.getPlayersByIdsString(teamIdsString);
 
         for (Player player : teamPlayers) {
-            updatePlayer(teamScore, encounterId, player);
+            updatePlayer(teamScore, encounter.getId(), encounter.getEncounterDate(), player);
         }
     }
 
     @Transactional
-    public void updatePlayer(double playerScore, int encounterId, Player player) {
+    public void updatePlayer(double playerScore, int encounterId, LocalDate encounterDate, Player player) {
         // Loading again in the current transactional context
         player = playerRepository.findById(player.getId()).orElseThrow();
         Double oldScore = player.getRankScore();
@@ -57,16 +60,17 @@ public class ScorePersister {
         player.setRankScore(newScore);
         playerRepository.save(player);
 
-        updateScoreHistory(player, encounterId, oldScore, newScore);
+        updateScoreHistory(player, encounterId, encounterDate, oldScore, newScore);
     }
 
-    private void updateScoreHistory(Player player, int encounterId, Double oldScore, Double newScore) {
+    private void updateScoreHistory(Player player, int encounterId, LocalDate encounterDate, Double oldScore, Double newScore) {
         ScoreHistory scoreHistory = ScoreHistory.builder()
-                .playerID(player.getId())
+                .playerId(player.getId())
                 .encounterId(encounterId)
                 .oldRankScore(oldScore)
                 .newRankScore(newScore)
                 .playerOldRank(player.getPlayerRank())
+                .encounterDate(encounterDate)
                 .build();
 
         scoreHistoryRepository.save(scoreHistory);

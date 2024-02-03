@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDate;
 import java.util.List;
 
 @Component
@@ -44,7 +45,7 @@ public class EloRankScoreCalculator implements RankScoreCalculator {
         int demeritPoints = -10;
 
         for (Player player : players) {
-            scorePersister.updatePlayer(demeritPoints, -1, player);
+            scorePersister.updatePlayer(demeritPoints, -1, LocalDate.now(),player);
         }
     }
 
