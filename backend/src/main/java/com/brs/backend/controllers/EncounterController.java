@@ -7,6 +7,7 @@ import com.brs.backend.model.Encounter;
 import com.brs.backend.model.Player;
 import com.brs.backend.repositories.EncounterRepository;
 import com.brs.backend.services.PlayerService;
+import com.brs.backend.services.ScoreHistoryService;
 import com.brs.backend.util.EncounterUtil;
 import com.brs.backend.util.PlayerUtil;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -41,6 +42,9 @@ public class EncounterController {
     @Autowired
     private PlayerService playerService;
 
+    @Autowired
+    private ScoreHistoryService scoreHistoryService;
+
     @GetMapping("/encounters")
     private List<Encounter> getAllEncounters() {
         return encounterRepository.findAll();
@@ -69,13 +73,13 @@ public class EncounterController {
             throw new RuntimeException("File name should not be null");
         }
 
-        if(!fileName.startsWith("encounter_")) {
+        if (!fileName.startsWith("encounter_")) {
             throw new RuntimeException("Encounter file name should starts with 'encounter_'");
         }
 
         String dateSubStr = fileName.substring(10, 20);
 
-        if(!Pattern.compile("20[2-9][0-9]-[0-9][0-2]-[0-3][0-9]").matcher(dateSubStr).find()) {
+        if (!Pattern.compile("20[2-9][0-9]-[0-9][0-2]-[0-3][0-9]").matcher(dateSubStr).find()) {
             throw new RuntimeException("Encounter file name should starts with 'encounter_' and then should be immediately followed by a date string in the format of yyyy-mm-dd");
         }
 
@@ -123,7 +127,13 @@ public class EncounterController {
         rankScoreCalculator.calculateAbsenteeScoreAndPersist(absentPlayers);
 
         log.info("Updating player ranking once process every encounter for the date : {}", date);
-        playerService.updatePlayerRanking();
+        List<Player> updatePlayerRanking = playerService.updatePlayerRanking();
+
+        log.info("Updating the new ranks in the history table");
+        for (Player player : updatePlayerRanking) {
+            log.info("  - updating player : {}", player.getId());
+            scoreHistoryService.updatePlayerEncounterNewRanking(player.getId(), date, player.getPlayerRank());
+        }
 
         return "Done";
     }
