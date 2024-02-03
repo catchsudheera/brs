@@ -3,6 +3,8 @@ package com.brs.backend.model;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDate;
+
 /**
  * CREATE TABLE SCORE_HISTORY (
  *   id INTEGER PRIMARY KEY AUTO_INCREMENT,
@@ -27,7 +29,7 @@ public class ScoreHistory {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
     @Column(name = "player_id")
-    private Integer playerID;
+    private Integer playerId;
     @Column(name = "encounter_id")
     private Integer encounterId;
     @Column(name = "old_rank_score")
@@ -36,4 +38,8 @@ public class ScoreHistory {
     private Double newRankScore;
     @Column(name = "player_old_rank")
     private int playerOldRank;
+    @Column(name = "player_new_rank")
+    private int playerNewRank;
+    @Column(name = "encounter_date")
+    private LocalDate encounterDate;
 }

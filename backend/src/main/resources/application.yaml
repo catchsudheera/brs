@@ -13,3 +13,6 @@ host:
 
 api:
   key: sample-api-key
+
+server:
+  forward-headers-strategy: NATIVE
