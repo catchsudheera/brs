@@ -1,6 +1,12 @@
 package com.brs.backend.dto;
 
-import java.util.List;
+import lombok.*;
 
-public record PlayerHistory(String playerName, Integer playerId, List<HistoryItem> historyItems) {
+@AllArgsConstructor
+@Setter
+@Getter
+@EqualsAndHashCode
+public abstract class PlayerHistory {
+    private String playerName;
+    private Integer playerId;
 }
