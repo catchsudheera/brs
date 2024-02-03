@@ -16,7 +16,7 @@ services:
       - {{ mysql_config_path }}/var-lib-mysql:/var/lib/mysql
 
   backend:
-    image: catchsudheera/brs-backend:v1.1
+    image: ghcr.io/catchsudheera/brs-backend:v1.2
     container_name: backend
     restart: unless-stopped
     environment:
