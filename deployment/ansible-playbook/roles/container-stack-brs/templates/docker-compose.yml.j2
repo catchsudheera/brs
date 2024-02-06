@@ -26,3 +26,12 @@ services:
       API_KEY: {{ backend_api_key }}
     ports:
       - "8080:8080"
+
+  frontend:
+    image: ghcr.io/catchsudheera/brs-frontend:v1.2
+    container_name: frontend
+    restart: unless-stopped
+    environment:
+      BACKEND_URL: {{ backend_host_url }}
+    ports:
+      - "3000:3000"
