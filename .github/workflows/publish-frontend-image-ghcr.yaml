@@ -1,4 +1,4 @@
-name: [FRONTEND] Build and publish images to ghcr
+name: FRONTEND Build and publish images to ghcr
 
 on: workflow_dispatch
 
