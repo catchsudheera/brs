@@ -1,18 +1,25 @@
 package com.brs.backend.services;
 
+import com.brs.backend.dto.PlayerInfo;
 import com.brs.backend.model.Player;
+import com.brs.backend.model.ScoreHistory;
 import com.brs.backend.repositories.PlayerRepository;
+import com.brs.backend.repositories.ScoreHistoryRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 
 @Component
 public class PlayerService {
     @Autowired
     private PlayerRepository playerRepository;
+
+    @Autowired
+    private ScoreHistoryRepository scoreHistoryRepository;
 
     public List<Player> updatePlayerRanking() {
         List<Player> playerList = playerRepository.findAll()
@@ -33,5 +40,14 @@ public class PlayerService {
 
     public List<Player> getAllPlayers() {
         return playerRepository.findAll();
+    }
+
+    public List<PlayerInfo> getAllPlayerInfo() {
+        return getAllPlayers().stream()
+                .map(e -> {
+                    Optional<ScoreHistory> h = scoreHistoryRepository.findFirstByPlayerIdOrderByEncounterDateDesc(e.getId());
+                    return new PlayerInfo(e.getId(), e.getName(), e.getRankScore(), e.getPlayerRank(), h.orElseThrow().getPlayerOldRank());
+                })
+                .toList();
     }
 }
