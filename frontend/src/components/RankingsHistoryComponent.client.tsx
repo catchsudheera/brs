@@ -1,6 +1,10 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { PlayerHistory, GraphData } from "../types/playerHistoryTypes";
+import {
+  PlayerHistory,
+  GraphData,
+  PlayerHistoryEntry,
+} from "../types/playerHistoryTypes";
 import {
   LineChart,
   Line,
@@ -11,6 +15,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
+import { parseISO, subDays, formatISO, format } from "date-fns";
 
 const RankingsHistoryComponent = () => {
   const [data, setData] = useState<GraphData[]>([]);
@@ -21,7 +26,8 @@ const RankingsHistoryComponent = () => {
         "https://brs.aragorn-media-server.duckdns.org/players/history?type=RANK"
       )
       .then((response) => {
-        const transformedData = transformDataForGraph(response.data);
+        const preprocessedData = preprocessDataToAddOldEntries(response.data);
+        const transformedData = transformDataForGraph(preprocessedData);
         setData(transformedData);
       })
       .catch((error) => {
@@ -31,6 +37,29 @@ const RankingsHistoryComponent = () => {
 
   const capitalizeFirstLetter = (string: string) => {
     return string.charAt(0).toUpperCase() + string.slice(1);
+  };
+
+  const preprocessDataToAddOldEntries = (
+    players: PlayerHistory[]
+  ): PlayerHistory[] => {
+    return players.map((player) => {
+      if (player.history.length > 0) {
+        const lastEntry = player.history[player.history.length - 1];
+        const newDate = subDays(parseISO(lastEntry.date), 7);
+
+        const newEntry: PlayerHistoryEntry = {
+          oldRank: lastEntry.oldRank,
+          newRank: lastEntry.oldRank,
+          date: format(newDate, "yyyy-MM-dd"),
+        };
+
+        return {
+          ...player,
+          history: [...player.history, newEntry],
+        };
+      }
+      return player;
+    });
   };
 
   const transformDataForGraph = (players: PlayerHistory[]): GraphData[] => {
@@ -50,6 +79,11 @@ const RankingsHistoryComponent = () => {
         }
       });
     });
+
+    graphData.sort(
+      (a, b) => parseISO(a.date).getTime() - parseISO(b.date).getTime()
+    );
+    console.log(graphData);
     return graphData;
   };
 
