@@ -33,7 +33,6 @@ const RankingsComponent = () => {
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-xl font-bold mb-4">Badminton Rankings</h1>
       <div className="overflow-x-auto">
         <table className="table-auto w-full">
           <thead className="bg-gray-200">
