@@ -22,7 +22,7 @@ services:
     environment:
       SPRING_DATASOURCE_PASSWORD: {{ mysql_password }}
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/brs
-      HOST_URL: {{ backend_host_url }}
+      HOST_FRONTEND: {{ frontend_host_url }}
       API_KEY: {{ backend_api_key }}
     ports:
       - "8080:8080"
