@@ -2,6 +2,7 @@ package com.brs.backend.controllers;
 
 import com.brs.backend.dto.HistoryType;
 import com.brs.backend.dto.PlayerHistory;
+import com.brs.backend.dto.PlayerInfo;
 import com.brs.backend.model.Player;
 import com.brs.backend.services.PlayerService;
 import com.brs.backend.services.ScoreHistoryService;
@@ -22,8 +23,8 @@ public class PlayerController {
     private PlayerService playerService;
 
     @GetMapping("/players")
-    public List<Player> getAllPlayers() {
-        return playerService.getAllPlayers();
+    public List<PlayerInfo> getAllPlayers() {
+        return playerService.getAllPlayerInfo();
     }
 
     @GetMapping("/players/history")
