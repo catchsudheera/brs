@@ -33,7 +33,7 @@ const RankingsComponent = () => {
               {rankings.map((player) => (
                 <tr key={player.id} className="border-b">
                   <td className="px-4 py-2">{player.playerRank}</td>
-                  <td className="px-4 py-2">{player.name}</td>
+                  <td className="px-4 py-2">{player.name.charAt(0).toUpperCase() + player.name.slice(1)}</td>
                   <td className="px-4 py-2">{player.rankScore.toFixed(2)}</td>
                 </tr>
               ))}
