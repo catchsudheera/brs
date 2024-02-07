@@ -3,5 +3,6 @@ export interface Player {
     name: string;
     rankScore: number;
     playerRank: number;
+    previousRank: number;
   }
   
