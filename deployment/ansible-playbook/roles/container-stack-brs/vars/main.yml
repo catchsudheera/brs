@@ -21,4 +21,5 @@ mysql_root_password: "{{ gv_mysql_root_password }}"
 # Backend
 backend_api_key: "{{ gv_backend_api_key }}"
 backend_host_url: "{{ gv_backend_host_url }}"
+frontend_host_url: "{{ gv_frontend_host_url }}"
 

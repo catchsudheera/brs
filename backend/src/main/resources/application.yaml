@@ -9,7 +9,7 @@ spring:
         physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
 
 host:
-  url: http://localhost:8080
+  frontend: http://localhost:3000
 
 api:
   key: sample-api-key
