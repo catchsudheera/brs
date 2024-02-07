@@ -12,4 +12,6 @@ public interface ScoreHistoryRepository extends JpaRepository<ScoreHistory, Inte
     List<ScoreHistory> findAllByPlayerId(Integer id);
 
     List<ScoreHistory> findAllByPlayerIdAndEncounterDate(Integer playerId, LocalDate encounterDate);
+
+    Optional<ScoreHistory> findFirstByPlayerIdOrderByEncounterDateDesc(Integer playerId);
 }
