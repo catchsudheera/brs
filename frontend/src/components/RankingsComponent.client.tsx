@@ -8,7 +8,8 @@ const RankingsComponent = () => {
     useEffect(() => {
       axios.get('https://brs.aragorn-media-server.duckdns.org/players')
         .then(response => {
-          setRankings(response.data);
+          const sortedData = response.data.sort((a: Player, b: Player) => a.playerRank - b.playerRank);
+          setRankings(sortedData);
         })
         .catch(error => {
           console.error("There was an error fetching the rankings:", error);
