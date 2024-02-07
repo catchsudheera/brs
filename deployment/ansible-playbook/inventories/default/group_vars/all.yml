@@ -36,5 +36,6 @@ gv_mysql_root_password: <password>
 
 # BACKEND
 gv_backend_host_url: https://whatever-your-hostname.com
+gv_frontend_host_url: https://whatever-your-hostname.com
 gv_backend_api_key: sample-api-key
 

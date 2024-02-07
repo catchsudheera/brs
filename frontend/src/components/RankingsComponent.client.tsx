@@ -5,6 +5,7 @@ import { Player } from '../types/player';
 const RankingsComponent = () => {
     const [rankings, setRankings] = useState<Player[]>([]);
 
+    // TODO : Get backend url from the env variable. Which already being injected to the docker env under : BACKEND_URL
     useEffect(() => {
       axios.get('https://brs.aragorn-media-server.duckdns.org/players')
         .then(response => {
