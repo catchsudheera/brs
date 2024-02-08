@@ -39,20 +39,20 @@ const RankingsHistoryComponent = () => {
     return string.charAt(0).toUpperCase() + string.slice(1);
   };
 
-  const preprocessDataToAddOldEntries = (
-    players: PlayerHistory[]
-  ): PlayerHistory[] => {
-    return players.map((player) => {
+  const preprocessDataToAddOldEntries = (players: PlayerHistory[]): PlayerHistory[] => {
+    return players.map(player => {
       if (player.history.length > 0) {
-        const lastEntry = player.history[player.history.length - 1];
-        const newDate = subDays(parseISO(lastEntry.date), 7);
+        const sortedHistory = player.history.sort((a, b) => parseISO(a.date).getTime() - parseISO(b.date).getTime());
+        const mostRecentEntry = sortedHistory[0];
 
+        const newDate = subDays(parseISO(mostRecentEntry.date), 7);
+  
         const newEntry: PlayerHistoryEntry = {
-          oldRank: lastEntry.oldRank,
-          newRank: lastEntry.oldRank,
+          oldRank: mostRecentEntry.oldRank,
+          newRank: mostRecentEntry.oldRank,
           date: format(newDate, "yyyy-MM-dd"),
         };
-
+  
         return {
           ...player,
           history: [...player.history, newEntry],
@@ -83,7 +83,6 @@ const RankingsHistoryComponent = () => {
     graphData.sort(
       (a, b) => parseISO(a.date).getTime() - parseISO(b.date).getTime()
     );
-    console.log(graphData);
     return graphData;
   };
 
