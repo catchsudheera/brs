@@ -20,4 +20,6 @@ public class Player {
     private Double rankScore;
     @Column(name = "player_rank")
     private Integer playerRank;
+    @Column(name = "color_hex")
+    private String colorHex;
 }
