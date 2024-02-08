@@ -6,7 +6,7 @@ import lombok.*;
 @Setter
 @Getter
 @EqualsAndHashCode
-public abstract class PlayerHistory {
+public class PlayerHistory {
     private String playerName;
     private Integer playerId;
 }
