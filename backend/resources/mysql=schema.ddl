@@ -9,6 +9,7 @@ CREATE TABLE `ENCOUNTER` (
   `team_1_set_points` int NOT NULL,
   `team_2_set_points` int NOT NULL,
   `calculated_score` double DEFAULT NULL,
+  `color_hex` varchar(6) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `team_uniqness` (`team_1`,`team_2`,`encounter_date`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
