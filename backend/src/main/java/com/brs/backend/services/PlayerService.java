@@ -46,7 +46,8 @@ public class PlayerService {
         return getAllPlayers().stream()
                 .map(e -> {
                     Optional<ScoreHistory> h = scoreHistoryRepository.findFirstByPlayerIdOrderByEncounterDateDesc(e.getId());
-                    return new PlayerInfo(e.getId(), e.getName(), e.getRankScore(), e.getPlayerRank(), h.orElseThrow().getPlayerOldRank());
+                    return new PlayerInfo(e.getId(), e.getName(), e.getRankScore(), e.getPlayerRank(),
+                            h.orElseThrow().getPlayerOldRank(), e.getColorHex());
                 })
                 .toList();
     }
