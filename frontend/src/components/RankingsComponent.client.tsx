@@ -38,7 +38,9 @@ const RankingsComponent = () => {
           <tbody>
             {sortedPlayers.map((player) => (
               <tr key={player.id} className="border-b">
-                <td className="px-4 py-2">{player.playerRank}</td>
+                <td className="px-4 py-2 items-center text-center">
+                  {player.playerRank}
+                </td>
                 <td className="px-4 py-2">
                   <Link
                     href={`/player/${player.id}/encounters`}
@@ -47,8 +49,10 @@ const RankingsComponent = () => {
                     {player.name}
                   </Link>
                 </td>
-                <td className="px-4 py-2">{player.rankScore.toFixed(2)}</td>
-                <td className="px-4 py-2">
+                <td className="px-4 py-2 items-center text-center">
+                  {player.rankScore.toFixed(2)}
+                </td>
+                <td className="px-4 py-2 items-center text-center">
                   {renderRankChange(player.playerRank, player.previousRank)}
                 </td>
               </tr>
