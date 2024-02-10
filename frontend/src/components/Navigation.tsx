@@ -7,17 +7,12 @@ const Navigation = () => {
       <ul className="flex space-x-4">
         <li>
           <Link href="/" className="hover:text-gray-200">
-            Ranking
+            Player Ranking
           </Link>
         </li>
         <li>
           <Link href="/player-ranking-history" className="hover:text-gray-200">
-            Ranking History
-          </Link>
-        </li>
-        <li>
-          <Link href="/player-encounters" className="hover:text-gray-200">
-            Encounters
+            History
           </Link>
         </li>
       </ul>
