@@ -1,16 +1,12 @@
+import React from 'react';
 import { useRouter } from 'next/router';
+import PlayerEncountersComponent from '@/components/PlayerEncountersComponent.client';
 
-const PlayerEncounters = () => {
+const PlayerEncountersPage = () => {
   const router = useRouter();
-  const { id } = router.query; // Access the dynamic segment value
+  const { id } = router.query;
 
-  // You can use this ID to fetch data or perform other actions
-  return (
-    <div>
-      <h1>Player Encounters</h1>
-      <p>Showing encounters for player with ID: {id}</p>
-    </div>
-  );
+  return <PlayerEncountersComponent playerId={id} />;
 };
 
-export default PlayerEncounters;
+export default PlayerEncountersPage;
