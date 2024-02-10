@@ -19,6 +19,9 @@ const renderTeamList = (team: EncounterPlayer[]) =>
 const PlayerEncounterComponent: React.FC<PlayerEncounterComponentProps> = ({
   encounter,
 }) => {
+  const scoreColorClass =
+    encounter.encounterScore < 0 ? "text-red-500" : "text-green-500";
+
   return (
     <div className="card bg-base-100 shadow-xl mb-8">
       <div className="card-body">
@@ -30,7 +33,9 @@ const PlayerEncounterComponent: React.FC<PlayerEncounterComponentProps> = ({
 
           <div className="stat place-items-center">
             <div className="stat-title">Score</div>
-            <div className="stat-value">{encounter.encounterScore}</div>
+            <div className={`stat-value ${scoreColorClass}`}>
+              {Math.abs(encounter.encounterScore)}
+            </div>
           </div>
         </div>
         <table className="table-auto w-full">
