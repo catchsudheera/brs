@@ -22,25 +22,28 @@ const PlayerEncounterComponent: React.FC<PlayerEncounterComponentProps> = ({
   const scoreColorClass =
     encounter.encounterScore < 0 ? "text-red-500" : "text-green-500";
 
-    const determineRowBackground = (playerPoints: number, opponentPoints: number) => {
-        return playerPoints > opponentPoints ? 'bg-green-100' : 'bg-red-100';
-      };
+  const determineRowBackground = (
+    playerPoints: number,
+    opponentPoints: number
+  ) => {
+    return playerPoints > opponentPoints ? "bg-green-100" : "bg-red-100";
+  };
 
   return (
     <div className="card bg-base-100 shadow-xl mb-8">
       <div className="card-body">
-        <div className="stats shadow">
-          <div className="stat place-items-center">
-            <div className="stat-title">{encounter.encounterDate}</div>
-            <div className="stat-value">{`Game ${encounter.encounterId}`}</div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center text-center">
+          <div>
+            <h4 className="font-bold text-xl lg:text-2xl">
+              {encounter.encounterDate}
+            </h4>
           </div>
-
-          <div className="stat place-items-center">
-            <div className="stat-title">Score</div>
-            <div className={`stat-value ${scoreColorClass}`}>
-              {Math.abs(encounter.encounterScore) > 0 && "+"}
-              {Math.abs(encounter.encounterScore)}
-            </div>
+          <div>
+            <p className="text-lg lg:text-xl">Game {encounter.encounterId}</p>
+          </div>
+          <div className={`font-bold text-lg lg:text-xl ${scoreColorClass}`}>
+            Score: {encounter.encounterScore > 0 ? "+" : "-"}
+            {Math.abs(encounter.encounterScore)}
           </div>
         </div>
         <table className="table-auto w-full">
@@ -51,7 +54,12 @@ const PlayerEncounterComponent: React.FC<PlayerEncounterComponentProps> = ({
             </tr>
           </thead>
           <tbody>
-            <tr className={determineRowBackground(encounter.playerTeamPoints, encounter.opponentTeamPoints)}>
+            <tr
+              className={determineRowBackground(
+                encounter.playerTeamPoints,
+                encounter.opponentTeamPoints
+              )}
+            >
               <td className="border px-4 py-2">
                 {renderTeamList(encounter.playerTeam)}
               </td>
@@ -64,7 +72,12 @@ const PlayerEncounterComponent: React.FC<PlayerEncounterComponentProps> = ({
                 vs
               </td>
             </tr>
-            <tr className={determineRowBackground(encounter.opponentTeamPoints, encounter.playerTeamPoints)}>
+            <tr
+              className={determineRowBackground(
+                encounter.opponentTeamPoints,
+                encounter.playerTeamPoints
+              )}
+            >
               <td className="border px-4 py-2">
                 {renderTeamList(encounter.opponentTeam)}
               </td>
