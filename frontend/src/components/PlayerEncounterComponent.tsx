@@ -22,6 +22,10 @@ const PlayerEncounterComponent: React.FC<PlayerEncounterComponentProps> = ({
   const scoreColorClass =
     encounter.encounterScore < 0 ? "text-red-500" : "text-green-500";
 
+    const determineRowBackground = (playerPoints: number, opponentPoints: number) => {
+        return playerPoints > opponentPoints ? 'bg-green-100' : 'bg-red-100';
+      };
+
   return (
     <div className="card bg-base-100 shadow-xl mb-8">
       <div className="card-body">
@@ -47,7 +51,7 @@ const PlayerEncounterComponent: React.FC<PlayerEncounterComponentProps> = ({
             </tr>
           </thead>
           <tbody>
-            <tr>
+            <tr className={determineRowBackground(encounter.playerTeamPoints, encounter.opponentTeamPoints)}>
               <td className="border px-4 py-2">
                 {renderTeamList(encounter.playerTeam)}
               </td>
@@ -60,7 +64,7 @@ const PlayerEncounterComponent: React.FC<PlayerEncounterComponentProps> = ({
                 vs
               </td>
             </tr>
-            <tr>
+            <tr className={determineRowBackground(encounter.opponentTeamPoints, encounter.playerTeamPoints)}>
               <td className="border px-4 py-2">
                 {renderTeamList(encounter.opponentTeam)}
               </td>
