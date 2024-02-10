@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { EncountersResponse } from "@/types/encounter";
 import PlayerEncounterComponent from "./PlayerEncounterComponent";
+import { capitalizeFirstLetter } from "@/utils/string";
 
 interface PlayerEncountersComponentProps {
   playerId: string | string[] | undefined;
@@ -43,7 +44,7 @@ const PlayerEncountersComponent: React.FC<PlayerEncountersComponentProps> = ({
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold text-center my-4">
-        Player Encounters for {encounters?.playerName}
+        Encounters for {encounters?.playerName ? capitalizeFirstLetter(encounters.playerName) : ""}
       </h1>
       {encounters?.encounterHistory.map((encounter) => (
         <PlayerEncounterComponent
