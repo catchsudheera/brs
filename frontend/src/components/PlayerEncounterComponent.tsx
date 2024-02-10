@@ -34,6 +34,7 @@ const PlayerEncounterComponent: React.FC<PlayerEncounterComponentProps> = ({
           <div className="stat place-items-center">
             <div className="stat-title">Score</div>
             <div className={`stat-value ${scoreColorClass}`}>
+              {Math.abs(encounter.encounterScore) > 0 && "+"}
               {Math.abs(encounter.encounterScore)}
             </div>
           </div>
