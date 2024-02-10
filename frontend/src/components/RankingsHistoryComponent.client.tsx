@@ -4,7 +4,7 @@ import {
   PlayerHistory,
   GraphData,
   PlayerHistoryEntry,
-} from "../types/playerHistoryTypes";
+} from "@/types/playerHistoryTypes";
 import {
   LineChart,
   Line,
@@ -15,11 +15,12 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import { parseISO, subDays, formatISO, format } from "date-fns";
-import { Player } from "../types/player";
+import { parseISO, subDays, format } from "date-fns";
 import { capitalizeFirstLetter } from "@/utils/string";
+import { usePlayerContext } from "@/contexts/PlayerContext";
 
 const RankingsHistoryComponent = () => {
+  const { players } = usePlayerContext();
   const [data, setData] = useState<GraphData[]>([]);
   const [playerColors, setPlayerColors] = useState<{ [key: string]: string }>(
     {}
@@ -42,8 +43,18 @@ const RankingsHistoryComponent = () => {
     fetchHistoryData();
   }, []);
 
-  const preprocessDataToAddOldEntries = (players: PlayerHistory[]): PlayerHistory[] => {
-    return players.map(player => {
+  useEffect(() => {
+    const colorsMapping: { [key: string]: string } = {};
+    players.forEach((player) => {
+      colorsMapping[capitalizeFirstLetter(player.name)] = player.colorHex;
+    });
+    setPlayerColors(colorsMapping);
+  }, [players]);
+
+  const preprocessDataToAddOldEntries = (
+    players: PlayerHistory[]
+  ): PlayerHistory[] => {
+    return players.map((player) => {
       if (player.history.length > 0) {
         const sortedHistory = player.history.sort(
           (a, b) => parseISO(a.date).getTime() - parseISO(b.date).getTime()
