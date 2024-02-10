@@ -11,7 +11,7 @@ const RankingsComponent = () => {
     } else if (change < 0) {
       return <span className="text-red-500">▼ {Math.abs(change)}</span>;
     } else {
-      return <span className="text-gray-500">→ No change</span>;
+      return <span className="text-gray-500">-</span>;
     }
   };
 
