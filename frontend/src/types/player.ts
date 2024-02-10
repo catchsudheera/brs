@@ -7,3 +7,8 @@ export interface Player {
     colorHex: string;
   }
   
+export interface PlayerContextType {
+  players: Player[];
+  loading: boolean;
+  error: Error | null;
+}

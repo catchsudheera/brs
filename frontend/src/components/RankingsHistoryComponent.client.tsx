@@ -17,6 +17,7 @@ import {
 } from "recharts";
 import { parseISO, subDays, formatISO, format } from "date-fns";
 import { Player } from "../types/player";
+import { capitalizeFirstLetter } from "@/utils/string";
 
 const RankingsHistoryComponent = () => {
   const [data, setData] = useState<GraphData[]>([]);
@@ -41,36 +42,8 @@ const RankingsHistoryComponent = () => {
     fetchHistoryData();
   }, []);
 
-  useEffect(() => {
-    const fetchPlayerColorsForGraph = async () => {
-      try {
-        const response = await axios.get<Player[]>(
-          "https://brs.aragorn-media-server.duckdns.org/players"
-        );
-        const players = response.data;
-        const colorsMapping: { [key: string]: string } = {};
-
-        players.forEach((player) => {
-          colorsMapping[capitalizeFirstLetter(player.name)] = player.colorHex;
-        });
-
-        setPlayerColors(colorsMapping);
-      } catch (error) {
-        console.error("There was an error fetching the players data:", error);
-      }
-    };
-
-    fetchPlayerColorsForGraph();
-  }, []);
-
-  const capitalizeFirstLetter = (string: string) => {
-    return string.charAt(0).toUpperCase() + string.slice(1);
-  };
-
-  const preprocessDataToAddOldEntries = (
-    players: PlayerHistory[]
-  ): PlayerHistory[] => {
-    return players.map((player) => {
+  const preprocessDataToAddOldEntries = (players: PlayerHistory[]): PlayerHistory[] => {
+    return players.map(player => {
       if (player.history.length > 0) {
         const sortedHistory = player.history.sort(
           (a, b) => parseISO(a.date).getTime() - parseISO(b.date).getTime()

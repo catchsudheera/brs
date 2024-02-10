@@ -1,24 +1,8 @@
-import React, { useEffect, useState } from "react";
-import axios from "axios";
-import { Player } from "../types/player";
+import React from 'react';
+import { usePlayerContext } from '@/contexts/PlayerContext'; 
 
 const RankingsComponent = () => {
-  const [rankings, setRankings] = useState<Player[]>([]);
-
-  // TODO : Get backend url from the env variable. Which already being injected to the docker env under : BACKEND_URL
-  useEffect(() => {
-    axios
-      .get("https://brs.aragorn-media-server.duckdns.org/players")
-      .then((response) => {
-        const sortedData = response.data.sort(
-          (a: Player, b: Player) => a.playerRank - b.playerRank
-        );
-        setRankings(sortedData);
-      })
-      .catch((error) => {
-        console.error("There was an error fetching the rankings:", error);
-      });
-  }, []);
+  const { players, loading, error } = usePlayerContext(); 
 
   const renderRankChange = (currentRank: number, previousRank: number) => {
     const change = previousRank - currentRank;
@@ -30,6 +14,11 @@ const RankingsComponent = () => {
       return <span className="text-gray-500">→ No change</span>;
     }
   };
+
+  if (loading) return <div>Loading rankings...</div>;
+  if (error) return <div>Error fetching rankings: {error.message}</div>;
+
+  const sortedPlayers = [...players].sort((a, b) => a.playerRank - b.playerRank);
 
   return (
     <div className="container mx-auto p-4">
@@ -44,11 +33,11 @@ const RankingsComponent = () => {
             </tr>
           </thead>
           <tbody>
-            {rankings.map((player) => (
+            {sortedPlayers.map((player) => (
               <tr key={player.id} className="border-b">
                 <td className="px-4 py-2">{player.playerRank}</td>
                 <td className="px-4 py-2">
-                  {player.name.charAt(0).toUpperCase() + player.name.slice(1)}
+                  {player.name}
                 </td>
                 <td className="px-4 py-2">{player.rankScore.toFixed(2)}</td>
                 <td className="px-4 py-2">
