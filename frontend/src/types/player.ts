@@ -4,5 +4,6 @@ export interface Player {
     rankScore: number;
     playerRank: number;
     previousRank: number;
+    colorHex: string;
   }
   

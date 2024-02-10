@@ -16,43 +16,75 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { parseISO, subDays, formatISO, format } from "date-fns";
+import { Player } from "../types/player";
 
 const RankingsHistoryComponent = () => {
   const [data, setData] = useState<GraphData[]>([]);
+  const [playerColors, setPlayerColors] = useState<{ [key: string]: string }>(
+    {}
+  );
 
   useEffect(() => {
-    axios
-      .get<PlayerHistory[]>(
-        "https://brs.aragorn-media-server.duckdns.org/players/history?type=RANK"
-      )
-      .then((response) => {
+    const fetchHistoryData = async () => {
+      try {
+        const response = await axios.get<PlayerHistory[]>(
+          "https://brs.aragorn-media-server.duckdns.org/players/history?type=RANK"
+        );
         const preprocessedData = preprocessDataToAddOldEntries(response.data);
         const transformedData = transformDataForGraph(preprocessedData);
         setData(transformedData);
-      })
-      .catch((error) => {
+      } catch (error) {
         console.error("There was an error fetching the history data:", error);
-      });
+      }
+    };
+
+    fetchHistoryData();
+  }, []);
+
+  useEffect(() => {
+    const fetchPlayerColorsForGraph = async () => {
+      try {
+        const response = await axios.get<Player[]>(
+          "https://brs.aragorn-media-server.duckdns.org/players"
+        );
+        const players = response.data;
+        const colorsMapping: { [key: string]: string } = {};
+
+        players.forEach((player) => {
+          colorsMapping[capitalizeFirstLetter(player.name)] = player.colorHex;
+        });
+
+        setPlayerColors(colorsMapping);
+      } catch (error) {
+        console.error("There was an error fetching the players data:", error);
+      }
+    };
+
+    fetchPlayerColorsForGraph();
   }, []);
 
   const capitalizeFirstLetter = (string: string) => {
     return string.charAt(0).toUpperCase() + string.slice(1);
   };
 
-  const preprocessDataToAddOldEntries = (players: PlayerHistory[]): PlayerHistory[] => {
-    return players.map(player => {
+  const preprocessDataToAddOldEntries = (
+    players: PlayerHistory[]
+  ): PlayerHistory[] => {
+    return players.map((player) => {
       if (player.history.length > 0) {
-        const sortedHistory = player.history.sort((a, b) => parseISO(a.date).getTime() - parseISO(b.date).getTime());
+        const sortedHistory = player.history.sort(
+          (a, b) => parseISO(a.date).getTime() - parseISO(b.date).getTime()
+        );
         const mostRecentEntry = sortedHistory[0];
 
         const newDate = subDays(parseISO(mostRecentEntry.date), 7);
-  
+
         const newEntry: PlayerHistoryEntry = {
           oldRank: mostRecentEntry.oldRank,
           newRank: mostRecentEntry.oldRank,
           date: format(newDate, "yyyy-MM-dd"),
         };
-  
+
         return {
           ...player,
           history: [...player.history, newEntry],
@@ -105,14 +137,20 @@ const RankingsHistoryComponent = () => {
         {data.length > 0 &&
           Object.keys(data[0])
             .filter((key) => key !== "date")
-            .map((key, idx) => (
-              <Line
-                type="monotone"
-                dataKey={key}
-                stroke={`#${Math.floor(Math.random() * 16777215).toString(16)}`}
-                key={idx}
-              />
-            ))}
+            .map((key, idx) => {
+              return (
+                <Line
+                  type="monotone"
+                  dataKey={key}
+                  stroke={
+                    playerColors[key]
+                      ? `#${playerColors[key]}`
+                      : `#${Math.floor(Math.random() * 16777215).toString(16)}`
+                  }
+                  key={idx}
+                />
+              );
+            })}
       </LineChart>
     </ResponsiveContainer>
   );
