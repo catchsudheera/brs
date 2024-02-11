@@ -1,7 +1,7 @@
 import "../app/globals.css";
 import type { AppProps } from "next/app";
-import Layout from "@/components/Layout";
-import Navigation from "@/components/Navigation";
+import LayoutComponent from "@/components/LayoutComponent";
+import NavigationComponent from "@/components/NavigationComponent";
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Player } from "@/types/player";
@@ -24,12 +24,12 @@ function MyApp({ Component, pageProps }: AppProps) {
   }, []);
 
   return (
-    <Layout>
+    <LayoutComponent>
       <PlayerProvider>
-        <Navigation />
+        <NavigationComponent />
         <Component {...pageProps} />
       </PlayerProvider>
-    </Layout>
+    </LayoutComponent>
   );
 }
 

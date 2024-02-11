@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-const Navigation = () => {
+const NavigationComponent = () => {
   return (
     <nav className="bg-gray-800 text-white p-4 flex justify-between items-center">
       <Link href="/">
@@ -22,4 +22,4 @@ const Navigation = () => {
   );
 };
 
-export default Navigation;
+export default NavigationComponent;
