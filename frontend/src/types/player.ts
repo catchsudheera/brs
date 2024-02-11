@@ -5,6 +5,8 @@ export interface Player {
   playerRank: number;
   previousRank: number;
   colorHex: string;
+  highestRank?: number;
+  timeInHighestRank?: string;
 }
 
 export interface PlayerContextType {

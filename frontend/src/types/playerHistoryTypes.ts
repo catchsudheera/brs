@@ -14,3 +14,9 @@ export interface GraphData {
   date: string;
   [key: string]: string | number;
 }
+
+export interface RankingHistoryContextType {
+  rankingHistoryData: GraphData[];
+  rankingHistoryloading: boolean;
+  rankingHistoryError: Error | null;
+}
