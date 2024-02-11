@@ -4,17 +4,17 @@ import React, {
   useState,
   useEffect,
   ReactNode,
-} from "react";
-import axios from "axios";
-import { Player, PlayerContextType } from "@/types/player";
-import { capitalizeFirstLetter } from "@/utils/string";
+} from 'react';
+import axios from 'axios';
+import { Player, PlayerContextType } from '@/types/player';
+import { capitalizeFirstLetter } from '@/utils/string';
 
 const PlayerContext = createContext<PlayerContextType | undefined>(undefined);
 
 export const usePlayerContext = () => {
   const context = useContext(PlayerContext);
   if (context === undefined) {
-    throw new Error("usePlayerContext must be used within a PlayerProvider");
+    throw new Error('usePlayerContext must be used within a PlayerProvider');
   }
   return context;
 };
@@ -31,7 +31,7 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({
       setLoading(true);
       try {
         const response = await axios.get<Player[]>(
-          "https://brs.aragorn-media-server.duckdns.org/players"
+          'https://brs.aragorn-media-server.duckdns.org/players',
         );
         const processedData = response.data.map((player) => ({
           ...player,
