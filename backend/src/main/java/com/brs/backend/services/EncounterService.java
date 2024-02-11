@@ -61,11 +61,15 @@ public class EncounterService {
                 playerTeamPoints = encounter.getTeam2SetPoints();
                 opponentTeamPoints = encounter.getTeam1SetPoints();
             }
+            var calculatedScore = encounter.getCalculatedScore();
+            if (playerTeamPoints < opponentTeamPoints) {
+                calculatedScore *= -1;
+            }
             playerEncounterHistoryRecords.add(
                     new PlayerEncounterHistoryRecord(
                             encounter.getEncounterDate(),
                             encounter.getId(),
-                            encounter.getCalculatedScore(),
+                            calculatedScore,
                             opponentTeam,
                             opponentTeamPoints,
                             playerTeam,
