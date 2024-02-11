@@ -1,19 +1,19 @@
-import Link from "next/link";
+import Link from 'next/link';
 
 const NavigationComponent = () => {
   return (
-    <nav className="bg-gray-800 text-white p-4 flex justify-between items-center">
-      <Link href="/">
-        <div className="text-lg font-semibold">Badminton Almere</div>
+    <nav className='bg-gray-800 text-white p-4 flex justify-between items-center'>
+      <Link href='/'>
+        <div className='text-lg font-semibold'>Badminton Almere</div>
       </Link>
-      <ul className="flex space-x-4">
+      <ul className='flex space-x-4'>
         <li>
-          <Link href="/" className="hover:text-gray-200">
+          <Link href='/' className='hover:text-gray-200'>
             Player Ranking
           </Link>
         </li>
         <li>
-          <Link href="/player-ranking-history" className="hover:text-gray-200">
+          <Link href='/player-ranking-history' className='hover:text-gray-200'>
             History
           </Link>
         </li>

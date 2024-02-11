@@ -1,10 +1,10 @@
-import React from "react";
-import RankingsHistoryComponent from "@/components/RankingsHistoryComponent.client";
+import React from 'react';
+import RankingsHistoryComponent from '@/components/RankingsHistoryComponent.client';
 
 const PlayerRanking = () => {
   return (
-    <div className="flex flex-col items-center">
-      <h1 className="text-2xl font-bold text-center my-4">
+    <div className='flex flex-col items-center'>
+      <h1 className='text-2xl font-bold text-center my-4'>
         Player Ranking History
       </h1>
       <RankingsHistoryComponent />
