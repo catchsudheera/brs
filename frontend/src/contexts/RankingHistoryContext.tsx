@@ -10,18 +10,15 @@ import {
   PlayerHistory,
   GraphData,
   PlayerHistoryEntry,
+  RankingHistoryContextType,
 } from '@/types/playerHistoryTypes';
 import { parseISO, subDays, format } from 'date-fns';
 import { capitalizeFirstLetter } from '@/utils/string';
 
-const RankingHistoryContext = createContext<{
-  data: GraphData[];
-  loading: boolean;
-  error: Error | null;
-}>({
-  data: [],
-  loading: false,
-  error: null,
+const RankingHistoryContext = createContext<RankingHistoryContextType>({
+  rankingHistoryData: [],
+  rankingHistoryloading: false,
+  rankingHistoryError: null,
 });
 
 export const useRankingHistoryContext = () => useContext(RankingHistoryContext);
@@ -107,7 +104,13 @@ export const RankingHistoryProvider: React.FC<{ children: ReactNode }> = ({
   };
 
   return (
-    <RankingHistoryContext.Provider value={{ data, loading, error }}>
+    <RankingHistoryContext.Provider
+      value={{
+        rankingHistoryData: data,
+        rankingHistoryloading: loading,
+        rankingHistoryError: error,
+      }}
+    >
       {children}
     </RankingHistoryContext.Provider>
   );
