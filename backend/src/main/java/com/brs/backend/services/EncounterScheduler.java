@@ -19,7 +19,7 @@ public class EncounterScheduler {
     @Value("${api.tg.key}")
     private String botKey;
 
-    @Value("${api.tg.group_id}")
+    @Value("${api.tg.group}")
     private String groupId;
 
     @Scheduled(cron = "0 0 15 * * MON")
