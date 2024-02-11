@@ -62,7 +62,7 @@ public class EncounterService {
                 opponentTeamPoints = encounter.getTeam1SetPoints();
             }
             var calculatedScore = encounter.getCalculatedScore();
-            if(playerTeamPoints<opponentTeamPoints){
+            if (playerTeamPoints < opponentTeamPoints) {
                 calculatedScore *= -1;
             }
             playerEncounterHistoryRecords.add(
