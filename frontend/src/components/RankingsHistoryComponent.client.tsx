@@ -15,7 +15,7 @@ import { useRankingHistoryContext } from '@/contexts/RankingHistoryContext';
 
 const RankingsHistoryComponent = () => {
   const { players } = usePlayerContext();
-  const { data, loading, error } = useRankingHistoryContext();
+  const { rankingHistoryData } = useRankingHistoryContext();
   const [playerColors, setPlayerColors] = useState<{ [key: string]: string }>(
     {},
   );
@@ -31,7 +31,7 @@ const RankingsHistoryComponent = () => {
   return (
     <ResponsiveContainer width='100%' height={400}>
       <LineChart
-        data={data}
+        data={rankingHistoryData}
         margin={{
           top: 5,
           right: 30,
@@ -44,8 +44,8 @@ const RankingsHistoryComponent = () => {
         <YAxis reversed={true} domain={['dataMin', 'dataMax']} />
         <Tooltip />
         <Legend />
-        {data.length > 0 &&
-          Object.keys(data[0])
+        {rankingHistoryData.length > 0 &&
+          Object.keys(rankingHistoryData[0])
             .filter((key) => key !== 'date')
             .map((key, idx) => {
               return (
