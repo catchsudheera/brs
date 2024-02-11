@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from "react";
-import axios from "axios";
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
 import {
   PlayerHistory,
   GraphData,
   PlayerHistoryEntry,
-} from "@/types/playerHistoryTypes";
+} from '@/types/playerHistoryTypes';
 import {
   LineChart,
   Line,
@@ -14,29 +14,29 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
-} from "recharts";
-import { parseISO, subDays, format } from "date-fns";
-import { capitalizeFirstLetter } from "@/utils/string";
-import { usePlayerContext } from "@/contexts/PlayerContext";
+} from 'recharts';
+import { parseISO, subDays, format } from 'date-fns';
+import { capitalizeFirstLetter } from '@/utils/string';
+import { usePlayerContext } from '@/contexts/PlayerContext';
 
 const RankingsHistoryComponent = () => {
   const { players } = usePlayerContext();
   const [data, setData] = useState<GraphData[]>([]);
   const [playerColors, setPlayerColors] = useState<{ [key: string]: string }>(
-    {}
+    {},
   );
 
   useEffect(() => {
     const fetchHistoryData = async () => {
       try {
         const response = await axios.get<PlayerHistory[]>(
-          "https://brs.aragorn-media-server.duckdns.org/players/history?type=RANK"
+          'https://brs.aragorn-media-server.duckdns.org/players/history?type=RANK',
         );
         const preprocessedData = preprocessDataToAddOldEntries(response.data);
         const transformedData = transformDataForGraph(preprocessedData);
         setData(transformedData);
       } catch (error) {
-        console.error("There was an error fetching the history data:", error);
+        console.error('There was an error fetching the history data:', error);
       }
     };
 
@@ -52,12 +52,12 @@ const RankingsHistoryComponent = () => {
   }, [players]);
 
   const preprocessDataToAddOldEntries = (
-    players: PlayerHistory[]
+    players: PlayerHistory[],
   ): PlayerHistory[] => {
     return players.map((player) => {
       if (player.history.length > 0) {
         const sortedHistory = player.history.sort(
-          (a, b) => parseISO(a.date).getTime() - parseISO(b.date).getTime()
+          (a, b) => parseISO(a.date).getTime() - parseISO(b.date).getTime(),
         );
         const mostRecentEntry = sortedHistory[0];
 
@@ -66,7 +66,7 @@ const RankingsHistoryComponent = () => {
         const newEntry: PlayerHistoryEntry = {
           oldRank: mostRecentEntry.oldRank,
           newRank: mostRecentEntry.oldRank,
-          date: format(newDate, "yyyy-MM-dd"),
+          date: format(newDate, 'yyyy-MM-dd'),
         };
 
         return {
@@ -97,13 +97,13 @@ const RankingsHistoryComponent = () => {
     });
 
     graphData.sort(
-      (a, b) => parseISO(a.date).getTime() - parseISO(b.date).getTime()
+      (a, b) => parseISO(a.date).getTime() - parseISO(b.date).getTime(),
     );
     return graphData;
   };
 
   return (
-    <ResponsiveContainer width="100%" height={400}>
+    <ResponsiveContainer width='100%' height={400}>
       <LineChart
         data={data}
         margin={{
@@ -113,18 +113,18 @@ const RankingsHistoryComponent = () => {
           bottom: 5,
         }}
       >
-        <CartesianGrid strokeDasharray="3 3" />
-        <XAxis dataKey="date" />
-        <YAxis reversed={true} domain={["dataMin", "dataMax"]} />
+        <CartesianGrid strokeDasharray='3 3' />
+        <XAxis dataKey='date' />
+        <YAxis reversed={true} domain={['dataMin', 'dataMax']} />
         <Tooltip />
         <Legend />
         {data.length > 0 &&
           Object.keys(data[0])
-            .filter((key) => key !== "date")
+            .filter((key) => key !== 'date')
             .map((key, idx) => {
               return (
                 <Line
-                  type="monotone"
+                  type='monotone'
                   dataKey={key}
                   stroke={
                     playerColors[key]

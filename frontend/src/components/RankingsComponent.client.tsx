@@ -1,6 +1,6 @@
-import React from "react";
-import Link from "next/link";
-import { usePlayerContext } from "@/contexts/PlayerContext";
+import React from 'react';
+import Link from 'next/link';
+import { usePlayerContext } from '@/contexts/PlayerContext';
 
 const RankingsComponent = () => {
   const { players, loading, error } = usePlayerContext();
@@ -8,11 +8,11 @@ const RankingsComponent = () => {
   const renderRankChange = (currentRank: number, previousRank: number) => {
     const change = previousRank - currentRank;
     if (change > 0) {
-      return <span className="text-green-500">▲ {Math.abs(change)}</span>;
+      return <span className='text-green-500'>▲ {Math.abs(change)}</span>;
     } else if (change < 0) {
-      return <span className="text-red-500">▼ {Math.abs(change)}</span>;
+      return <span className='text-red-500'>▼ {Math.abs(change)}</span>;
     } else {
-      return <span className="text-gray-500">-</span>;
+      return <span className='text-gray-500'>-</span>;
     }
   };
 
@@ -20,39 +20,39 @@ const RankingsComponent = () => {
   if (error) return <div>Error fetching rankings: {error.message}</div>;
 
   const sortedPlayers = [...players].sort(
-    (a, b) => a.playerRank - b.playerRank
+    (a, b) => a.playerRank - b.playerRank,
   );
 
   return (
-    <div className="container mx-auto p-4">
-      <div className="overflow-x-auto">
-        <table className="table-auto w-full">
-          <thead className="bg-gray-200">
+    <div className='container mx-auto p-4'>
+      <div className='overflow-x-auto'>
+        <table className='table-auto w-full'>
+          <thead className='bg-gray-200'>
             <tr>
-              <th className="px-4 py-2">Rank</th>
-              <th className="px-4 py-2">Player</th>
-              <th className="px-4 py-2">Rank Score</th>
-              <th className="px-4 py-2">Change</th>
+              <th className='px-4 py-2'>Rank</th>
+              <th className='px-4 py-2'>Player</th>
+              <th className='px-4 py-2'>Rank Score</th>
+              <th className='px-4 py-2'>Change</th>
             </tr>
           </thead>
           <tbody>
             {sortedPlayers.map((player) => (
-              <tr key={player.id} className="border-b">
-                <td className="px-4 py-2 items-center text-center">
+              <tr key={player.id} className='border-b'>
+                <td className='px-4 py-2 items-center text-center'>
                   {player.playerRank}
                 </td>
-                <td className="px-4 py-2">
+                <td className='px-4 py-2'>
                   <Link
                     href={`/player/${player.id}/encounters`}
-                    className="text-blue-600 hover:text-blue-800"
+                    className='text-blue-600 hover:text-blue-800'
                   >
                     {player.name}
                   </Link>
                 </td>
-                <td className="px-4 py-2 items-center text-center">
+                <td className='px-4 py-2 items-center text-center'>
                   {player.rankScore.toFixed(2)}
                 </td>
-                <td className="px-4 py-2 items-center text-center">
+                <td className='px-4 py-2 items-center text-center'>
                   {renderRankChange(player.playerRank, player.previousRank)}
                 </td>
               </tr>
