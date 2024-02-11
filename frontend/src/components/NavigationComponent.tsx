@@ -34,7 +34,7 @@ const NavigationComponent = () => {
                   <div className='flex-shrink-0 flex items-center'>
                     <img
                       className='block lg:hidden h-8 w-auto'
-                      src='./badminton-almere-logo.webp' // Mobile logo path
+                      src='/badminton-almere-logo.webp' // Mobile logo path
                       alt='Badminton Almere'
                     />
                     <img
