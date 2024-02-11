@@ -13,6 +13,9 @@ host:
 
 api:
   key: sample-api-key
+  tg:
+    key: sample-telegram-key
+    group_id: sample-group-id
 
 server:
   forward-headers-strategy: NATIVE
