@@ -30,21 +30,23 @@ const NavigationComponent = () => {
                 </Disclosure.Button>
               </div>
               <div className='flex-1 flex items-center justify-center sm:items-stretch sm:justify-start'>
-                <div className='flex-shrink-0 flex items-center'>
-                  <img
-                    className='block lg:hidden h-8 w-auto'
-                    src='./badminton-almere-logo.webp' // Mobile logo path
-                    alt='Badminton Almere'
-                  />
-                  <img
-                    className='hidden lg:block h-8 w-auto'
-                    src='/badminton-almere-logo.webp' // Desktop logo path
-                    alt='Badminton Almere'
-                  />
-                  <div className='txt-lg font-bold text-white ml-4'>
-                    Badminton Almere
+                <Link href='/'>
+                  <div className='flex-shrink-0 flex items-center'>
+                    <img
+                      className='block lg:hidden h-8 w-auto'
+                      src='./badminton-almere-logo.webp' // Mobile logo path
+                      alt='Badminton Almere'
+                    />
+                    <img
+                      className='hidden lg:block h-8 w-auto'
+                      src='/badminton-almere-logo.webp' // Desktop logo path
+                      alt='Badminton Almere'
+                    />
+                    <div className='txt-lg font-bold text-white ml-4'>
+                      Badminton Almere
+                    </div>
                   </div>
-                </div>
+                </Link>
                 <div className='hidden sm:block sm:ml-6'>
                   <div className='flex space-x-4'>
                     {navigation.map((item) => (
