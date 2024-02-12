@@ -1,4 +1,5 @@
 package com.brs.backend.dto;
 
-public record PlayerInfo(Integer id, String name, Double rankScore, Integer playerRank, Integer previousRank, String colorHex) {
+public record PlayerInfo(Integer id, String name, Double rankScore, Integer playerRank, Integer previousRank, String colorHex,
+                         Integer highestRank, String timeInHighestRank) {
 }
