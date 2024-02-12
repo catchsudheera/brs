@@ -22,6 +22,8 @@ CREATE TABLE `PLAYER` (
   `name` varchar(32) NOT NULL,
   `rank_score` double NOT NULL DEFAULT '1000',
   `player_rank` int DEFAULT NULL,
+  `highest_rank` int DEFAULT NULL,
+  `rank_since` date DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
