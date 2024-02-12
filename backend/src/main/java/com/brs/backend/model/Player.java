@@ -3,6 +3,8 @@ package com.brs.backend.model;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDate;
+
 
 @Entity(name="PLAYER")
 @Table(name = "PLAYER")
@@ -22,4 +24,8 @@ public class Player {
     private Integer playerRank;
     @Column(name = "color_hex")
     private String colorHex;
+    @Column(name = "highest_rank")
+    private Integer highestRank;
+    @Column(name = "rank_since")
+    private LocalDate rankSince;
 }

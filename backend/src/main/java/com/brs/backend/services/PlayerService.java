@@ -8,6 +8,8 @@ import com.brs.backend.repositories.ScoreHistoryRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDate;
+import java.time.Period;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -32,6 +34,10 @@ public class PlayerService {
         int rank = 0;
         for (Player player : playerList) {
             player.setPlayerRank(++rank);
+            if (player.getPlayerRank() < player.getHighestRank()) {
+                player.setHighestRank(player.getPlayerRank());
+                player.setRankSince(LocalDate.now());
+            }
             playerListSaved.add(playerRepository.save(player));
         }
 
@@ -46,8 +52,10 @@ public class PlayerService {
         return getAllPlayers().stream()
                 .map(e -> {
                     Optional<ScoreHistory> h = scoreHistoryRepository.findFirstByPlayerIdOrderByEncounterDateDesc(e.getId());
+                    Period period = Period.between(LocalDate.now(), e.getRankSince());
+                    int diff = Math.abs(period.getDays());
                     return new PlayerInfo(e.getId(), e.getName(), e.getRankScore(), e.getPlayerRank(),
-                            h.orElseThrow().getPlayerOldRank(), e.getColorHex());
+                            h.orElseThrow().getPlayerOldRank(), e.getColorHex(), e.getHighestRank(), diff + " day(s)");
                 })
                 .toList();
     }
