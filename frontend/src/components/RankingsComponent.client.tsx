@@ -51,10 +51,10 @@ const RankingsComponent = () => {
                   </Link>
                 </td>
                 <td className='px-4 py-2 items-center text-center'>
-                  {`${player.highestRank} (${player.timeInHighestRank})`}
+                  {player.rankScore.toFixed(2)}
                 </td>
                 <td className='px-4 py-2 items-center text-center'>
-                  {player.rankScore.toFixed(2)}
+                  {`${player.highestRank} (${player.timeInHighestRank})`}
                 </td>
                 <td className='px-4 py-2 items-center text-center'>
                   {renderRankChange(player.playerRank, player.previousRank)}
