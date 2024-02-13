@@ -32,6 +32,7 @@ const RankingsComponent = () => {
               <th className='px-4 py-2'>Rank</th>
               <th className='px-4 py-2'>Player</th>
               <th className='px-4 py-2'>Rank Score</th>
+              <th className='px-4 py-2'>Highest Rank</th>
               <th className='px-4 py-2'>Change</th>
             </tr>
           </thead>
@@ -48,6 +49,9 @@ const RankingsComponent = () => {
                   >
                     {player.name}
                   </Link>
+                </td>
+                <td className='px-4 py-2 items-center text-center'>
+                  {`${player.highestRank} (${player.timeInHighestRank})`}
                 </td>
                 <td className='px-4 py-2 items-center text-center'>
                   {player.rankScore.toFixed(2)}
