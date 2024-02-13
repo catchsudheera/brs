@@ -25,7 +25,7 @@ const RankingsComponent = () => {
 
   const formatDays = (days: string) => {
     return days.replace('(', '').replace(')', '');
-  }
+  };
 
   return (
     <div className='container mx-auto p-4'>
@@ -63,7 +63,9 @@ const RankingsComponent = () => {
                 </td>
                 <td className='px-4 py-2 items-center text-center'>
                   <span>{`${player.highestRank}`} </span>
-                  <span className='text-xs text-gray-400'>({formatDays(player.timeInHighestRank)})</span>
+                  <span className='text-xs text-gray-400'>
+                    ({formatDays(player.timeInHighestRank)})
+                  </span>
                 </td>
               </tr>
             ))}
