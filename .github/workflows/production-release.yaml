@@ -1,0 +1,23 @@
+name: PRODUCTION release
+
+on: workflow_dispatch
+
+jobs:
+  push-production-images:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 'Login to ghcr'
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{github.actor}}
+          password: ${{secrets.GHCR_PUSH_TOKEN}}
+
+      - name: 'Build and push'
+        run: |
+          docker image tag ghcr.io/catchsudheera/brs-backend:rc ghcr.io/catchsudheera/brs-backend:production
+          docker push ghcr.io/catchsudheera/brs-backend:production
+          docker image tag ghcr.io/catchsudheera/brs-frontend:rc ghcr.io/catchsudheera/brs-frontend:production
+          docker push ghcr.io/catchsudheera/brs-frontend:production
+          
+          

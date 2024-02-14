@@ -1,6 +1,6 @@
-name: BACKEND Build and publish images to ghcr
+name: BACKEND Staging build
 
-on: workflow_dispatch
+on: [push, workflow_dispatch]
 
 jobs:
   push-backend-image:
@@ -9,8 +9,11 @@ jobs:
       run:
         working-directory: './backend'
     steps:
-      - name: 'Checkout latest main branch'
-        uses: actions/checkout@main
+      - name: 'Checkout the branch that triggered the workflow'
+        uses: actions/checkout@v4
+
+      - name: 'Set the tag name according to the branch'
+        run: if [ "${GITHUB_REF##*/}" = "main" ]; then echo "TAG=rc" >> $GITHUB_ENV; else echo "TAG=staging" >> $GITHUB_ENV; fi
 
       - name: 'Packaging environment'
         uses: actions/setup-java@v3
@@ -30,6 +33,6 @@ jobs:
 
       - name: 'Build and push'
         run: |
-          docker build . --tag ghcr.io/catchsudheera/brs-backend:v1.2
-          docker push ghcr.io/catchsudheera/brs-backend:v1.2
+          docker build . --tag ghcr.io/catchsudheera/brs-backend:$TAG
+          docker push ghcr.io/catchsudheera/brs-backend:$TAG
 
