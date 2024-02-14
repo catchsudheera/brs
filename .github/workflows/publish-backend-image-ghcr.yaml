@@ -1,6 +1,9 @@
 name: BACKEND Staging build
 
-on: [push, workflow_dispatch]
+on:
+  push:
+    paths:
+      - backend/**
 
 jobs:
   push-backend-image:
