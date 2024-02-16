@@ -19,6 +19,7 @@ const RankingsHistoryComponent = () => {
   const [playerColors, setPlayerColors] = useState<{ [key: string]: string }>(
     {},
   );
+  const [highlightedPlayerKey, setHighlightedPlayerKey] = useState<string>();
 
   useEffect(() => {
     const colorsMapping: { [key: string]: string } = {};
@@ -27,6 +28,13 @@ const RankingsHistoryComponent = () => {
     });
     setPlayerColors(colorsMapping);
   }, [players]);
+
+  const onLegendMouseEnter = (o: any) => {
+    const { dataKey } = o;
+    setHighlightedPlayerKey(dataKey)
+  };
+
+  const onLegendMouseLeave = () => setHighlightedPlayerKey(undefined);
 
   return (
     <ResponsiveContainer width='100%' height={400}>
@@ -43,7 +51,7 @@ const RankingsHistoryComponent = () => {
         <XAxis dataKey='date' />
         <YAxis reversed={true} domain={['dataMin', 'dataMax']} />
         <Tooltip />
-        <Legend />
+        <Legend onMouseEnter={onLegendMouseEnter} onMouseLeave={onLegendMouseLeave} />
         {rankingHistoryData.length > 0 &&
           Object.keys(rankingHistoryData[0])
             .filter((key) => key !== 'date')
@@ -51,12 +59,13 @@ const RankingsHistoryComponent = () => {
               return (
                 <Line
                   type='monotone'
-                  dataKey={key}
+                  dataKey={key}                  
                   stroke={
                     playerColors[key]
                       ? `#${playerColors[key]}`
                       : `#${Math.floor(Math.random() * 16777215).toString(16)}`
                   }
+                  strokeOpacity={highlightedPlayerKey ? (highlightedPlayerKey === key ? 1 : 0.05) : 1}
                   key={idx}
                 />
               );
