@@ -31,10 +31,20 @@ const RankingsHistoryComponent = () => {
 
   const onLegendMouseEnter = (o: any) => {
     const { dataKey } = o;
-    setHighlightedPlayerKey(dataKey)
+    setHighlightedPlayerKey(dataKey);
   };
 
   const onLegendMouseLeave = () => setHighlightedPlayerKey(undefined);
+
+  const renderLabel = (e: any) => {
+    const { value, x, y, index } = e;
+    const isFirstPlot = index === 0;
+    // Nudge only the first label to the side so it doesn't overlap with the Y axis line.
+    const lx = isFirstPlot ? x + 10 : x;
+    const ly = y - 10;
+    
+    return <text className='recharts-text recharts-label' textAnchor='middle' fill='#808080' x={lx} y={ly} fontSize={12}>{value}</text>;
+  };
 
   return (
     <ResponsiveContainer width='100%' height={400}>
@@ -59,13 +69,15 @@ const RankingsHistoryComponent = () => {
               return (
                 <Line
                   type='monotone'
-                  dataKey={key}                  
+                  dataKey={key}
                   stroke={
                     playerColors[key]
                       ? `#${playerColors[key]}`
                       : `#${Math.floor(Math.random() * 16777215).toString(16)}`
                   }
                   strokeOpacity={highlightedPlayerKey ? (highlightedPlayerKey === key ? 1 : 0.05) : 1}
+                  label={highlightedPlayerKey === key ? renderLabel : undefined}
+                  dot={!highlightedPlayerKey || highlightedPlayerKey === key}
                   key={idx}
                 />
               );
