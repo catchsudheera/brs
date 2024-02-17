@@ -39,9 +39,11 @@ const RankingsHistoryComponent = () => {
   const renderLabel = (e: any) => {
     const { value, x, y, index } = e;
     const isFirstPlot = index === 0;
+    const invertYPos = value == 1;
     // Nudge only the first label to the side so it doesn't overlap with the Y axis line.
     const lx = isFirstPlot ? x + 10 : x;
-    const ly = y - 10;
+    // Invert the Y position of the label only when the plot reaches the top (eg: 1st place), preventing it from hiding when out of bound.
+    const ly = invertYPos ? y + 18 : y - 10;
     
     return <text className='recharts-text recharts-label' textAnchor='middle' fill='#808080' x={lx} y={ly} fontSize={12}>{value}</text>;
   };
