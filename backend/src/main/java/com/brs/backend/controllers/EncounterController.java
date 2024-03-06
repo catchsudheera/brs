@@ -79,7 +79,7 @@ public class EncounterController {
 
         String dateSubStr = fileName.substring(10, 20);
 
-        if (!Pattern.compile("20[2-9][0-9]-[0-9][0-2]-[0-3][0-9]").matcher(dateSubStr).find()) {
+        if (!Pattern.compile("20[2-9][0-9]-[0-1][0-9]-[0-3][0-9]").matcher(dateSubStr).find()) {
             throw new RuntimeException("Encounter file name should starts with 'encounter_' and then should be immediately followed by a date string in the format of yyyy-mm-dd");
         }
 
