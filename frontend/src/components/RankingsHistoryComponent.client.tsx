@@ -44,8 +44,19 @@ const RankingsHistoryComponent = () => {
     const lx = isFirstPlot ? x + 10 : x;
     // Invert the Y position of the label only when the plot reaches the top (eg: 1st place), preventing it from hiding when out of bound.
     const ly = invertYPos ? y + 18 : y - 10;
-    
-    return <text className='recharts-text recharts-label' textAnchor='middle' fill='#808080' x={lx} y={ly} fontSize={12}>{value}</text>;
+
+    return (
+      <text
+        className='recharts-text recharts-label'
+        textAnchor='middle'
+        fill='#808080'
+        x={lx}
+        y={ly}
+        fontSize={12}
+      >
+        {value}
+      </text>
+    );
   };
 
   return (
@@ -63,7 +74,10 @@ const RankingsHistoryComponent = () => {
         <XAxis dataKey='date' />
         <YAxis reversed={true} domain={['dataMin', 'dataMax']} />
         <Tooltip />
-        <Legend onMouseEnter={onLegendMouseEnter} onMouseLeave={onLegendMouseLeave} />
+        <Legend
+          onMouseEnter={onLegendMouseEnter}
+          onMouseLeave={onLegendMouseLeave}
+        />
         {rankingHistoryData.length > 0 &&
           Object.keys(rankingHistoryData[0])
             .filter((key) => key !== 'date')
@@ -77,7 +91,13 @@ const RankingsHistoryComponent = () => {
                       ? `#${playerColors[key]}`
                       : `#${Math.floor(Math.random() * 16777215).toString(16)}`
                   }
-                  strokeOpacity={highlightedPlayerKey ? (highlightedPlayerKey === key ? 1 : 0.05) : 1}
+                  strokeOpacity={
+                    highlightedPlayerKey
+                      ? highlightedPlayerKey === key
+                        ? 1
+                        : 0.05
+                      : 1
+                  }
                   label={highlightedPlayerKey === key ? renderLabel : undefined}
                   dot={!highlightedPlayerKey || highlightedPlayerKey === key}
                   key={idx}
