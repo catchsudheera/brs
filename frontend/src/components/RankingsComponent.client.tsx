@@ -30,15 +30,15 @@ const RankingsComponent = () => {
   return (
     <div className='container mx-auto p-4'>
       <div className='overflow-x-auto'>
-        <table className='table-auto w-full'>
-          <thead className='bg-gray-200'>
+        <table className='table w-full'>
+          <thead>
             <tr>
-              <th className='px-4 py-2' colSpan={2}>
+              <th className='px-4 py-2 text-center' colSpan={2}>
                 Rank
               </th>
               <th className='px-4 py-2'>Player</th>
-              <th className='px-4 py-2'>Score</th>
-              <th className='px-4 py-2'>Highest Rank</th>
+              <th className='px-4 py-2 text-center'>Score</th>
+              <th className='px-4 py-2 text-center'>Highest Rank</th>
             </tr>
           </thead>
           <tbody>
@@ -53,7 +53,7 @@ const RankingsComponent = () => {
                 <td className='px-4 py-2'>
                   <Link
                     href={`/player/${player.id}/encounters`}
-                    className='text-blue-600 hover:text-blue-800'
+                    className='link'
                   >
                     {player.name}
                   </Link>
