@@ -30,18 +30,18 @@ const PlayerEncounterComponent: React.FC<PlayerEncounterComponentProps> = ({
   };
 
   return (
-    <div className='mb-8'>
+    <div className='mb-8 overflow-x-auto'>
       <div className='grid grid-cols-1 md:grid-cols-3 gap-4 items-center text-center'>
         <div className={`font-bold text-lg lg:text-xl ${scoreColorClass}`}>
           Score: {encounter.encounterScore > 0 ? '+' : '-'}
           {Math.abs(encounter.encounterScore)}
         </div>
       </div>
-      <table className='table-auto w-full'>
+      <table className='table'>
         <thead>
           <tr>
-            <th className='border px-4 py-2'>Players</th>
-            <th className='border px-4 py-2'>Score</th>
+            <th className='px-4 py-2'>Players</th>
+            <th className='px-4 py-2'>Score</th>
           </tr>
         </thead>
         <tbody>

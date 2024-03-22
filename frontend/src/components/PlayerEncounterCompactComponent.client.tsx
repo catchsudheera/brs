@@ -111,7 +111,7 @@ const PlayerEncountersCompactComponent: React.FC<
         >
           {({ open }) => (
             <>
-              <Disclosure.Button className='flex justify-between w-full px-4 py-2 text-sm font-medium text-left bg-gray-200 rounded-lg hover:bg-gray-300 focus:outline-none focus-visible:ring focus-visible:ring-gray-500 focus-visible:ring-opacity-75'>
+              <Disclosure.Button className='flex justify-between w-full px-4 py-2 text-sm font-medium text-left bg-gray-200 bg-opacity-50 rounded-lg hover:bg-gray-300 focus:outline-none focus-visible:ring focus-visible:ring-gray-500 focus-visible:ring-opacity-75'>
                 <span className='text-gray-700'>{date}</span>
                 <ChevronUpIcon
                   className={`${open ? 'transform rotate-180' : ''} w-5 h-5 text-gray-700`}
