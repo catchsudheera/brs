@@ -39,3 +39,7 @@ gv_backend_host_url: https://whatever-your-hostname.com
 gv_frontend_host_url: https://whatever-your-hostname.com
 gv_backend_api_key: sample-api-key
 
+# DDNS client
+gv_ddns_host: <host_from_namecheap>
+gv_ddns_domain: <whatever-your-hostname.com>
+gv_ddns_password: <password>
