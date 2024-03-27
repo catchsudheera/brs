@@ -23,3 +23,9 @@ backend_api_key: "{{ gv_backend_api_key }}"
 backend_host_url: "{{ gv_backend_host_url }}"
 frontend_host_url: "{{ gv_frontend_host_url }}"
 
+
+# DDNS client
+ddns_host: {{ gv_ddns_host }}
+ddns_domain: {{ gv_ddns_domain }}
+ddns_password: {{ gv_ddns_password }}
+
