@@ -38,6 +38,7 @@
   vars:
     docker_compose_dir_path: "{{ brs_container_stack_location }}"
     stack_name: container-stack-brs
+    docker_compose_reload_systemd_on_calendar_cron: "{{ brs_docker_compose_reload_systemd_on_calendar_cron }}"
 
 - name: Stop Docker containers if running
   block:
