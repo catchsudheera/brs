@@ -38,9 +38,9 @@ export const RankingHistoryProvider: React.FC<{ children: ReactNode }> = ({
           'https://brs.aragorn-media-server.duckdns.org/players/history?type=RANK',
         );
 
-        const preprocessedData = preprocessDataToAddOldEntries(response.data);
-        const transformedData = transformDataForGraph(preprocessedData);
-        setData(transformedData);
+        const transformedData = transformDataForGraph(response.data);
+        const postProcessedData = postProcessDataToAddPreviousDates(transformedData, response.data);
+        setData(postProcessedData);
       } catch (error) {
         console.error('There was an error fetching the history data:', error);
         setError(error as Error);
@@ -52,31 +52,32 @@ export const RankingHistoryProvider: React.FC<{ children: ReactNode }> = ({
     fetchHistoryData();
   }, []);
 
-  const preprocessDataToAddOldEntries = (
-    players: PlayerHistory[],
-  ): PlayerHistory[] => {
-    return players.map((player) => {
-      if (player.history.length > 0) {
-        const sortedHistory = player.history.sort(
-          (a, b) => parseISO(a.date).getTime() - parseISO(b.date).getTime(),
-        );
-        const mostRecentEntry = sortedHistory[0];
+  const postProcessDataToAddPreviousDates = (ranksPerDateArr: GraphData[], historyPerPlayerArr: PlayerHistory[]): GraphData[] => {
+    // Defining a virtual starting date 7 days before the available first date
+    let startingDate = subDays(parseISO(ranksPerDateArr[0].date), 7);
 
-        const newDate = subDays(parseISO(mostRecentEntry.date), 7);
+    // Iterating through the data set to prefill ranks where missing.
+    //  1. Virtual staring date gets the oldRank of the player on the first date.
+    //  2. Players started in the middle get the old rank assigned from the virtual staring date until the encounter date before they first joined.
 
-        const newEntry: PlayerHistoryEntry = {
-          oldRank: mostRecentEntry.oldRank,
-          newRank: mostRecentEntry.oldRank,
-          date: format(newDate, 'yyyy-MM-dd'),
-        };
+    const playerToInitialOldRankMap = historyPerPlayerArr.map((playerHistory) => {
+      const sortedHistory = playerHistory.history.sort(
+        (a, b) => parseISO(a.date).getTime() - parseISO(b.date).getTime(),
+      );
 
-        return {
-          ...player,
-          history: [...player.history, newEntry],
-        };
-      }
-      return player;
+      return {player: capitalizeFirstLetter(playerHistory.playerName), initialOldRank: sortedHistory[0].oldRank};
     });
+
+    ranksPerDateArr.unshift({date: format(startingDate, 'yyyy-MM-dd')});
+    ranksPerDateArr.forEach((e) => {
+      for (let item of playerToInitialOldRankMap) {
+         if(!(item.player in e)) {
+            e[item.player] = item.initialOldRank;
+         }
+      }
+    });
+
+    return ranksPerDateArr;
   };
 
   const transformDataForGraph = (players: PlayerHistory[]): GraphData[] => {
