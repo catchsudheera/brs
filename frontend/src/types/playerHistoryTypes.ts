@@ -12,7 +12,7 @@ export interface PlayerHistory {
 
 export interface GraphData {
   date: string;
-  [key: string]: string | number;
+  [key: string]: string | number | null;
 }
 
 export interface RankingHistoryContextType {
