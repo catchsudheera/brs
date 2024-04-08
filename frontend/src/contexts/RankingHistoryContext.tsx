@@ -58,7 +58,7 @@ export const RankingHistoryProvider: React.FC<{ children: ReactNode }> = ({
 
     // Iterating through the data set to prefill ranks where missing.
     //  1. Virtual staring date gets the oldRank of the player on the first date.
-    //  2. Players started in the middle get the old rank assigned from the virtual staring date until the encounter date before they first joined.
+    //  2. Players started in the middle get the initial old rank assigned for the encouter date before the one they first joined.
 
     const playerToInitialOldRankMap = historyPerPlayerArr.map((playerHistory) => {
       const sortedHistory = playerHistory.history.sort(
@@ -69,13 +69,19 @@ export const RankingHistoryProvider: React.FC<{ children: ReactNode }> = ({
     });
 
     ranksPerDateArr.unshift({date: format(startingDate, 'yyyy-MM-dd')});
-    ranksPerDateArr.forEach((e) => {
+    let playedAdded: string[] = [];
+    ranksPerDateArr.reverse().forEach((e) => {
       for (let item of playerToInitialOldRankMap) {
-         if(!(item.player in e)) {
-            e[item.player] = item.initialOldRank;
-         }
+        if (!(playedAdded.includes(item.player)) && !(item.player in e)) {
+          e[item.player] = item.initialOldRank;
+          playedAdded.push(item.player);
+        } else if(!(item.player in e)) {
+          e[item.player] = null;
+        }
       }
     });
+
+    ranksPerDateArr.reverse();
 
     return ranksPerDateArr;
   };
