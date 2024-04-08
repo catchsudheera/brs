@@ -41,7 +41,7 @@ services:
     container_name: ddns
     restart: unless-stopped
     environment:
-      NC_HOST: {{ ddns_host }}
-      NC_DOMAIN: {{ ddns_domain }}
-      NC_PASS: {{ ddns_password }}
+      NC_HOST: "{{ ddns_host }}"
+      NC_DOMAIN: "{{ ddns_domain }}"
+      NC_PASS: "{{ ddns_password }}"
       
