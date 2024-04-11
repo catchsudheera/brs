@@ -24,9 +24,13 @@ export function groupBy<T, K extends keyof any>(
   );
 }
 
-export function sumBy<T, K extends keyof any>(array: T[], keyGetter: (item: T) => K,): Record<K, Number> {
+interface Encounters {
+  encounterScore: number;
+}
+
+export function sumBy<T extends Encounters, K extends keyof any>(array: T[], keyGetter: (item: T) => K,): Record<K, number> {
   return array.reduce(
-    (accumulator: Record<K, Number>, currentItem: T) => {
+    (accumulator: Record<K, number>, currentItem: T) => {
       const key: K = keyGetter(currentItem);
       if (!accumulator[key]) {
         accumulator[key] = 0;
@@ -34,6 +38,6 @@ export function sumBy<T, K extends keyof any>(array: T[], keyGetter: (item: T) =
       accumulator[key] = accumulator[key] + currentItem.encounterScore;
       return accumulator;
     },
-    {} as Record<K, Number>,
+    {} as Record<K, number>,
   );
 }
