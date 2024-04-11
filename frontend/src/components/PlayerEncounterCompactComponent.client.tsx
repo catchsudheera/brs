@@ -19,7 +19,7 @@ const PlayerEncountersCompactComponent: React.FC<
   const [encountersByDate, setEncountersByDate] = useState<
     Record<string, Encounter[]>
   >({});
-  const [scoreSumByDate, setScoreSumByDate] = useState<Record<string, Number>>({});
+  const [scoreSumByDate, setScoreSumByDate] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [player, setPlayer] = useState<Player | null>(null);
