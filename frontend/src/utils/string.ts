@@ -23,3 +23,17 @@ export function groupBy<T, K extends keyof any>(
     {} as Record<K, T[]>,
   );
 }
+
+export function sumBy<T, K extends keyof any>(array: T[], keyGetter: (item: T) => K,): Record<K, Number> {
+  return array.reduce(
+    (accumulator: Record<K, Number>, currentItem: T) => {
+      const key: K = keyGetter(currentItem);
+      if (!accumulator[key]) {
+        accumulator[key] = 0;
+      }
+      accumulator[key] = accumulator[key] + currentItem.encounterScore;
+      return accumulator;
+    },
+    {} as Record<K, Number>,
+  );
+}
