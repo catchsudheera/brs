@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { EncountersResponse, Encounter } from '@/types/encounter';
-import { capitalizeFirstLetter, groupBy } from '@/utils/string';
+import { capitalizeFirstLetter, groupBy, sumBy } from '@/utils/string';
 import { usePlayerContext } from '@/contexts/PlayerContext';
 import { Player } from '@/types/player';
 import PlayerEncounterComponent from './PlayerEncounterComponent';
@@ -19,6 +19,7 @@ const PlayerEncountersCompactComponent: React.FC<
   const [encountersByDate, setEncountersByDate] = useState<
     Record<string, Encounter[]>
   >({});
+  const [scoreSumByDate, setScoreSumByDate] = useState<Record<string, Number>>({});
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [player, setPlayer] = useState<Player | null>(null);
@@ -43,6 +44,13 @@ const PlayerEncountersCompactComponent: React.FC<
           (encounter) => encounter.encounterDate,
         );
         setEncountersByDate(groupedByDate);
+        
+        const sumByDate = sumBy(
+          response.data.encounterHistory,
+          (encounter) => encounter.encounterDate,
+        );
+
+        setScoreSumByDate(sumByDate);
       } catch (error) {
         console.error(
           'There was an error fetching the encounters data:',
@@ -97,6 +105,17 @@ const PlayerEncountersCompactComponent: React.FC<
     );
   };
 
+  const renderSum=(sum: number) => {
+    const formattedSum = (Math.round(sum * 100) / 100).toFixed(2);
+    return (
+      <span className={`font-bold ${Math.sign(sum) == 1 ? 'text-green-600' : 'text-red-600'}`}>
+        Net Score : 
+        {Math.sign(sum) == 1 ? '+' : ''}
+        {formattedSum}
+        </span>
+    );
+  };
+
   return (
     <div className='container mx-auto p-4'>
       <h1 className='text-2xl font-bold text-center my-4'>
@@ -113,6 +132,7 @@ const PlayerEncountersCompactComponent: React.FC<
             <>
               <Disclosure.Button className='flex justify-between w-full px-4 py-2 text-sm font-medium text-left bg-gray-200 bg-opacity-50 rounded-lg hover:bg-gray-300 focus:outline-none focus-visible:ring focus-visible:ring-gray-500 focus-visible:ring-opacity-75'>
                 <span className='text-gray-700'>{date}</span>
+                {open ? renderSum(scoreSumByDate[date]) : null}
                 <ChevronUpIcon
                   className={`${open ? 'transform rotate-180' : ''} w-5 h-5 text-gray-700`}
                 />
