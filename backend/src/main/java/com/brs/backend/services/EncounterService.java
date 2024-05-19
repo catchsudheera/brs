@@ -82,6 +82,9 @@ public class EncounterService {
     }
 
     public List<PlayerEncounterHistoryRecord> getPlayerEncounterHistory(Integer teamAp1, Integer teamAp2, Integer teamBp1, Integer teamBp2) {
+        if (teamAp1 == null || teamAp1 == 0) {
+            return Collections.emptyList();
+        }
         List<PlayerEncounterHistoryRecord> encounterHistory = getPlayerEncounterHistory(teamAp1).getEncounterHistory();
 
         if (teamAp2 != null && teamAp2 > 0){
