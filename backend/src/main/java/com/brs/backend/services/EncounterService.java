@@ -81,6 +81,30 @@ public class EncounterService {
                 currentPlayer.getPlayerId(), playerEncounterHistoryRecords);
     }
 
+    public List<PlayerEncounterHistoryRecord> getPlayerEncounterHistory(Integer teamAp1, Integer teamAp2, Integer teamBp1, Integer teamBp2) {
+        List<PlayerEncounterHistoryRecord> encounterHistory = getPlayerEncounterHistory(teamAp1).getEncounterHistory();
+
+        if (teamAp2 != null && teamAp2 > 0){
+            encounterHistory = encounterHistory.stream()
+                    .filter(e -> e.playerTeam().stream().anyMatch(w -> w.getPlayerId().equals(teamAp2)))
+                    .toList();
+        }
+
+        if (teamBp1 != null && teamBp1 > 0) {
+            encounterHistory = encounterHistory.stream()
+                    .filter(e -> e.opponentTeam().stream().anyMatch((w -> w.getPlayerId().equals(teamBp1))))
+                    .toList();
+        }
+
+        if (teamBp2 != null && teamBp2 > 0) {
+            encounterHistory = encounterHistory.stream()
+                    .filter(e -> e.opponentTeam().stream().anyMatch((w -> w.getPlayerId().equals(teamBp2))))
+                    .toList();
+        }
+
+        return encounterHistory;
+    }
+
     private PlayerHistory getPlayerInfo(Integer playerId) {
         var player = playerCache.computeIfAbsent(playerId, id -> playerRepository.findById(id).orElse(null));
         if (player == null) {
