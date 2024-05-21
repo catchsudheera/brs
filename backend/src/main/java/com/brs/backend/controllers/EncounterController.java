@@ -3,9 +3,11 @@ package com.brs.backend.controllers;
 import com.brs.backend.core.RankScoreCalculator;
 import com.brs.backend.core.RankScoreCalculatorProvider;
 import com.brs.backend.dto.EncounterResult;
+import com.brs.backend.dto.PlayerEncounterHistoryRecord;
 import com.brs.backend.model.Encounter;
 import com.brs.backend.model.Player;
 import com.brs.backend.repositories.EncounterRepository;
+import com.brs.backend.services.EncounterService;
 import com.brs.backend.services.PlayerService;
 import com.brs.backend.services.ScoreHistoryService;
 import com.brs.backend.util.EncounterUtil;
@@ -44,6 +46,9 @@ public class EncounterController {
 
     @Autowired
     private ScoreHistoryService scoreHistoryService;
+
+    @Autowired
+    private EncounterService encounterService;
 
     @GetMapping("/encounters")
     private List<Encounter> getAllEncounters() {
@@ -97,6 +102,15 @@ public class EncounterController {
         }
 
         return "ok";
+    }
+
+    @GetMapping("/encounters-for-players")
+    public List<PlayerEncounterHistoryRecord> getEncountersForPlayers(@RequestParam(required = true) Integer teamAp1,
+                                                                      @RequestParam(required = false) Integer teamAp2,
+                                                                      @RequestParam(required = false) Integer teamBp1,
+                                                                      @RequestParam(required = false) Integer teamBp2
+                                        ) {
+        return encounterService.getPlayerEncounterHistory(teamAp1, teamAp2, teamBp1, teamBp2);
     }
 
     @PostMapping("/encounters/{date}/process")
