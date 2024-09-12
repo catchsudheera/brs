@@ -9,6 +9,7 @@ container_data_root: "{{ gv_container_data_root }}"
 brs_container_stack_location: "{{ gv_local_brs_user_home }}/.container-stack-brs"
 
 docker_network_name: "{{ gv_docker_network_name }}"
+brs_docker_compose_reload_systemd_on_calendar_cron: "{{ gv_docker_compose_reload_systemd_on_calendar_cron }}"
 
 # Mysql
 mysql_config_path: "{{ container_data_root }}/mysql/config"
