@@ -1,0 +1,35 @@
+spring:
+  application:
+    name: coordinator-backend
+
+
+chatbot: &commonChatBot
+  id: sample-id
+  token: bot-token
+
+openSlotGroup: &commonOpenSlotGroup
+  groupId: sample-id-open-slot
+
+adminGroup: &commonAdminGroup
+  groupId: sample-id-admin
+
+encounter-events-config:
+  encounterEvents:
+    - chatBot:
+        <<: *commonChatBot
+      memberGroup:
+        groupId: sample-id-1
+      openSlotGroup:
+        <<: *commonOpenSlotGroup
+      adminGroup:
+        <<: *commonAdminGroup
+      cron: "0 0 * * WED"
+    - chatBot:
+        <<: *commonChatBot
+      memberGroup:
+        groupId: sample-id-2
+      openSlotGroup:
+        <<: *commonOpenSlotGroup
+      adminGroup:
+        <<: *commonAdminGroup
+      cron: "0 0 * * MON"
