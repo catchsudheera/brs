@@ -5,26 +5,29 @@ spring:
 
 chatbot: &commonChatBot
   id: sample-id
-  token: bot-token
+  token: 6991917782:AAFInVjoiLXgHaRggVKd_LFqIVOmV4rY5bI
 
 openSlotGroup: &commonOpenSlotGroup
-  groupId: sample-id-open-slot
+  groupId: -4573540198
 
 adminGroup: &commonAdminGroup
-  groupId: sample-id-admin
+  groupId: -4542431431
 
 encounter-events-config:
   encounterEvents:
-    - chatBot:
+    - name: wednesday-badminton
+      chatBot:
         <<: *commonChatBot
       memberGroup:
-        groupId: sample-id-1
+        groupId: -4531367864
       openSlotGroup:
         <<: *commonOpenSlotGroup
       adminGroup:
         <<: *commonAdminGroup
       cron: "0 0 * * WED"
-    - chatBot:
+      totalSlots: 18
+    - name: monday-badminton
+      chatBot:
         <<: *commonChatBot
       memberGroup:
         groupId: sample-id-2
@@ -33,3 +36,4 @@ encounter-events-config:
       adminGroup:
         <<: *commonAdminGroup
       cron: "0 0 * * MON"
+      totalSlots: 18
