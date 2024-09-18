@@ -43,8 +43,8 @@ public class EloRankScoreCalculator implements RankScoreCalculator {
 
     @Override
     public void calculateAbsenteeScoreAndPersist(List<Player> players) {
-        // Demerit points chnaged to -30 from -10 in Sep, 2024
-        int demeritPoints = -30;
+        // Demerit points chnaged to -22 from -10 in Sep, 2024
+        int demeritPoints = -22;
 
         for (Player player : players) {
             scorePersister.updatePlayer(demeritPoints, -1, LocalDate.now(),player);
