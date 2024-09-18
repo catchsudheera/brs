@@ -33,7 +33,8 @@ public class EloRankScoreCalculator implements RankScoreCalculator {
         double team1WinExpected = 1 / (1 + Math.pow(10, ((team2AverageRankScore - team1AverageRankScore) / 480)));
         double team1WinActual = encounter.getTeam1SetPoints() > encounter.getTeam2SetPoints() ? 1 : 0;
 
-        double team1Score = BigDecimal.valueOf(40 * (team1WinActual - team1WinExpected)).setScale(2, RoundingMode.HALF_UP).doubleValue();
+        // K value lowered to 20 from 40 in Sep, 2024
+        double team1Score = BigDecimal.valueOf(20 * (team1WinActual - team1WinExpected)).setScale(2, RoundingMode.HALF_UP).doubleValue();
         double team2Score =  -1 * team1Score;
 
         scorePersister.persistScores(encounter.getId(), team1Score, team2Score);
@@ -42,7 +43,8 @@ public class EloRankScoreCalculator implements RankScoreCalculator {
 
     @Override
     public void calculateAbsenteeScoreAndPersist(List<Player> players) {
-        int demeritPoints = -10;
+        // Demerit points chnaged to -30 from -10 in Sep, 2024
+        int demeritPoints = -30;
 
         for (Player player : players) {
             scorePersister.updatePlayer(demeritPoints, -1, LocalDate.now(),player);
