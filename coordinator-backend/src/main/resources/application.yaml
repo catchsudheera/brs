@@ -1,6 +1,14 @@
 spring:
   application:
     name: coordinator-backend
+  datasource:
+    url: jdbc:mysql://localhost:3306/brs
+    username: brs_user
+    password: password
+  jpa:
+    hibernate:
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
 
 
 chatbot: &commonChatBot
