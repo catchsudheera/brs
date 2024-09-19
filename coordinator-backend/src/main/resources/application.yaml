@@ -10,6 +10,10 @@ spring:
       naming:
         physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
 
+aws:
+  api:
+    gateway:
+      resource-url: https://wzn6683ql5.execute-api.eu-central-1.amazonaws.com/prod
 
 chatbot: &commonChatBot
   id: sample-id

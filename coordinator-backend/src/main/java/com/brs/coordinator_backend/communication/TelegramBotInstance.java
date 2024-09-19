@@ -15,7 +15,9 @@ import com.pengrad.telegrambot.response.PollResponse;
 import com.pengrad.telegrambot.response.SendResponse;
 import kotlin.Pair;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.Arrays;
 
@@ -24,6 +26,8 @@ import java.util.Arrays;
 @Slf4j
 public class TelegramBotInstance implements ChatBotContract {
 
+    @Autowired
+    private RestTemplate restTemplate;
 
     @Override
     public Pair<Integer, String> createPoll(ChatBot sender, ChatGroup group, String pollSubject, String[] options) {
@@ -68,36 +72,10 @@ public class TelegramBotInstance implements ChatBotContract {
 
     @Override
     public void getPollState(ChatBot sender, ChatGroup group, String pollId) {
-//        log.info("Checking poll status for : {}", pollId);
-//        TelegramBot bot = new TelegramBot(sender.token());
-//
-//        Poll poll = null;
-//        int lastUpdate = 0;
-//        while (poll == null) {
-//            log.info(" -- Trying from last update id : {}", lastUpdate);
-//            GetUpdates request = new GetUpdates().limit(100).timeout(0); //.allowedUpdates("poll");
-//            if (lastUpdate > 0) {
-//                request = request.offset(lastUpdate + 1);
-//            }
-//            GetUpdatesResponse response = bot.execute(request);
-//            if (response.updates().isEmpty()) {
-//                break;
-//            }
-//
-//            for (Update update : response.updates()) {
-//                Poll thispoll = update.poll();
-//                if (thispoll != null && pollId.equals(thispoll.id())) {
-//                    poll = thispoll;
-//                    log.info("Found the poll for the chatId : {}", thispoll.id());
-//                    break;
-//                }
-//                lastUpdate = update.updateId();
-//            }
-//        }
-//
-//
-//        log.info("Poll : {}", poll);
-
+        // TODO configure following
+        // TODO Add DTO class for pollState
+        String pollStateStr = restTemplate.getForObject("https://wzn6683ql5.execute-api.eu-central-1.amazonaws.com/prod/telegram-poll-webhook-persist?pollId=" + pollId, String.class);
+        log.info("Poll state : {}", pollStateStr);
     }
 
     @Override
