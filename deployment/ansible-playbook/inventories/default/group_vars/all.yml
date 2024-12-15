@@ -6,11 +6,12 @@ gv_server_timezone: Europe/Amsterdam
 ansible_user: ubuntu
 gv_local_brs_user: brs-user
 gv_local_brs_uid: 1007
-gv_local_brs_group: home-guardian-server
+gv_local_brs_group: brs_group
 gv_local_brs_gid: 1007
 gv_local_brs_user_home: "/home/{{ gv_local_brs_user }}"
 
 gv_docker_network_name: brs-server-network
+gv_docker_compose_reload_systemd_on_calendar_cron: hourly
 
 # Storage location type. Options : [local, nfs]
 gv_storage_location_type: local
