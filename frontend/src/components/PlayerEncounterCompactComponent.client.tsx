@@ -65,8 +65,23 @@ const PlayerEncountersCompactComponent: React.FC<
     fetchEncounters();
   }, [playerId]);
 
-  if (loading) return <div>Loading...</div>;
-  if (error) return <div>Error: {error}</div>;
+  if (loading) return (
+    <div className="flex justify-center items-center min-h-[200px]">
+      <div className="loading loading-spinner loading-lg"></div>
+    </div>
+  );
+
+  if (error) return (
+    <div className="alert alert-error">
+      <span>Error: {error}</span>
+    </div>
+  );
+
+  const totalEncounters = Object.values(encountersByDate).flat().length;
+  const allEncounters = Object.values(encountersByDate).flat();
+  const wins = allEncounters.filter(e => e.playerTeamPoints > e.opponentTeamPoints).length;
+  const losses = totalEncounters - wins;
+  const winRate = totalEncounters > 0 ? (wins / totalEncounters * 100).toFixed(1) : '0';
 
   const renderTableRow = (encounter: Encounter) => {
     return (
@@ -118,58 +133,92 @@ const PlayerEncountersCompactComponent: React.FC<
 
   return (
     <div className='container mx-auto p-4'>
-      <h1 className='text-2xl font-bold text-center my-4'>
-        Encounters for {player ? capitalizeFirstLetter(player.name) : ''}
-      </h1>
-      {Object.entries(encountersByDate).map(([date, encounters], idx) => (
-        <Disclosure
-          key={date}
-          as='div'
-          className='mb-4'
-          defaultOpen={idx === 0}
-        >
-          {({ open }) => (
-            <>
-              <Disclosure.Button className='flex justify-between w-full px-4 py-2 text-sm font-medium text-left bg-gray-200 bg-opacity-50 rounded-lg hover:bg-gray-300 focus:outline-none focus-visible:ring focus-visible:ring-gray-500 focus-visible:ring-opacity-75'>
-                <span className='text-gray-700'>{date}</span>
-                {open ? renderSum(scoreSumByDate[date]) : null}
-                <ChevronUpIcon
-                  className={`${open ? 'transform rotate-180' : ''} w-5 h-5 text-gray-700`}
-                />
-              </Disclosure.Button>
-              <Disclosure.Panel className='px-4 pt-4 pb-2 text-sm text-gray-500'>
-                <div className='overflow-x-auto'>
-                  {/* Desktop Table View */}
-                  <table className='table w-full hidden md:table'>
-                    <thead>
-                      <tr>
-                        <th>Team 1</th>
-                        <th>Points</th>
-                        <th>Team 2</th>
-                        <th>Points</th>
-                        <th>Result</th>
-                        <th>Score</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {encounters.map((encounter) => renderTableRow(encounter))}
-                    </tbody>
-                  </table>
-                  {/* Mobile View */}
-                  <div className='md:hidden'>
-                    {encounters.map((encounter) => (
-                      <PlayerEncounterComponent
-                        key={encounter.encounterId}
-                        encounter={encounter}
-                      />
-                    ))}
+      {/* Title Section */}
+      <div className="mb-6 sm:mb-8 text-center">
+        <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-emerald-600 to-emerald-400 bg-clip-text text-transparent">
+          {player ? capitalizeFirstLetter(player.name) : 'Player'} History
+        </h1>
+        <p className="mt-2 text-sm sm:text-base text-gray-600 dark:text-gray-400">
+          Match history and performance statistics
+        </p>
+      </div>
+
+      {/* Stats Summary */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 mb-6 sm:mb-8">
+        <div className="stat bg-base-200 rounded-lg shadow-md p-2 sm:p-4">
+          <div className="stat-title text-xs sm:text-sm">Games</div>
+          <div className="stat-value text-lg sm:text-3xl">{totalEncounters}</div>
+        </div>
+        <div className="stat bg-base-200 rounded-lg shadow-md p-2 sm:p-4">
+          <div className="stat-title text-xs sm:text-sm">Wins</div>
+          <div className="stat-value text-lg sm:text-3xl text-success">{wins}</div>
+        </div>
+        <div className="stat bg-base-200 rounded-lg shadow-md p-2 sm:p-4">
+          <div className="stat-title text-xs sm:text-sm">Losses</div>
+          <div className="stat-value text-lg sm:text-3xl text-error">{losses}</div>
+        </div>
+        <div className="stat bg-base-200 rounded-lg shadow-md p-2 sm:p-4">
+          <div className="stat-title text-xs sm:text-sm">Win Rate</div>
+          <div className="stat-value text-lg sm:text-3xl">{winRate}%</div>
+        </div>
+      </div>
+
+      {/* Encounters by Date */}
+      <div className="space-y-2">
+        {Object.entries(encountersByDate).map(([date, encounters], idx) => (
+          <Disclosure
+            key={date}
+            as='div'
+            className='rounded-lg overflow-hidden'
+            defaultOpen={idx === 0}
+          >
+            {({ open }) => (
+              <>
+                <Disclosure.Button className='flex justify-between w-full px-4 py-3 text-sm font-medium text-left bg-base-200 hover:bg-base-300 transition-colors duration-150 focus:outline-none focus-visible:ring focus-visible:ring-emerald-500 focus-visible:ring-opacity-75'>
+                  <span className='font-semibold'>{date}</span>
+                  <div className="flex items-center space-x-4">
+                    {open && renderSum(scoreSumByDate[date])}
+                    <ChevronUpIcon
+                      className={`${
+                        open ? 'transform rotate-180' : ''
+                      } w-5 h-5 text-gray-500 transition-transform duration-150`}
+                    />
                   </div>
-                </div>
-              </Disclosure.Panel>
-            </>
-          )}
-        </Disclosure>
-      ))}
+                </Disclosure.Button>
+                <Disclosure.Panel className='bg-base-100 shadow-inner'>
+                  <div className='overflow-x-auto'>
+                    {/* Desktop Table View */}
+                    <table className='table w-full hidden md:table'>
+                      <thead className='bg-base-200'>
+                        <tr>
+                          <th className='font-semibold'>Team 1</th>
+                          <th className='font-semibold text-center'>Points</th>
+                          <th className='font-semibold'>Team 2</th>
+                          <th className='font-semibold text-center'>Points</th>
+                          <th className='font-semibold text-center'>Result</th>
+                          <th className='font-semibold text-center'>Score</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {encounters.map((encounter) => renderTableRow(encounter))}
+                      </tbody>
+                    </table>
+                    {/* Mobile View */}
+                    <div className='md:hidden'>
+                      {encounters.map((encounter) => (
+                        <PlayerEncounterComponent
+                          key={encounter.encounterId}
+                          encounter={encounter}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </Disclosure.Panel>
+              </>
+            )}
+          </Disclosure>
+        ))}
+      </div>
     </div>
   );
 };
