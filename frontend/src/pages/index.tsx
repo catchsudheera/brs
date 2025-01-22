@@ -2,12 +2,12 @@ import React from 'react';
 import Link from 'next/link';
 import RankingsComponent from '@/components/RankingsComponent.client';
 
-const Index = () => {
+const Home = () => {
   return (
-    <div className='flex flex-col items-center'>
+    <div className="container mx-auto p-4 min-h-screen">
       <RankingsComponent />
     </div>
   );
 };
 
-export default Index;
+export default Home;
