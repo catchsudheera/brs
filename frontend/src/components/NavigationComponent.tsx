@@ -1,11 +1,13 @@
 import { Fragment, useEffect, useState } from 'react';
 import { Disclosure, Menu, Transition } from '@headlessui/react';
-import { Bars3Icon, BellIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { Bars3Icon, BellIcon, XMarkIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
+import { usePlayerContext } from '@/contexts/PlayerContext';
+import { capitalizeFirstLetter } from '@/utils/string';
 
 const navigation = [
-  { name: 'Player Ranking', href: '/' },
+  { name: 'Ranking', href: '/' },
   { name: 'History', href: '/player-ranking-history' },
 ];
 
@@ -15,6 +17,7 @@ function classNames(...classes: (string | boolean)[]): string {
 
 const NavigationComponent = () => {
   const router = useRouter();
+  const { players } = usePlayerContext();
   const [theme, setTheme] = useState('emerald');
   const [isScrolled, setIsScrolled] = useState(false);
 
@@ -36,6 +39,10 @@ const NavigationComponent = () => {
     setTheme(theme === 'emerald' ? 'dark' : 'emerald');
   };
 
+  const isEncountersPage = () => {
+    return router.pathname.includes('/player') && router.pathname.includes('/encounters');
+  };
+
   return (
     <>
       {/* Placeholder div to prevent content jump when nav becomes fixed */}
@@ -44,8 +51,8 @@ const NavigationComponent = () => {
       <Disclosure as='nav' 
         className={`${
           isScrolled 
-            ? 'fixed top-0 left-0 right-0 animate-slideDown z-50' 
-            : 'relative'
+            ? 'fixed top-0 left-0 right-0 animate-slideDown z-[100]'
+            : 'relative z-[100]'
         } bg-gradient-to-r from-gray-900 to-gray-800 shadow-lg`}
       >
         {({ open }) => (
@@ -78,24 +85,76 @@ const NavigationComponent = () => {
                   </Link>
 
                   {/* Desktop navigation */}
-                  <div className='hidden sm:ml-8 sm:flex sm:items-center'>
-                    <div className='flex space-x-4'>
-                      {navigation.map((item) => (
-                        <Link
-                          key={item.name}
-                          href={item.href}
-                          className={classNames(
-                            router.pathname === item.href
-                              ? 'bg-emerald-600 text-white'
-                              : 'text-gray-300 hover:bg-gray-700 hover:text-white',
-                            'px-4 py-2 rounded-md text-sm font-medium transition duration-150'
-                          )}
-                          aria-current={router.pathname === item.href ? 'page' : undefined}
-                        >
-                          {item.name}
-                        </Link>
-                      ))}
-                    </div>
+                  <div className='hidden sm:flex sm:ml-6 sm:items-center space-x-4'>
+                    <Link
+                      href={navigation[0].href}
+                      className={classNames(
+                        router.pathname === navigation[0].href
+                          ? 'bg-emerald-600 text-white'
+                          : 'text-gray-300 hover:bg-gray-700 hover:text-white',
+                        'px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150'
+                      )}
+                    >
+                      {navigation[0].name}
+                    </Link>
+
+                    {/* Player Encounters Dropdown */}
+                    <Menu as="div" className="relative">
+                      <Menu.Button 
+                        className={classNames(
+                          isEncountersPage()
+                            ? 'bg-emerald-600 text-white'
+                            : 'text-gray-300 hover:bg-gray-700 hover:text-white',
+                          'px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150 inline-flex items-center'
+                        )}
+                      >
+                        Encounters
+                        <ChevronDownIcon className="ml-2 -mr-1 h-5 w-5" aria-hidden="true" />
+                      </Menu.Button>
+                      <Transition
+                        as={Fragment}
+                        enter="transition ease-out duration-100"
+                        enterFrom="transform opacity-0 scale-95"
+                        enterTo="transform opacity-100 scale-100"
+                        leave="transition ease-in duration-75"
+                        leaveFrom="transform opacity-100 scale-100"
+                        leaveTo="transform opacity-0 scale-95"
+                      >
+                        <Menu.Items className="absolute right-0 mt-2 w-56 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none divide-y divide-gray-100 max-h-96 overflow-y-auto z-[60]">
+                          <div className="py-1">
+                            {players
+                              .sort((a, b) => a.name.localeCompare(b.name))
+                              .map((player) => (
+                                <Menu.Item key={player.id}>
+                                  {({ active }) => (
+                                    <Link
+                                      href={`/player/${player.id}/encounters`}
+                                      className={classNames(
+                                        active ? 'bg-gray-100 text-gray-900' : 'text-gray-700',
+                                        'block px-4 py-2 text-sm hover:text-emerald-600 transition-colors duration-150'
+                                      )}
+                                    >
+                                      {capitalizeFirstLetter(player.name)}
+                                    </Link>
+                                  )}
+                                </Menu.Item>
+                              ))}
+                          </div>
+                        </Menu.Items>
+                      </Transition>
+                    </Menu>
+
+                    <Link
+                      href={navigation[1].href}
+                      className={classNames(
+                        router.pathname === navigation[1].href
+                          ? 'bg-emerald-600 text-white'
+                          : 'text-gray-300 hover:bg-gray-700 hover:text-white',
+                        'px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150'
+                      )}
+                    >
+                      {navigation[1].name}
+                    </Link>
                   </div>
                 </div>
 
@@ -129,25 +188,73 @@ const NavigationComponent = () => {
             </div>
 
             {/* Mobile menu panel */}
-            <Disclosure.Panel className='sm:hidden'>
-              <div className='px-2 pt-2 pb-3 space-y-1'>
-                {navigation.map((item) => (
+            <Disclosure.Panel className='sm:hidden fixed top-16 left-0 right-0 bottom-0 bg-gray-800 overflow-y-auto z-[90]'>
+              {({ close }) => (
+                <div className='px-2 pt-2 pb-3 space-y-1'>
                   <Disclosure.Button
-                    key={item.name}
                     as={Link}
-                    href={item.href}
+                    href={navigation[0].href}
                     className={classNames(
-                      router.pathname === item.href
+                      router.pathname === navigation[0].href
                         ? 'bg-emerald-600 text-white'
                         : 'text-gray-300 hover:bg-gray-700 hover:text-white',
-                      'block px-3 py-2 rounded-md text-base font-medium transition duration-150'
+                      'block px-3 py-2 rounded-md text-base font-medium'
                     )}
-                    aria-current={router.pathname === item.href ? 'page' : undefined}
                   >
-                    {item.name}
+                    {navigation[0].name}
                   </Disclosure.Button>
-                ))}
-              </div>
+
+                  {/* Mobile Player Encounters Submenu */}
+                  <Disclosure>
+                    {({ open }) => (
+                      <>
+                        <Disclosure.Button 
+                          className={classNames(
+                            isEncountersPage()
+                              ? 'bg-emerald-600 text-white'
+                              : 'text-gray-300 hover:bg-gray-700 hover:text-white',
+                            'flex w-full justify-between px-3 py-2 text-base font-medium rounded-md'
+                          )}
+                        >
+                          <span>Encounters</span>
+                          <ChevronDownIcon
+                            className={`${
+                              open ? 'transform rotate-180' : ''
+                            } w-5 h-5 text-gray-400`}
+                          />
+                        </Disclosure.Button>
+                        <Disclosure.Panel className="px-4 pt-2 pb-2 space-y-1">
+                          {players
+                            .sort((a, b) => a.name.localeCompare(b.name))
+                            .map((player) => (
+                              <Link
+                                key={player.id}
+                                href={`/player/${player.id}/encounters`}
+                                className="block px-3 py-2 text-base text-gray-300 hover:bg-gray-700 hover:text-white rounded-md"
+                                onClick={() => close()}
+                              >
+                                {capitalizeFirstLetter(player.name)}
+                              </Link>
+                            ))}
+                        </Disclosure.Panel>
+                      </>
+                    )}
+                  </Disclosure>
+
+                  <Disclosure.Button
+                    as={Link}
+                    href={navigation[1].href}
+                    className={classNames(
+                      router.pathname === navigation[1].href
+                        ? 'bg-emerald-600 text-white'
+                        : 'text-gray-300 hover:bg-gray-700 hover:text-white',
+                      'block px-3 py-2 rounded-md text-base font-medium'
+                    )}
+                  >
+                    {navigation[1].name}
+                  </Disclosure.Button>
+                </div>
+              )}
             </Disclosure.Panel>
           </>
         )}
