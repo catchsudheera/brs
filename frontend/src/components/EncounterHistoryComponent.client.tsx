@@ -8,7 +8,7 @@ const EncounterHistoryComponent = () => {
   const [input4, setInput4] = useState(0);
   const [result, setResult] = useState(null);
 
-  const handleSubmit = async (event) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const res = await fetch(`https://brs.aragorn-media-server.duckdns.org/encounters-for-players?teamAp1=${input1}&teamAp2=${input2}&teamBp1=${input3}&teamBp2=${input4}`);
     const data = await res.json();
