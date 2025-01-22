@@ -194,93 +194,111 @@ const EncounterHistoryComponent = () => {
               </tr>
             </thead>
             <tbody>
-              {encounters.map((encounter) => (
-                <tr 
-                  key={encounter.encounterId}
-                  className="hover:bg-base-200 transition-colors duration-150"
-                >
-                  <td className="whitespace-nowrap">
-                    {new Date(encounter.encounterDate).toLocaleDateString()}
-                  </td>
-                  <td className={encounter.playerTeamPoints > encounter.opponentTeamPoints ? 'bg-green-100 dark:bg-green-900/30' : 'bg-red-100 dark:bg-red-900/30'}>
-                    {encounter.playerTeam
-                      .map(player => capitalizeFirstLetter(player.playerName))
-                      .join(', ')}
-                  </td>
-                  <td className="text-center whitespace-nowrap">
-                    {encounter.playerTeamPoints} - {encounter.opponentTeamPoints}
-                  </td>
-                  <td className={encounter.playerTeamPoints < encounter.opponentTeamPoints ? 'bg-green-100 dark:bg-green-900/30' : 'bg-red-100 dark:bg-red-900/30'}>
-                    {encounter.opponentTeam
-                      .map(player => capitalizeFirstLetter(player.playerName))
-                      .join(', ')}
-                  </td>
-                  <td className="text-center">
-                    <span 
-                      className={`font-medium ${
-                        encounter.encounterScore > 0 ? 'text-success' : 'text-error'
-                      }`}
-                    >
-                      {encounter.encounterScore > 0 ? '+' : ''}
-                      {encounter.encounterScore.toFixed(2)}
-                    </span>
-                  </td>
-                </tr>
-              ))}
+              {encounters.map((encounter) => {
+                const isWin = encounter.playerTeamPoints > encounter.opponentTeamPoints;
+                return (
+                  <tr 
+                    key={encounter.encounterId}
+                    className="hover:bg-base-200 transition-colors duration-150"
+                  >
+                    <td className="whitespace-nowrap">
+                      {new Date(encounter.encounterDate).toLocaleDateString()}
+                    </td>
+                    <td className={isWin ? 'bg-green-100 dark:bg-green-900/30' : 'bg-red-100 dark:bg-red-900/30'}>
+                      <div className="flex items-center">
+                        <span className={`mr-2 ${isWin ? 'text-success' : 'text-error'}`}>
+                          {isWin ? '✅' : '❌'}
+                        </span>
+                        {encounter.playerTeam
+                          .map(player => capitalizeFirstLetter(player.playerName))
+                          .join(', ')}
+                      </div>
+                    </td>
+                    <td className="text-center whitespace-nowrap">
+                      {encounter.playerTeamPoints} - {encounter.opponentTeamPoints}
+                    </td>
+                    <td className={!isWin ? 'bg-green-100 dark:bg-green-900/30' : 'bg-red-100 dark:bg-red-900/30'}>
+                      <div className="flex items-center">
+                        <span className={`mr-2 ${!isWin ? 'text-success' : 'text-error'}`}>
+                          {!isWin ? '✅' : '❌'}
+                        </span>
+                        {encounter.opponentTeam
+                          .map(player => capitalizeFirstLetter(player.playerName))
+                          .join(', ')}
+                      </div>
+                    </td>
+                    <td className="text-center">
+                      <span 
+                        className={`font-medium ${
+                          encounter.encounterScore > 0 ? 'text-success' : 'text-error'
+                        }`}
+                      >
+                        {encounter.encounterScore > 0 ? '+' : ''}
+                        {encounter.encounterScore.toFixed(2)}
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
 
         {/* Mobile Card View */}
         <div className="md:hidden space-y-4">
-          {encounters.map((encounter) => (
-            <div 
-              key={encounter.encounterId}
-              className="bg-base-200 rounded-lg p-4 space-y-2"
-            >
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-gray-600">
-                  {new Date(encounter.encounterDate).toLocaleDateString()}
-                </span>
-                <span 
-                  className={`font-medium ${
-                    encounter.encounterScore > 0 ? 'text-success' : 'text-error'
-                  }`}
-                >
-                  {encounter.encounterScore > 0 ? '+' : ''}
-                  {encounter.encounterScore.toFixed(2)}
-                </span>
-              </div>
+          {encounters.map((encounter) => {
+            const isWin = encounter.playerTeamPoints > encounter.opponentTeamPoints;
+            return (
+              <div 
+                key={encounter.encounterId}
+                className="bg-base-200 rounded-lg p-4 space-y-2"
+              >
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-gray-600">
+                    {new Date(encounter.encounterDate).toLocaleDateString()}
+                  </span>
+                  <span 
+                    className={`font-medium ${
+                      encounter.encounterScore > 0 ? 'text-success' : 'text-error'
+                    }`}
+                  >
+                    {encounter.encounterScore > 0 ? '+' : ''}
+                    {encounter.encounterScore.toFixed(2)}
+                  </span>
+                </div>
 
-              <div className="grid grid-cols-3 gap-2 items-center">
-                <div className={`col-span-1 rounded p-2 ${
-                  encounter.playerTeamPoints > encounter.opponentTeamPoints 
-                    ? 'bg-green-100 dark:bg-green-900/30' 
-                    : 'bg-red-100 dark:bg-red-900/30'
-                }`}>
-                  <div className="font-medium">
-                    {encounter.playerTeam
-                      .map(player => capitalizeFirstLetter(player.playerName))
-                      .join(', ')}
+                <div className="grid grid-cols-3 gap-2 items-center">
+                  <div className={`col-span-1 rounded p-2 ${
+                    isWin ? 'bg-green-100 dark:bg-green-900/30' : 'bg-red-100 dark:bg-red-900/30'
+                  }`}>
+                    <div className="font-medium">
+                      <span className={`mr-2 ${isWin ? 'text-success' : 'text-error'}`}>
+                        {isWin ? '✅' : '❌'}
+                      </span>
+                      {encounter.playerTeam
+                        .map(player => capitalizeFirstLetter(player.playerName))
+                        .join(', ')}
+                    </div>
                   </div>
-                </div>
-                <div className="col-span-1 text-center font-bold">
-                  {encounter.playerTeamPoints} - {encounter.opponentTeamPoints}
-                </div>
-                <div className={`col-span-1 text-right rounded p-2 ${
-                  encounter.playerTeamPoints < encounter.opponentTeamPoints 
-                    ? 'bg-green-100 dark:bg-green-900/30' 
-                    : 'bg-red-100 dark:bg-red-900/30'
-                }`}>
-                  <div className="font-medium">
-                    {encounter.opponentTeam
-                      .map(player => capitalizeFirstLetter(player.playerName))
-                      .join(', ')}
+                  <div className="col-span-1 text-center font-bold">
+                    {encounter.playerTeamPoints} - {encounter.opponentTeamPoints}
+                  </div>
+                  <div className={`col-span-1 text-right rounded p-2 ${
+                    !isWin ? 'bg-green-100 dark:bg-green-900/30' : 'bg-red-100 dark:bg-red-900/30'
+                  }`}>
+                    <div className="font-medium">
+                      <span className={`mr-2 ${!isWin ? 'text-success' : 'text-error'}`}>
+                        {!isWin ? '✅' : '❌'}
+                      </span>
+                      {encounter.opponentTeam
+                        .map(player => capitalizeFirstLetter(player.playerName))
+                        .join(', ')}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </>
     );
