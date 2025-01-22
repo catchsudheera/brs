@@ -7,6 +7,7 @@ import { Player } from '@/types/player';
 import PlayerEncounterComponent from './PlayerEncounterComponent';
 import { Disclosure } from '@headlessui/react';
 import { ChevronUpIcon } from '@heroicons/react/24/solid';
+import Link from 'next/link';
 
 interface PlayerEncountersComponentProps {
   playerId: string | string[] | undefined;
@@ -133,6 +134,22 @@ const PlayerEncountersCompactComponent: React.FC<
 
   return (
     <div className='container mx-auto p-4'>
+      {/* Breadcrumbs */}
+      <div className="text-sm breadcrumbs mb-6">
+        <ul>
+          <li>
+            <Link href="/" className="text-gray-600 hover:text-emerald-600">
+              Rankings
+            </Link>
+          </li>
+          <li>
+            <span className="text-emerald-600">
+              {player ? `${capitalizeFirstLetter(player.name)}'s` : 'Player\'s'} History
+            </span>
+          </li>
+        </ul>
+      </div>
+
       {/* Title Section */}
       <div className="mb-6 sm:mb-8 text-center">
         <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-emerald-600 to-emerald-400 bg-clip-text text-transparent">
