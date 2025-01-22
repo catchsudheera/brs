@@ -8,7 +8,9 @@ import { capitalizeFirstLetter } from '@/utils/string';
 
 const navigation = [
   { name: 'Ranking', href: '/' },
+  { name: 'Encounters', href: '#' },
   { name: 'History', href: '/player-ranking-history' },
+  { name: 'Encounter History', href: '/encounter-history' },
 ];
 
 function classNames(...classes: (string | boolean)[]): string {
@@ -144,17 +146,21 @@ const NavigationComponent = () => {
                       </Transition>
                     </Menu>
 
-                    <Link
-                      href={navigation[1].href}
-                      className={classNames(
-                        router.pathname === navigation[1].href
-                          ? 'bg-emerald-600 text-white'
-                          : 'text-gray-300 hover:bg-gray-700 hover:text-white',
-                        'px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150'
-                      )}
-                    >
-                      {navigation[1].name}
-                    </Link>
+                    {/* Remaining navigation items */}
+                    {navigation.slice(2).map((item) => (
+                      <Link
+                        key={item.name}
+                        href={item.href}
+                        className={classNames(
+                          router.pathname === item.href
+                            ? 'bg-emerald-600 text-white'
+                            : 'text-gray-300 hover:bg-gray-700 hover:text-white',
+                          'px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150'
+                        )}
+                      >
+                        {item.name}
+                      </Link>
+                    ))}
                   </div>
                 </div>
 
@@ -241,18 +247,22 @@ const NavigationComponent = () => {
                     )}
                   </Disclosure>
 
-                  <Disclosure.Button
-                    as={Link}
-                    href={navigation[1].href}
-                    className={classNames(
-                      router.pathname === navigation[1].href
-                        ? 'bg-emerald-600 text-white'
-                        : 'text-gray-300 hover:bg-gray-700 hover:text-white',
-                      'block px-3 py-2 rounded-md text-base font-medium'
-                    )}
-                  >
-                    {navigation[1].name}
-                  </Disclosure.Button>
+                  {/* Remaining navigation items */}
+                  {navigation.slice(2).map((item) => (
+                    <Disclosure.Button
+                      key={item.name}
+                      as={Link}
+                      href={item.href}
+                      className={classNames(
+                        router.pathname === item.href
+                          ? 'bg-emerald-600 text-white'
+                          : 'text-gray-300 hover:bg-gray-700 hover:text-white',
+                        'block px-3 py-2 rounded-md text-base font-medium'
+                      )}
+                    >
+                      {item.name}
+                    </Disclosure.Button>
+                  ))}
                 </div>
               )}
             </Disclosure.Panel>
