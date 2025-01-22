@@ -39,31 +39,31 @@ const RankingsComponent = () => {
   return (
     <div className='container mx-auto p-4'>
       {/* Title Section */}
-      <div className="mb-8 text-center">
-        <h1 className="text-4xl font-bold bg-gradient-to-r from-emerald-600 to-emerald-400 bg-clip-text text-transparent">
+      <div className="mb-6 sm:mb-8 text-center">
+        <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-emerald-600 to-emerald-400 bg-clip-text text-transparent">
           Player Rankings
         </h1>
-        <p className="mt-2 text-gray-600 dark:text-gray-400">
+        <p className="mt-2 text-sm sm:text-base text-gray-600 dark:text-gray-400">
           Current standings of all active players
         </p>
       </div>
 
-      {/* Stats Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-        <div className="stat bg-base-200 rounded-lg shadow-md">
-          <div className="stat-title">Total Players</div>
-          <div className="stat-value">{players.length}</div>
+      {/* Stats Summary - Optimized for mobile */}
+      <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-6 sm:mb-8">
+        <div className="stat bg-base-200 rounded-lg shadow-md p-2 sm:p-4">
+          <div className="stat-title text-xs sm:text-sm">Players</div>
+          <div className="stat-value text-lg sm:text-3xl">{players.length}</div>
         </div>
-        <div className="stat bg-base-200 rounded-lg shadow-md">
-          <div className="stat-title">Top Score</div>
-          <div className="stat-value">
-            {Math.max(...players.map(p => p.rankScore)).toFixed(2)}
+        <div className="stat bg-base-200 rounded-lg shadow-md p-2 sm:p-4">
+          <div className="stat-title text-xs sm:text-sm">Top Score</div>
+          <div className="stat-value text-lg sm:text-3xl">
+            {Math.max(...players.map(p => p.rankScore)).toFixed(1)}
           </div>
         </div>
-        <div className="stat bg-base-200 rounded-lg shadow-md">
-          <div className="stat-title">Average Score</div>
-          <div className="stat-value">
-            {(players.reduce((acc, p) => acc + p.rankScore, 0) / players.length).toFixed(2)}
+        <div className="stat bg-base-200 rounded-lg shadow-md p-2 sm:p-4">
+          <div className="stat-title text-xs sm:text-sm">Average</div>
+          <div className="stat-value text-lg sm:text-3xl">
+            {(players.reduce((acc, p) => acc + p.rankScore, 0) / players.length).toFixed(1)}
           </div>
         </div>
       </div>
