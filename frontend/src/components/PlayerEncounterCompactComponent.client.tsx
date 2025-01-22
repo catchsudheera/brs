@@ -153,7 +153,7 @@ const PlayerEncountersCompactComponent: React.FC<
       {/* Title Section */}
       <div className="mb-6 sm:mb-8 text-center">
         <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-emerald-600 to-emerald-400 bg-clip-text text-transparent">
-          {player ? capitalizeFirstLetter(player.name) : 'Player'} History
+          {player ? `${capitalizeFirstLetter(player.name)}'s` : 'Player\'s'} History
         </h1>
         <p className="mt-2 text-sm sm:text-base text-gray-600 dark:text-gray-400">
           Match history and performance statistics
