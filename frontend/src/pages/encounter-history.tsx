@@ -3,7 +3,7 @@ import EncounterHistoryComponent from '@/components/EncounterHistoryComponent.cl
 
 const EncounterHistoryPage = () => {
   return (
-    <div>
+    <div className="container mx-auto p-4 min-h-screen">
       <EncounterHistoryComponent />
     </div>
   );
