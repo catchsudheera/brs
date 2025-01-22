@@ -19,6 +19,7 @@ const renderTeamList = (team: EncounterPlayer[]) =>
 const PlayerEncounterComponent: React.FC<PlayerEncounterComponentProps> = ({
   encounter,
 }) => {
+  const isWin = encounter.playerTeamPoints > encounter.opponentTeamPoints;
   const scoreColorClass =
     encounter.encounterScore < 0 ? 'text-red-500' : 'text-green-500';
 
@@ -26,58 +27,72 @@ const PlayerEncounterComponent: React.FC<PlayerEncounterComponentProps> = ({
     playerPoints: number,
     opponentPoints: number,
   ) => {
-    return playerPoints > opponentPoints ? 'bg-green-100' : 'bg-red-100';
+    return playerPoints > opponentPoints ? 'bg-green-100 dark:bg-green-900/30' : 'bg-red-100 dark:bg-red-900/30';
   };
 
   return (
-    <div className='mb-8 overflow-x-auto'>
-      <div className='grid grid-cols-1 md:grid-cols-3 gap-4 items-center text-center'>
-        <div className={`font-bold text-lg lg:text-xl ${scoreColorClass}`}>
-          Score: {encounter.encounterScore > 0 ? '+' : '-'}
-          {Math.abs(encounter.encounterScore)}
+    <div className="p-4">
+      <div className="flex justify-between items-center mb-2">
+        <div className="flex items-center">
+          <span className={`mr-2 ${isWin ? 'text-success' : 'text-error'}`}>
+            {isWin ? '✅' : '❌'}
+          </span>
+          <span>{isWin ? 'Won' : 'Lost'}</span>
         </div>
+        <span
+          className={`font-bold ${
+            encounter.encounterScore > 0 ? 'text-green-600' : 'text-red-600'
+          }`}
+        >
+          {encounter.encounterScore > 0 ? '+' : '-'}
+          {Math.abs(encounter.encounterScore)}
+        </span>
       </div>
-      <table className='table'>
-        <thead>
-          <tr>
-            <th className='px-4 py-2'>Players</th>
-            <th className='px-4 py-2'>Score</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr
-            className={determineRowBackground(
-              encounter.playerTeamPoints,
-              encounter.opponentTeamPoints,
-            )}
-          >
-            <td className='border px-4 py-2'>
-              {renderTeamList(encounter.playerTeam)}
-            </td>
-            <td className='border px-4 py-2 text-center'>
-              {encounter.playerTeamPoints}
-            </td>
-          </tr>
-          <tr className='bg-gray-100'>
-            <td className='border px-4 py-2 text-center' colSpan={2}>
-              vs
-            </td>
-          </tr>
-          <tr
-            className={determineRowBackground(
-              encounter.opponentTeamPoints,
-              encounter.playerTeamPoints,
-            )}
-          >
-            <td className='border px-4 py-2'>
-              {renderTeamList(encounter.opponentTeam)}
-            </td>
-            <td className='border px-4 py-2 text-center'>
-              {encounter.opponentTeamPoints}
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      <div className='mb-8 overflow-x-auto'>
+        <div className='grid grid-cols-1 md:grid-cols-3 gap-4 items-center text-center'>
+          <div className={`font-bold text-lg lg:text-xl ${scoreColorClass}`}>
+            Score: {encounter.encounterScore > 0 ? '+' : '-'}
+            {Math.abs(encounter.encounterScore)}
+          </div>
+        </div>
+        <table className='table'>
+          <thead>
+            <tr>
+              <th className='px-4 py-2'>Players</th>
+              <th className='px-4 py-2'>Score</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td className={determineRowBackground(
+                encounter.playerTeamPoints,
+                encounter.opponentTeamPoints,
+              )}>
+                {renderTeamList(encounter.playerTeam)}
+              </td>
+              <td className='border px-4 py-2 text-center'>
+                {encounter.playerTeamPoints}
+              </td>
+            </tr>
+            <tr className='bg-gray-100'>
+              <td className='border px-4 py-2 text-center' colSpan={2}>
+                vs
+              </td>
+            </tr>
+            <tr>
+              <td className={determineRowBackground(
+                encounter.opponentTeamPoints,
+                encounter.playerTeamPoints,
+              )}>
+                {renderTeamList(encounter.opponentTeam)}
+              </td>
+              <td className='border px-4 py-2 text-center'>
+                {encounter.opponentTeamPoints}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };

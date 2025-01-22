@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import axios from 'axios';
 import { EncountersResponse, Encounter } from '@/types/encounter';
 import { capitalizeFirstLetter, groupBy, sumBy } from '@/utils/string';
@@ -85,31 +85,42 @@ const PlayerEncountersCompactComponent: React.FC<
   const winRate = totalEncounters > 0 ? (wins / totalEncounters * 100).toFixed(1) : '0';
 
   const renderTableRow = (encounter: Encounter) => {
+    const isWin = encounter.playerTeamPoints > encounter.opponentTeamPoints;
     return (
       <tr
         key={encounter.encounterId}
-        className={
-          encounter.playerTeamPoints > encounter.opponentTeamPoints
-            ? 'bg-green-100'
-            : 'bg-red-100'
-        }
+        className="hover:bg-base-200 transition-colors duration-150"
       >
-        <td>
-          {encounter.playerTeam
-            .map((player) => capitalizeFirstLetter(player.playerName))
-            .join(', ')}
+        <td className="whitespace-nowrap">
+          {new Date(encounter.encounterDate).toLocaleDateString()}
         </td>
-        <td>{encounter.playerTeamPoints}</td>
-        <td>
-          {encounter.opponentTeam
-            .map((player) => capitalizeFirstLetter(player.playerName))
-            .join(', ')}
+        <td className={isWin ? 'bg-green-100 dark:bg-green-900/30' : 'bg-red-100 dark:bg-red-900/30'}>
+          <div className="flex items-center">
+            <span className={`mr-2 ${isWin ? 'text-success' : 'text-error'}`}>
+              {isWin ? '✅' : '❌'}
+            </span>
+            {encounter.playerTeam
+              .map((player) => capitalizeFirstLetter(player.playerName))
+              .join(', ')}
+          </div>
         </td>
-        <td>{encounter.opponentTeamPoints}</td>
-        <td>
-          {encounter.playerTeamPoints > encounter.opponentTeamPoints
-            ? 'Won'
-            : 'Lost'}
+        <td className="text-center whitespace-nowrap">
+          {encounter.playerTeamPoints} - {encounter.opponentTeamPoints}
+        </td>
+        <td className={!isWin ? 'bg-green-100 dark:bg-green-900/30' : 'bg-red-100 dark:bg-red-900/30'}>
+          <div className="flex items-center">
+            <span className={`mr-2 ${!isWin ? 'text-success' : 'text-error'}`}>
+              {!isWin ? '✅' : '❌'}
+            </span>
+            {encounter.opponentTeam
+              .map((player) => capitalizeFirstLetter(player.playerName))
+              .join(', ')}
+          </div>
+        </td>
+        <td className="text-center">
+          <span className={isWin ? 'text-success' : 'text-error'}>
+            {isWin ? 'Won' : 'Lost'}
+          </span>
         </td>
         <td
           className={`font-bold ${encounter.encounterScore > 0 ? 'text-green-600' : 'text-red-600'}`}
@@ -132,6 +143,17 @@ const PlayerEncountersCompactComponent: React.FC<
     );
   };
 
+  const renderRankChange = (currentRank: number, previousRank: number) => {
+    const change = previousRank - currentRank;
+    if (change > 0) {
+      return <span className='text-green-500 ml-2'>(▲ {Math.abs(change)})</span>;
+    } else if (change < 0) {
+      return <span className='text-red-500 ml-2'>(▼ {Math.abs(change)})</span>;
+    } else {
+      return <span className='text-gray-500 ml-2'>(=)</span>;
+    }
+  };
+
   return (
     <div className='container mx-auto p-4'>
       {/* Breadcrumbs */}
@@ -152,6 +174,15 @@ const PlayerEncountersCompactComponent: React.FC<
 
       {/* Title Section */}
       <div className="mb-6 sm:mb-8 text-center">
+        <div className="flex items-center justify-center gap-2 mb-2">
+          {player && (
+            <div className="flex items-center bg-base-200 px-4 py-2 rounded-lg shadow-sm">
+              <span className="text-gray-600 mr-1">Rank</span>
+              <span className="text-2xl font-bold text-emerald-600">#{player.playerRank}</span>
+              {renderRankChange(player.playerRank, player.previousRank)}
+            </div>
+          )}
+        </div>
         <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-emerald-600 to-emerald-400 bg-clip-text text-transparent">
           {player ? `${capitalizeFirstLetter(player.name)}'s` : 'Player\'s'} History
         </h1>
