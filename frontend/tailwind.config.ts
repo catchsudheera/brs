@@ -14,7 +14,17 @@ const config: Config = {
       xl: '1280px',
       '2xl': '1536px',
     },
-    extend: {},
+    extend: {
+      keyframes: {
+        slideDown: {
+          '0%': { transform: 'translateY(-100%)' },
+          '100%': { transform: 'translateY(0)' },
+        },
+      },
+      animation: {
+        slideDown: 'slideDown 0.3s ease-in-out',
+      },
+    },
   },
   plugins: [require('daisyui')],
   daisyui: {
