@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { usePlayerContext } from '@/contexts/PlayerContext';
 import { capitalizeFirstLetter } from '@/utils/string';
 
@@ -20,11 +20,110 @@ const EncounterHistoryComponent = () => {
   const [teamB2, setTeamB2] = useState<number>(0);
   const [result, setResult] = useState<Encounter[] | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [searchA1, setSearchA1] = useState('');
+  const [searchA2, setSearchA2] = useState('');
+  const [searchB1, setSearchB1] = useState('');
+  const [searchB2, setSearchB2] = useState('');
+  const [dropdownOpen, setDropdownOpen] = useState('');
+  const resultsRef = useRef<HTMLDivElement>(null);
 
   const sortedPlayers = useMemo(() => 
     [...players].sort((a, b) => a.name.localeCompare(b.name)),
     [players]
   );
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (!(event.target as Element).closest('.dropdown-container')) {
+        setDropdownOpen('');
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const getFilteredPlayers = (search: string) => {
+    return sortedPlayers.filter(player => 
+      player.name.toLowerCase().includes(search.toLowerCase())
+    );
+  };
+
+  const renderCombobox = (
+    value: number,
+    onChange: (value: number) => void,
+    search: string,
+    setSearch: (value: string) => void,
+    id: string,
+    required: boolean = false
+  ) => {
+    const selectedPlayer = sortedPlayers.find(p => p.id === value);
+    const filteredPlayers = getFilteredPlayers(search);
+
+    return (
+      <div className="relative dropdown-container">
+        <div 
+          className={`select select-bordered w-full flex items-center justify-between cursor-pointer ${
+            dropdownOpen === id ? 'select-active' : ''
+          }`}
+          onClick={() => setDropdownOpen(prev => prev === id ? '' : id)}
+        >
+          <span className="block truncate">
+            {selectedPlayer ? capitalizeFirstLetter(selectedPlayer.name) : 'Select player...'}
+          </span>
+          <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
+            <svg className="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M10 3a1 1 0 01.707.293l3 3a1 1 0 01-1.414 1.414L10 5.414 7.707 7.707a1 1 0 01-1.414-1.414l3-3A1 1 0 0110 3zm-3.707 9.293a1 1 0 011.414 0L10 14.586l2.293-2.293a1 1 0 011.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
+            </svg>
+          </span>
+        </div>
+
+        {dropdownOpen === id && (
+          <div className="absolute z-10 mt-1 w-full rounded-md bg-base-100 shadow-lg">
+            <div className="p-2">
+              <input
+                type="text"
+                className="input input-bordered w-full"
+                placeholder="Search players..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                onClick={(e) => e.stopPropagation()}
+                autoFocus
+              />
+            </div>
+            <ul className="max-h-60 overflow-auto py-1">
+              <li
+                className="px-3 py-2 hover:bg-base-200 cursor-pointer"
+                onClick={() => {
+                  onChange(0);
+                  setDropdownOpen('');
+                  setSearch('');
+                }}
+              >
+                Select player...
+              </li>
+              {filteredPlayers.map((player) => (
+                <li
+                  key={player.id}
+                  className={`px-3 py-2 hover:bg-base-200 cursor-pointer ${
+                    player.id === value ? 'bg-base-200' : ''
+                  }`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onChange(player.id);
+                    setDropdownOpen('');
+                    setSearch('');
+                  }}
+                >
+                  {capitalizeFirstLetter(player.name)}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+    );
+  };
 
   // Validation for duplicate players
   const getValidationError = () => {
@@ -53,9 +152,17 @@ const EncounterHistoryComponent = () => {
       );
       const data = await res.json();
       setResult(data);
+      
+      // Add small delay to ensure the results are rendered
+      setTimeout(() => {
+        resultsRef.current?.scrollIntoView({ 
+          behavior: 'smooth',
+          block: 'start'
+        });
+      }, 100);
+      
     } catch (error) {
       console.error('Error fetching encounters:', error);
-      // Optionally add error handling here
     } finally {
       setIsLoading(false);
     }
@@ -95,7 +202,7 @@ const EncounterHistoryComponent = () => {
                   <td className="whitespace-nowrap">
                     {new Date(encounter.encounterDate).toLocaleDateString()}
                   </td>
-                  <td>
+                  <td className={encounter.playerTeamPoints > encounter.opponentTeamPoints ? 'bg-green-100 dark:bg-green-900/30' : 'bg-red-100 dark:bg-red-900/30'}>
                     {encounter.playerTeam
                       .map(player => capitalizeFirstLetter(player.playerName))
                       .join(', ')}
@@ -103,7 +210,7 @@ const EncounterHistoryComponent = () => {
                   <td className="text-center whitespace-nowrap">
                     {encounter.playerTeamPoints} - {encounter.opponentTeamPoints}
                   </td>
-                  <td>
+                  <td className={encounter.playerTeamPoints < encounter.opponentTeamPoints ? 'bg-green-100 dark:bg-green-900/30' : 'bg-red-100 dark:bg-red-900/30'}>
                     {encounter.opponentTeam
                       .map(player => capitalizeFirstLetter(player.playerName))
                       .join(', ')}
@@ -146,7 +253,11 @@ const EncounterHistoryComponent = () => {
               </div>
 
               <div className="grid grid-cols-3 gap-2 items-center">
-                <div className="col-span-1">
+                <div className={`col-span-1 rounded p-2 ${
+                  encounter.playerTeamPoints > encounter.opponentTeamPoints 
+                    ? 'bg-green-100 dark:bg-green-900/30' 
+                    : 'bg-red-100 dark:bg-red-900/30'
+                }`}>
                   <div className="font-medium">
                     {encounter.playerTeam
                       .map(player => capitalizeFirstLetter(player.playerName))
@@ -156,7 +267,11 @@ const EncounterHistoryComponent = () => {
                 <div className="col-span-1 text-center font-bold">
                   {encounter.playerTeamPoints} - {encounter.opponentTeamPoints}
                 </div>
-                <div className="col-span-1 text-right">
+                <div className={`col-span-1 text-right rounded p-2 ${
+                  encounter.playerTeamPoints < encounter.opponentTeamPoints 
+                    ? 'bg-green-100 dark:bg-green-900/30' 
+                    : 'bg-red-100 dark:bg-red-900/30'
+                }`}>
                   <div className="font-medium">
                     {encounter.opponentTeam
                       .map(player => capitalizeFirstLetter(player.playerName))
@@ -184,7 +299,7 @@ const EncounterHistoryComponent = () => {
       </div>
 
       <form onSubmit={handleSubmit} className="max-w-4xl mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-[1fr,auto,1fr] items-center gap-8">
           {/* Team 1 */}
           <div className="bg-base-200 p-6 rounded-lg shadow-md">
             <h2 className="text-lg font-semibold mb-4 text-center">Team 1</h2>
@@ -193,35 +308,19 @@ const EncounterHistoryComponent = () => {
                 <label className="block text-sm font-medium mb-2">
                   Player 1 <span className="text-error">*</span>
                 </label>
-                <select
-                  value={teamA1}
-                  onChange={(e) => setTeamA1(Number(e.target.value))}
-                  className="select select-bordered w-full"
-                  required
-                >
-                  <option value={0}>Select player...</option>
-                  {sortedPlayers.map((player) => (
-                    <option key={`a1-${player.id}`} value={player.id}>
-                      {capitalizeFirstLetter(player.name)}
-                    </option>
-                  ))}
-                </select>
+                {renderCombobox(teamA1, setTeamA1, searchA1, setSearchA1, 'a1', true)}
               </div>
               <div>
                 <label className="block text-sm font-medium mb-2">Player 2</label>
-                <select
-                  value={teamA2}
-                  onChange={(e) => setTeamA2(Number(e.target.value))}
-                  className="select select-bordered w-full"
-                >
-                  <option value={0}>Select player...</option>
-                  {sortedPlayers.map((player) => (
-                    <option key={`a2-${player.id}`} value={player.id}>
-                      {capitalizeFirstLetter(player.name)}
-                    </option>
-                  ))}
-                </select>
+                {renderCombobox(teamA2, setTeamA2, searchA2, setSearchA2, 'a2')}
               </div>
+            </div>
+          </div>
+
+          {/* VS Divider - Desktop & Mobile Combined */}
+          <div className="flex justify-center">
+            <div className="bg-base-200 rounded-full p-3 md:p-4 shadow-md">
+              <span className="text-lg md:text-xl font-bold text-gray-600">VS</span>
             </div>
           </div>
 
@@ -231,33 +330,11 @@ const EncounterHistoryComponent = () => {
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium mb-2">Player 1</label>
-                <select
-                  value={teamB1}
-                  onChange={(e) => setTeamB1(Number(e.target.value))}
-                  className="select select-bordered w-full"
-                >
-                  <option value={0}>Select player...</option>
-                  {sortedPlayers.map((player) => (
-                    <option key={`b1-${player.id}`} value={player.id}>
-                      {capitalizeFirstLetter(player.name)}
-                    </option>
-                  ))}
-                </select>
+                {renderCombobox(teamB1, setTeamB1, searchB1, setSearchB1, 'b1')}
               </div>
               <div>
                 <label className="block text-sm font-medium mb-2">Player 2</label>
-                <select
-                  value={teamB2}
-                  onChange={(e) => setTeamB2(Number(e.target.value))}
-                  className="select select-bordered w-full"
-                >
-                  <option value={0}>Select player...</option>
-                  {sortedPlayers.map((player) => (
-                    <option key={`b2-${player.id}`} value={player.id}>
-                      {capitalizeFirstLetter(player.name)}
-                    </option>
-                  ))}
-                </select>
+                {renderCombobox(teamB2, setTeamB2, searchB2, setSearchB2, 'b2')}
               </div>
             </div>
           </div>
@@ -291,7 +368,7 @@ const EncounterHistoryComponent = () => {
 
       {/* Results Section */}
       {result && (
-        <div className="mt-8">
+        <div className="mt-8" ref={resultsRef}>
           <div className="bg-base-100 rounded-lg shadow-lg">
             <div className="p-4 border-b border-base-200">
               <h2 className="text-xl font-semibold">Match Results</h2>
