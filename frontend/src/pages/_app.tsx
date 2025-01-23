@@ -5,17 +5,20 @@ import NavigationComponent from '@/components/NavigationComponent';
 import React from 'react';
 import { PlayerProvider } from '@/contexts/PlayerContext';
 import { RankingHistoryProvider } from '@/contexts/RankingHistoryContext';
+import { SessionProvider } from 'next-auth/react';
 
-function MyApp({ Component, pageProps }: AppProps) {
+function MyApp({ Component, pageProps: { session, ...pageProps } }: AppProps) {
   return (
-    <LayoutComponent>
-      <PlayerProvider>
-        <RankingHistoryProvider>
-          <NavigationComponent />
-          <Component {...pageProps} />
-        </RankingHistoryProvider>
-      </PlayerProvider>
-    </LayoutComponent>
+    <SessionProvider session={session}>
+      <LayoutComponent>
+        <PlayerProvider>
+          <RankingHistoryProvider>
+            <NavigationComponent />
+            <Component {...pageProps} />
+          </RankingHistoryProvider>
+        </PlayerProvider>
+      </LayoutComponent>
+    </SessionProvider>
   );
 }
 
