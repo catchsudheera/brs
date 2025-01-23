@@ -187,10 +187,10 @@ const EncounterHistoryComponent = () => {
             <thead className="bg-base-200">
               <tr>
                 <th className="text-left">Date</th>
-                <th className="text-left">Team 1</th>
+                <th className="text-center">Team 1</th>
                 <th className="text-center">Score</th>
-                <th className="text-left">Team 2</th>
-                <th className="text-center">Result</th>
+                <th className="text-center">Team 2</th>
+                <th className="text-center">Points</th>
               </tr>
             </thead>
             <tbody>
@@ -206,8 +206,12 @@ const EncounterHistoryComponent = () => {
                     </td>
                     <td className={isWin ? 'bg-green-100 dark:bg-green-900/30' : 'bg-red-100 dark:bg-red-900/30'}>
                       <div className="flex items-center">
-                        <span className={`mr-2 ${isWin ? 'text-success' : 'text-error'}`}>
-                          {isWin ? '✅' : '❌'}
+                        <span className={`mr-2 flex items-center justify-center w-5 h-5 rounded-full ${
+                          isWin 
+                            ? 'bg-emerald-600 text-white' 
+                            : 'bg-red-600 text-white'
+                        }`}>
+                          {isWin ? '✓' : '×'}
                         </span>
                         {encounter.playerTeam
                           .map(player => capitalizeFirstLetter(player.playerName))
@@ -219,8 +223,12 @@ const EncounterHistoryComponent = () => {
                     </td>
                     <td className={!isWin ? 'bg-green-100 dark:bg-green-900/30' : 'bg-red-100 dark:bg-red-900/30'}>
                       <div className="flex items-center">
-                        <span className={`mr-2 ${!isWin ? 'text-success' : 'text-error'}`}>
-                          {!isWin ? '✅' : '❌'}
+                        <span className={`mr-2 flex items-center justify-center w-5 h-5 rounded-full ${
+                          !isWin 
+                            ? 'bg-emerald-600 text-white' 
+                            : 'bg-red-600 text-white'
+                        }`}>
+                          {!isWin ? '✓' : '×'}
                         </span>
                         {encounter.opponentTeam
                           .map(player => capitalizeFirstLetter(player.playerName))
@@ -271,28 +279,40 @@ const EncounterHistoryComponent = () => {
                   <div className={`col-span-1 rounded p-2 ${
                     isWin ? 'bg-green-100 dark:bg-green-900/30' : 'bg-red-100 dark:bg-red-900/30'
                   }`}>
-                    <div className="font-medium">
-                      <span className={`mr-2 ${isWin ? 'text-success' : 'text-error'}`}>
-                        {isWin ? '✅' : '❌'}
+                    <div className="font-medium flex flex-col items-center">
+                      <span className={`mb-1 flex items-center justify-center w-5 h-5 rounded-full ${
+                        isWin 
+                          ? 'bg-emerald-600 text-white' 
+                          : 'bg-red-600 text-white'
+                      }`}>
+                        {isWin ? '✓' : '×'}
                       </span>
-                      {encounter.playerTeam
-                        .map(player => capitalizeFirstLetter(player.playerName))
-                        .join(', ')}
+                      <span className="text-center">
+                        {encounter.playerTeam
+                          .map(player => capitalizeFirstLetter(player.playerName))
+                          .join(', ')}
+                      </span>
                     </div>
                   </div>
                   <div className="col-span-1 text-center font-bold">
                     {encounter.playerTeamPoints} - {encounter.opponentTeamPoints}
                   </div>
-                  <div className={`col-span-1 text-right rounded p-2 ${
+                  <div className={`col-span-1 rounded p-2 ${
                     !isWin ? 'bg-green-100 dark:bg-green-900/30' : 'bg-red-100 dark:bg-red-900/30'
                   }`}>
-                    <div className="font-medium">
-                      <span className={`mr-2 ${!isWin ? 'text-success' : 'text-error'}`}>
-                        {!isWin ? '✅' : '❌'}
+                    <div className="font-medium flex flex-col items-center">
+                      <span className={`mb-1 flex items-center justify-center w-5 h-5 rounded-full ${
+                        !isWin 
+                          ? 'bg-emerald-600 text-white' 
+                          : 'bg-red-600 text-white'
+                      }`}>
+                        {!isWin ? '✓' : '×'}
                       </span>
-                      {encounter.opponentTeam
-                        .map(player => capitalizeFirstLetter(player.playerName))
-                        .join(', ')}
+                      <span className="text-center">
+                        {encounter.opponentTeam
+                          .map(player => capitalizeFirstLetter(player.playerName))
+                          .join(', ')}
+                      </span>
                     </div>
                   </div>
                 </div>

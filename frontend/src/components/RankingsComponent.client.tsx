@@ -32,6 +32,8 @@ const RankingsComponent = () => {
     (a, b) => a.playerRank - b.playerRank,
   );
 
+  const averageScore = players.reduce((acc, p) => acc + p.rankScore, 0) / players.length;
+
   const formatDays = (days: string) => {
     return days.replace('(', '').replace(')', '');
   };
@@ -63,7 +65,7 @@ const RankingsComponent = () => {
         <div className="stat bg-base-200 rounded-lg shadow-md p-2 sm:p-4">
           <div className="stat-title text-xs sm:text-sm">Average</div>
           <div className="stat-value text-lg sm:text-3xl">
-            {(players.reduce((acc, p) => acc + p.rankScore, 0) / players.length).toFixed(1)}
+            {averageScore.toFixed(1)}
           </div>
         </div>
       </div>
@@ -83,7 +85,14 @@ const RankingsComponent = () => {
           </thead>
           <tbody>
             {sortedPlayers.map((player) => (
-              <tr key={player.id} className='hover:bg-base-200 transition-colors duration-150'>
+              <tr 
+                key={player.id} 
+                className={`hover:bg-base-200 transition-colors duration-150 ${
+                  player.rankScore > averageScore 
+                    ? 'bg-blue-50 dark:bg-blue-900/10' 
+                    : 'bg-amber-50 dark:bg-amber-900/10'
+                }`}
+              >
                 <td className='px-1 py-3 items-center text-center font-medium'>
                   {player.playerRank}
                 </td>
