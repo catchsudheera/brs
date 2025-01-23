@@ -247,12 +247,12 @@ const PlayerEncountersCompactComponent: React.FC<
                     <table className='table w-full hidden md:table'>
                       <thead className='bg-base-200'>
                         <tr>
-                          <th className='font-semibold'>Team 1</th>
-                          <th className='font-semibold text-center'>Points</th>
-                          <th className='font-semibold'>Team 2</th>
-                          <th className='font-semibold text-center'>Points</th>
-                          <th className='font-semibold text-center'>Result</th>
+                          <th className='font-semibold'>Date</th>
+                          <th className='font-semibold text-center'>Team 1</th>
                           <th className='font-semibold text-center'>Score</th>
+                          <th className='font-semibold text-center'>Team 2</th>
+                          <th className='font-semibold text-center'>Result</th>
+                          <th className='font-semibold'>Points</th>
                         </tr>
                       </thead>
                       <tbody>
