@@ -34,8 +34,12 @@ const PlayerEncounterComponent: React.FC<PlayerEncounterComponentProps> = ({
     <div className="p-4">
       <div className="flex justify-between items-center mb-2">
         <div className="flex items-center">
-          <span className={`mr-2 ${isWin ? 'text-success' : 'text-error'}`}>
-            {isWin ? '✅' : '❌'}
+          <span className={`mr-2 flex items-center justify-center w-5 h-5 rounded-full ${
+            isWin 
+              ? 'bg-emerald-600 text-white' 
+              : 'bg-red-600 text-white'
+          }`}>
+            {isWin ? '✓' : '×'}
           </span>
           <span>{isWin ? 'Won' : 'Lost'}</span>
         </div>
