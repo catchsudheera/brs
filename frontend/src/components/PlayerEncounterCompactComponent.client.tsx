@@ -96,8 +96,12 @@ const PlayerEncountersCompactComponent: React.FC<
         </td>
         <td className={isWin ? 'bg-green-100 dark:bg-green-900/30' : 'bg-red-100 dark:bg-red-900/30'}>
           <div className="flex items-center">
-            <span className={`mr-2 ${isWin ? 'text-success' : 'text-error'}`}>
-              {isWin ? '✅' : '❌'}
+            <span className={`mr-2 flex items-center justify-center w-5 h-5 rounded-full ${
+              isWin 
+                ? 'bg-emerald-600 text-white' 
+                : 'bg-red-600 text-white'
+            }`}>
+              {isWin ? '✓' : '×'}
             </span>
             {encounter.playerTeam
               .map((player) => capitalizeFirstLetter(player.playerName))
@@ -109,8 +113,12 @@ const PlayerEncountersCompactComponent: React.FC<
         </td>
         <td className={!isWin ? 'bg-green-100 dark:bg-green-900/30' : 'bg-red-100 dark:bg-red-900/30'}>
           <div className="flex items-center">
-            <span className={`mr-2 ${!isWin ? 'text-success' : 'text-error'}`}>
-              {!isWin ? '✅' : '❌'}
+            <span className={`mr-2 flex items-center justify-center w-5 h-5 rounded-full ${
+              !isWin 
+                ? 'bg-emerald-600 text-white' 
+                : 'bg-red-600 text-white'
+            }`}>
+              {!isWin ? '✓' : '×'}
             </span>
             {encounter.opponentTeam
               .map((player) => capitalizeFirstLetter(player.playerName))
@@ -239,12 +247,12 @@ const PlayerEncountersCompactComponent: React.FC<
                     <table className='table w-full hidden md:table'>
                       <thead className='bg-base-200'>
                         <tr>
-                          <th className='font-semibold'>Team 1</th>
-                          <th className='font-semibold text-center'>Points</th>
-                          <th className='font-semibold'>Team 2</th>
-                          <th className='font-semibold text-center'>Points</th>
-                          <th className='font-semibold text-center'>Result</th>
+                          <th className='font-semibold'>Date</th>
+                          <th className='font-semibold text-center'>Team 1</th>
                           <th className='font-semibold text-center'>Score</th>
+                          <th className='font-semibold text-center'>Team 2</th>
+                          <th className='font-semibold text-center'>Result</th>
+                          <th className='font-semibold'>Points</th>
                         </tr>
                       </thead>
                       <tbody>
