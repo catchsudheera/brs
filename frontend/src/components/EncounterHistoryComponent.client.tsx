@@ -190,7 +190,7 @@ const EncounterHistoryComponent = () => {
                 <th className="text-left">Team 1</th>
                 <th className="text-center">Score</th>
                 <th className="text-left">Team 2</th>
-                <th className="text-center">Result</th>
+                <th className="text-center">Points</th>
               </tr>
             </thead>
             <tbody>
