@@ -3,6 +3,8 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import { usePlayerContext } from '@/contexts/PlayerContext';
 import { capitalizeFirstLetter } from '@/utils/string';
+import { gameStorageService } from '@/services/gameStorageService';
+import type { Player } from '@/types/player';
 
 const AUTH_ENABLED = process.env.NEXT_PUBLIC_AUTH_ENABLED === 'true';
 
@@ -36,6 +38,31 @@ const GamePlannerPage = () => {
   const router = useRouter();
   const { players } = usePlayerContext();
   const [selectedPlayers, setSelectedPlayers] = useState<number[]>([]);
+  const [isEditing, setIsEditing] = useState(false);
+  const { gameId } = router.query;
+
+  // Load existing game data if editing
+  React.useEffect(() => {
+    const loadExistingGame = async () => {
+      if (typeof gameId === 'string') {
+        try {
+          const game = await gameStorageService.getGame(gameId);
+          if (game) {
+            setIsEditing(true);
+            // Combine all player IDs from all groups
+            const selectedIds = Object.values(game.groups)
+              .flat()
+              .filter((id, index, self) => self.indexOf(id) === index);
+            setSelectedPlayers(selectedIds);
+          }
+        } catch (error) {
+          console.error('Failed to load game:', error);
+        }
+      }
+    };
+
+    loadExistingGame();
+  }, [gameId]);
 
   // Only redirect if auth is enabled
   React.useEffect(() => {
@@ -71,7 +98,7 @@ const GamePlannerPage = () => {
     return '';
   };
 
-  const handleCreateGameDay = () => {
+  const handleCreateGameDay = async () => {
     // Get selected players with their details
     const selectedPlayerDetails = players
       .filter(p => selectedPlayers.includes(p.id))
@@ -122,16 +149,36 @@ const GamePlannerPage = () => {
     // Convert groups to URL query params
     const queryParams = Object.entries(groups)
       .reduce((params, [groupName, players]) => {
-        const groupNum = groupName.split(' ')[1];  // Get number from "Group X"
+        const groupNum = groupName.split(' ')[1];
         params[`group${groupNum}`] = players.map(p => p.id).join(',');
         return params;
       }, {} as Record<string, string>);
 
-    // Navigate with cleaner query params
-    router.push({
-      pathname: '/admin/game-day',
-      query: queryParams
-    });
+    try {
+      let gameIdToUse = gameId;  // Create mutable variable
+      
+      if (isEditing && typeof gameId === 'string') {
+        await gameStorageService.updateGame(gameId, Object.entries(groups).reduce((acc, [groupName, players]) => {
+          acc[groupName] = players.map(p => p.id);
+          return acc;
+        }, {} as Record<string, number[]>));
+      } else {
+        gameIdToUse = await gameStorageService.createGame(
+          Object.entries(groups).reduce((acc, [groupName, players]) => {
+            acc[groupName] = players.map(p => p.id);
+            return acc;
+          }, {} as Record<string, number[]>)
+        );
+      }
+
+      router.push({
+        pathname: '/admin/game-day',
+        query: { gameId: gameIdToUse }
+      });
+    } catch (error) {
+      console.error('Failed to save game:', error);
+      // TODO: Show error toast/notification
+    }
   };
 
   return (
@@ -139,10 +186,12 @@ const GamePlannerPage = () => {
       {/* Title Section */}
       <div className="mb-6 sm:mb-8 text-center">
         <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-emerald-600 to-emerald-400 bg-clip-text text-transparent">
-          Game Planner
+          {isEditing ? 'Edit Game Day' : 'Game Planner'}
         </h1>
         <p className="mt-2 text-sm sm:text-base text-gray-600 dark:text-gray-400">
-          Select players for the game day (maximum 20)
+          {isEditing 
+            ? 'Modify player selection for the game day'
+            : 'Select players for the game day (maximum 20)'}
         </p>
       </div>
 
