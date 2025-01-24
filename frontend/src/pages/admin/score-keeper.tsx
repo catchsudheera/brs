@@ -65,6 +65,27 @@ const areValidMatchScores = (team1Score: number, team2Score: number): boolean =>
   );
 };
 
+// Add helper function to count games
+const getGameStats = (groups: Record<string, any>, scores: Record<string, any>) => {
+  let totalGames = 0;
+  let completedGames = 0;
+
+  Object.entries(groups).forEach(([groupName, players]) => {
+    const matchCount = getMatchCombinations((players as any[]).map(p => p.name)).length;
+    totalGames += matchCount;
+    
+    if (scores[groupName]) {
+      Object.values(scores[groupName]).forEach((score: any) => {
+        if (score.team1Score > 0 || score.team2Score > 0) {
+          completedGames++;
+        }
+      });
+    }
+  });
+
+  return { totalGames, completedGames };
+};
+
 const ScoreKeeperPage = () => {
   const router = useRouter();
   const { players } = usePlayerContext();
@@ -82,16 +103,20 @@ const ScoreKeeperPage = () => {
       
       try {
         const game = await gameStorageService.getGame(gameId);
-        setGameData(game);
         if (game) {
+          // Initialize scores if they don't exist
+          const gameWithScores = {
+            ...game,
+            scores: game.scores || {}  // Ensure scores object exists
+          };
+          setGameData(gameWithScores);
+          
           // Set initial active group
           if (Object.keys(game.groups).length > 0 && !activeGroup) {
             setActiveGroup(Object.keys(game.groups)[0]);
           }
-          // Initialize empty scores object if not exists
-          if (!game.scores) {
-            await gameStorageService.updateGameScores(gameId, {});
-          }
+        } else {
+          setGameData(null);
         }
       } catch (error) {
         console.error('Failed to fetch game:', error);
@@ -243,20 +268,100 @@ const ScoreKeeperPage = () => {
       {/* Tab Navigation - Scrollable on mobile */}
       <div className="overflow-x-auto mb-6">
         <div className="tabs tabs-boxed inline-flex min-w-full justify-center">
-          {Object.keys(groups).map((groupName) => (
-            <button
-              key={groupName}
-              className={`tab tab-lg ${activeGroup === groupName ? 'tab-active' : ''}`}
-              onClick={() => setActiveGroup(groupName)}
-            >
-              {groupName}
-            </button>
-          ))}
+          {Object.keys(groups)
+            .filter(key => key !== 'management')
+            .map((groupName) => (
+              <button
+                key={groupName}
+                className={`tab tab-lg ${activeGroup === groupName ? 'tab-active' : ''}`}
+                onClick={() => setActiveGroup(groupName)}
+              >
+                {groupName}
+              </button>
+            ))}
         </div>
       </div>
 
+      {/* Floating Management Button */}
+      <button
+        className="fixed bottom-6 right-6 btn btn-circle btn-primary shadow-lg"
+        onClick={() => setActiveGroup('management')}
+        title="Game Management"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+      </button>
+
       {/* Active Group Content */}
-      {activeGroup && (
+      {activeGroup === 'management' ? (
+        <div className="bg-base-100 rounded-lg shadow-lg p-4 sm:p-6">
+          <h2 className="text-lg font-semibold mb-4">Game Management</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Game Progress Section */}
+            <div className="space-y-4">
+              <h3 className="text-md font-medium">Game Progress</h3>
+              {!isGameStarted ? (
+                <div className="text-center p-6 bg-base-200 rounded-lg">
+                  <p className="text-gray-600">Click Start Games to begin recording scores</p>
+                  <button 
+                    className="btn btn-primary mt-4"
+                    onClick={handleStart}
+                  >
+                    Start Games
+                  </button>
+                </div>
+              ) : (
+                <>
+                  {(() => {
+                    const { totalGames, completedGames } = getGameStats(groups, gameData.scores || {});
+                    const progressPercent = Math.round((completedGames / totalGames) * 100);
+                    
+                    return (
+                      <div className="p-6 bg-base-200 rounded-lg">
+                        <div className="text-center mb-4">
+                          <div className="text-2xl font-bold text-primary">
+                            {completedGames} / {totalGames}
+                          </div>
+                          <div className="text-sm text-gray-600">Games Completed</div>
+                        </div>
+                        <div className="w-full bg-base-300 rounded-full h-2.5">
+                          <div 
+                            className="bg-primary h-2.5 rounded-full transition-all duration-500"
+                            style={{ width: `${progressPercent}%` }}
+                          ></div>
+                        </div>
+                        <div className="text-center mt-2 text-sm text-gray-600">
+                          {progressPercent}% Complete
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </>
+              )}
+            </div>
+
+            {/* Actions Section */}
+            <div className="space-y-4">
+              <h3 className="text-md font-medium">Actions</h3>
+              <div className="p-6 bg-base-200 rounded-lg">
+                {isGameStarted && (
+                  <button 
+                    className="btn btn-primary w-full"
+                    onClick={() => {
+                      // TODO: Handle results submission
+                      console.log('Submitting results...');
+                    }}
+                  >
+                    Submit Results
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : activeGroup && (
         <div className="bg-base-100 rounded-lg shadow-lg p-4 sm:p-6">
           <div className="mb-4">
             <h2 className="text-lg font-semibold mb-2">Players</h2>
@@ -276,7 +381,7 @@ const ScoreKeeperPage = () => {
             <h2 className="text-lg font-semibold mb-3">Matches</h2>
             <div className="space-y-3">
               {getMatchCombinations(groups[activeGroup].map(p => p.name)).map((match, idx) => {
-                const matchScore = gameData.scores[activeGroup]?.[idx];
+                const matchScore = gameData?.scores?.[activeGroup]?.[idx];
                 const hasScore = !!matchScore;
                 const isPlayed = hasScore && (matchScore.team1Score > 0 || matchScore.team2Score > 0);
                 const team1Won = isPlayed && matchScore.team1Score > matchScore.team2Score;
@@ -436,36 +541,6 @@ const ScoreKeeperPage = () => {
           </form>
         </dialog>
       )}
-
-      {/* Navigation Buttons */}
-      <div className="flex justify-between mt-4">
-        {!isGameStarted ? (
-          <>
-            <button 
-              className="btn btn-outline"
-              onClick={handleBack}
-            >
-              Back to Groups
-            </button>
-            <button 
-              className="btn btn-primary"
-              onClick={handleStart}
-            >
-              Start Games
-            </button>
-          </>
-        ) : (
-          <button 
-            className="btn btn-primary"
-            onClick={() => {
-              // TODO: Handle results submission
-              console.log('Submitting results...');
-            }}
-          >
-            Submit Results
-          </button>
-        )}
-      </div>
     </div>
   );
 };

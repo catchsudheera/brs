@@ -182,7 +182,7 @@ const GamePlannerPage = () => {
   };
 
   return (
-    <div className="container mx-auto p-4">
+    <div className="container mx-auto p-4 pb-32 md:pb-4">
       {/* Title Section */}
       <div className="mb-6 sm:mb-8 text-center">
         <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-emerald-600 to-emerald-400 bg-clip-text text-transparent">
@@ -195,38 +195,8 @@ const GamePlannerPage = () => {
         </p>
       </div>
 
-      {/* Player Selection */}
+      {/* Player Grid */}
       <div className="bg-base-100 rounded-lg shadow-lg p-6">
-        <div className="mb-4 flex justify-between items-center">
-          <h2 className="text-xl font-semibold">
-            Selected Players: {selectedPlayers.length}/{MAX_PLAYERS}
-          </h2>
-          <button
-            className={`btn ${
-              !isValidPlayerCount(selectedPlayers.length)
-                ? 'btn-disabled bg-gray-300 cursor-not-allowed' 
-                : 'btn-primary'
-            }`}
-            disabled={!isValidPlayerCount(selectedPlayers.length)}
-            title={getValidationMessage(selectedPlayers.length)}
-            onClick={handleCreateGameDay}
-          >
-            Create Game Day
-          </button>
-        </div>
-
-        <div className="mb-4">
-          <p className="text-sm text-gray-600 dark:text-gray-400">
-            Select players for groups of 4-5 players (maximum {MAX_GROUPS} groups)
-          </p>
-          {selectedPlayers.length > 0 && !isValidPlayerCount(selectedPlayers.length) && (
-            <p className="text-sm text-red-500 mt-2">
-              {getValidationMessage(selectedPlayers.length)}
-            </p>
-          )}
-        </div>
-
-        {/* Player Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {players
             .sort((a, b) => a.playerRank - b.playerRank)
@@ -264,6 +234,60 @@ const GamePlannerPage = () => {
               </div>
             ))}
         </div>
+      </div>
+
+      {/* Fixed Bottom Panel on Mobile */}
+      <div className="fixed bottom-0 left-0 right-0 bg-base-100 shadow-lg p-4 md:hidden border-t border-base-200">
+        <div className="container mx-auto">
+          <div className="flex items-center justify-between mb-2">
+            <div className="text-sm font-medium">
+              Selected: {selectedPlayers.length}/{MAX_PLAYERS}
+            </div>
+            {selectedPlayers.length > 0 && !isValidPlayerCount(selectedPlayers.length) && (
+              <div className="text-sm text-red-500">
+                {getValidationMessage(selectedPlayers.length)}
+              </div>
+            )}
+          </div>
+          <button
+            className={`btn w-full ${
+              !isValidPlayerCount(selectedPlayers.length)
+                ? 'btn-disabled bg-gray-300 cursor-not-allowed' 
+                : 'btn-primary'
+            }`}
+            disabled={!isValidPlayerCount(selectedPlayers.length)}
+            title={getValidationMessage(selectedPlayers.length)}
+            onClick={handleCreateGameDay}
+          >
+            {isEditing ? 'Update Game Day' : 'Create Game Day'}
+          </button>
+        </div>
+      </div>
+
+      {/* Desktop Actions - Hide on Mobile */}
+      <div className="hidden md:block mt-4">
+        <div className="flex justify-between items-center">
+          <div className="text-lg font-semibold">
+            Selected Players: {selectedPlayers.length}/{MAX_PLAYERS}
+          </div>
+          <button
+            className={`btn ${
+              !isValidPlayerCount(selectedPlayers.length)
+                ? 'btn-disabled bg-gray-300 cursor-not-allowed' 
+                : 'btn-primary'
+            }`}
+            disabled={!isValidPlayerCount(selectedPlayers.length)}
+            title={getValidationMessage(selectedPlayers.length)}
+            onClick={handleCreateGameDay}
+          >
+            {isEditing ? 'Update Game Day' : 'Create Game Day'}
+          </button>
+        </div>
+        {selectedPlayers.length > 0 && !isValidPlayerCount(selectedPlayers.length) && (
+          <p className="text-sm text-red-500 mt-2">
+            {getValidationMessage(selectedPlayers.length)}
+          </p>
+        )}
       </div>
     </div>
   );
