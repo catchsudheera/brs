@@ -51,6 +51,20 @@ const getMatchCombinations = (players: string[]): MatchCombination[] => {
   return [];
 };
 
+const MAX_POINTS = 30;
+
+const isValidScore = (score: number): boolean => {
+  return Number.isInteger(score) && score >= 0 && score <= MAX_POINTS;
+};
+
+const areValidMatchScores = (team1Score: number, team2Score: number): boolean => {
+  return (
+    isValidScore(team1Score) &&
+    isValidScore(team2Score) &&
+    team1Score !== team2Score
+  );
+};
+
 const ScoreKeeperPage = () => {
   const router = useRouter();
   const { players } = usePlayerContext();
@@ -354,9 +368,16 @@ const ScoreKeeperPage = () => {
                 <input
                   type="number"
                   min="0"
+                  max={MAX_POINTS}
                   className="input input-bordered w-full text-center"
                   defaultValue={gameData.scores[selectedMatch.groupName]?.[selectedMatch.matchIndex]?.team1Score || 0}
                   id="team1Score"
+                  onInput={(e) => {
+                    const input = e.target as HTMLInputElement;
+                    if (input.value && !isValidScore(parseInt(input.value))) {
+                      input.value = input.value.slice(0, -1);
+                    }
+                  }}
                 />
               </div>
               <div className="text-center font-bold">vs</div>
@@ -367,11 +388,23 @@ const ScoreKeeperPage = () => {
                 <input
                   type="number"
                   min="0"
+                  max={MAX_POINTS}
                   className="input input-bordered w-full text-center"
                   defaultValue={gameData.scores[selectedMatch.groupName]?.[selectedMatch.matchIndex]?.team2Score || 0}
                   id="team2Score"
+                  onInput={(e) => {
+                    const input = e.target as HTMLInputElement;
+                    if (input.value && !isValidScore(parseInt(input.value))) {
+                      input.value = input.value.slice(0, -1);
+                    }
+                  }}
                 />
               </div>
+            </div>
+            <div className="text-sm text-gray-500 mt-2">
+              * Scores must be between 0 and {MAX_POINTS} points
+              <br />
+              * Scores cannot be equal
             </div>
             <div className="modal-action">
               <button 
@@ -385,6 +418,12 @@ const ScoreKeeperPage = () => {
                 onClick={() => {
                   const team1Score = parseInt((document.getElementById('team1Score') as HTMLInputElement).value);
                   const team2Score = parseInt((document.getElementById('team2Score') as HTMLInputElement).value);
+                  
+                  if (!areValidMatchScores(team1Score, team2Score)) {
+                    alert('Invalid scores. Please check the requirements and try again.');
+                    return;
+                  }
+                  
                   handleScoreSubmit(team1Score, team2Score);
                 }}
               >
