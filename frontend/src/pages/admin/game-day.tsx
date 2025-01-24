@@ -2,34 +2,79 @@ import React from 'react';
 import { useRouter } from 'next/router';
 import { usePlayerContext } from '@/contexts/PlayerContext';
 import { capitalizeFirstLetter } from '@/utils/string';
+import { gameStorageService } from '@/services/gameStorageService';
+import type { GameScore } from '@/services/gameStorageService';
 
 const GameDayPage = () => {
   const router = useRouter();
   const { players } = usePlayerContext();
-  
-  // Convert URL params to groups
-  const groups = Object.entries(router.query)
-    .filter(([key]) => key.startsWith('group'))
-    .reduce((acc, [key, value]) => {
-      const groupName = `Group ${key.replace('group', '')}`;
-      const playerIds = (value as string).split(',').map(Number);
-      acc[groupName] = playerIds
-        .map(id => players.find(p => p.id === id))
-        .filter((player): player is NonNullable<typeof player> => player !== undefined)
-        .sort((a, b) => a.playerRank - b.playerRank);
-      return acc;
-    }, {} as Record<string, typeof players>);
+  const { gameId } = router.query;
+  const [gameData, setGameData] = React.useState<GameScore | null>(null);
+  const [isLoading, setIsLoading] = React.useState(true);
+
+  // Fetch game data from IndexedDB
+  React.useEffect(() => {
+    const fetchGame = async () => {
+      if (typeof gameId !== 'string') return;
+      
+      try {
+        const game = await gameStorageService.getGame(gameId);
+        setGameData(game);
+      } catch (error) {
+        console.error('Failed to fetch game:', error);
+        // TODO: Show error toast/notification
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchGame();
+  }, [gameId]);
+
+  const handleBack = () => {
+    router.push({
+      pathname: '/admin/game-planner',
+      query: { gameId }
+    });
+  };
 
   const handleContinue = () => {
     router.push({
       pathname: '/admin/score-keeper',
-      query: router.query // Pass along the same group parameters
+      query: { gameId }
     });
   };
 
-  const handleBack = () => {
-    router.push('/admin/game-planner');
-  };
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="loading loading-spinner loading-lg"></div>
+      </div>
+    );
+  }
+
+  if (!gameData) {
+    return (
+      <div className="container mx-auto p-4 text-center">
+        <h1 className="text-2xl font-bold text-red-600">Game not found</h1>
+        <button 
+          className="btn btn-primary mt-4"
+          onClick={handleBack}
+        >
+          Back to Game Planner
+        </button>
+      </div>
+    );
+  }
+
+  // Convert player IDs to full player objects
+  const groups = Object.entries(gameData.groups).reduce((acc, [groupName, playerIds]) => {
+    acc[groupName] = playerIds
+      .map(id => players.find(p => p.id === id))
+      .filter((player): player is NonNullable<typeof player> => player !== undefined)
+      .sort((a, b) => a.playerRank - b.playerRank);
+    return acc;
+  }, {} as Record<string, typeof players>);
 
   return (
     <div className="container mx-auto p-4">
