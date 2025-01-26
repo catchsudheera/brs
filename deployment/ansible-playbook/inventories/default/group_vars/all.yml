@@ -5,9 +5,9 @@ gv_server_timezone: Europe/Amsterdam
 # USER
 ansible_user: ubuntu
 gv_local_brs_user: brs-user
-gv_local_brs_uid: 1007
-gv_local_brs_group: home-guardian-server
-gv_local_brs_gid: 1007
+gv_local_brs_uid: 1000
+gv_local_brs_group: brs-users
+gv_local_brs_gid: 1000
 gv_local_brs_user_home: "/home/{{ gv_local_brs_user }}"
 
 gv_docker_network_name: brs-server-network
@@ -39,7 +39,3 @@ gv_backend_host_url: https://whatever-your-hostname.com
 gv_frontend_host_url: https://whatever-your-hostname.com
 gv_backend_api_key: sample-api-key
 
-# DDNS client
-gv_ddns_host: <host_from_namecheap>
-gv_ddns_domain: <whatever-your-hostname.com>
-gv_ddns_password: <password>

@@ -28,7 +28,7 @@
     group: "{{ server_data_dir_group }}"
 
 - name: Start Docker containers using docker-compose
-  community.docker.docker_compose:
+  community.docker.docker_compose_v2:
     project_src: "{{ brs_container_stack_location }}"
   tags: start-stacks
 
@@ -47,12 +47,12 @@
       register: brs_container_stack_location_docker_compose_file
 
     - name: Check validity of compose file
-      shell: "docker-compose -f {{ brs_container_stack_location }}/docker-compose.yml config"
+      shell: "docker compose -f {{ brs_container_stack_location }}/docker-compose.yml config"
       register: brs_container_stack_docker_compose_file_validate
       ignore_errors: yes
 
     - name: Stopping using docker compose
-      community.docker.docker_compose:
+      community.docker.docker_compose_v2:
         project_src: "{{ brs_container_stack_location }}"
         state: absent
       when: brs_container_stack_location_docker_compose_file.stat.exists and brs_container_stack_docker_compose_file_validate.failed|bool != true
