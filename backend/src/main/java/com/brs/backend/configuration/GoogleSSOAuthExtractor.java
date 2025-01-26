@@ -4,6 +4,7 @@ import com.brs.backend.services.GoogleSSOService;
 import com.brs.backend.util.Constants;
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
@@ -15,6 +16,7 @@ import java.util.Optional;
 import java.util.Set;
 
 @Component
+@Slf4j
 public class GoogleSSOAuthExtractor {
 
     @Autowired
@@ -43,10 +45,11 @@ public class GoogleSSOAuthExtractor {
             return Optional.empty();
         }
         var ssoUser = googleSSOService.getProfileDetailsGoogle(providedKey);
+        log.info(ssoUser.toString());
         if(ssoUser == null) {
             return Optional.empty();
         }
-        if(authenticatedEmails.contains(ssoUser.getEmail().toLowerCase())) {
+        if(authenticatedEmails.contains(ssoUser.email().toLowerCase())) {
             return Optional.of(new ApiKeyAuth(providedKey, AuthorityUtils.NO_AUTHORITIES));
         }
         return Optional.empty();

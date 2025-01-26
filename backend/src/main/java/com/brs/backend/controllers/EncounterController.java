@@ -126,6 +126,11 @@ public class EncounterController {
         return encounterService.getPlayerEncounterHistory(teamAp1, teamAp2, teamBp1, teamBp2);
     }
 
+    @PostMapping("/v2/validate")
+    private String processToken(@PathVariable LocalDate date) {
+        return "Wade Goda";
+    }
+
     @PostMapping("/encounters/{date}/process")
     @Parameter(name = "x-api-key", required = true, example = "sample-api-key", in = ParameterIn.HEADER)
     private String processEncounter(@PathVariable LocalDate date) {
