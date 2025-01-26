@@ -1,6 +1,7 @@
 package com.brs.backend.util;
 
 import com.brs.backend.dto.Team;
+import com.brs.backend.dto.TeamV2;
 import com.brs.backend.model.Player;
 import com.brs.backend.repositories.PlayerRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +30,13 @@ public class PlayerUtil {
                 .map(Object::toString)
                 .collect(Collectors.joining(PLAYER_ID_DELIMITER));
     }
+
+    public String getTeamPlayerIdsStringV2(TeamV2 team) {
+        return Arrays.asList(team.player1(),team.player2())
+                .stream().sorted().map(Object::toString)
+                .collect(Collectors.joining(PLAYER_ID_DELIMITER));
+    }
+
 
     public List<Player> getPlayersByIdsString(String idsString) {
         return Arrays.stream(idsString.split(PLAYER_ID_DELIMITER))

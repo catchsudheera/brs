@@ -15,12 +15,18 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class ApiKeyAuthFilter extends OncePerRequestFilter {
 
-    private final ApiKeyAuthExtractor extractor;
+    private final ApiKeyAuthExtractor apiKeyExtractor;
+    private final GoogleSSOAuthExtractor googleSSOAuthExtractor;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        extractor.extract(request)
-                .ifPresent(SecurityContextHolder.getContext()::setAuthentication);
+        if (request.getRequestURI().startsWith("/v2")) {
+            googleSSOAuthExtractor.extract(request)
+                    .ifPresent(SecurityContextHolder.getContext()::setAuthentication);
+        } else {
+            apiKeyExtractor.extract(request)
+                    .ifPresent(SecurityContextHolder.getContext()::setAuthentication);
+        }
 
         filterChain.doFilter(request, response);
     }
