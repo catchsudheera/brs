@@ -27,3 +27,4 @@ replay_pid*
 /frontend/.idea
 /.idea/.gitignore
 /.idea/*
+frontend/.env.local
