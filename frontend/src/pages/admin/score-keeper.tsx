@@ -99,6 +99,9 @@ const ScoreKeeperPage = () => {
   const [passwordModalOpen, setPasswordModalOpen] = useState(false);
   const [pendingMatch, setPendingMatch] = useState<SelectedMatch | null>(null);
   const [passwordError, setPasswordError] = useState(false);
+  const [showSubmitWarning, setShowSubmitWarning] = useState(false);
+  const [showSubmitPasswordModal, setShowSubmitPasswordModal] = useState(false);
+  const [submitPasswordError, setSubmitPasswordError] = useState(false);
   
   // Fetch game data from IndexedDB
   React.useEffect(() => {
@@ -296,6 +299,35 @@ const ScoreKeeperPage = () => {
     }
   };
 
+  const handleSubmitResults = () => {
+    const { totalGames, completedGames } = getGameStats(groups, gameData.scores || {});
+    
+    if (completedGames < totalGames) {
+      setShowSubmitWarning(true);
+    } else {
+      setShowSubmitPasswordModal(true);
+    }
+  };
+
+  const handleFinalSubmit = () => {
+    // TODO: Handle final submission logic
+    console.log('Final submission...');
+  };
+
+  const handleSubmitPasswordVerify = (e: React.FormEvent) => {
+    e.preventDefault();
+    const passwordInput = (document.getElementById('submit-password') as HTMLInputElement).value;
+    
+    if (validateEditPassword(passwordInput)) {
+      setShowSubmitPasswordModal(false);
+      setSubmitPasswordError(false);
+      setShowSubmitWarning(false);
+      handleFinalSubmit();
+    } else {
+      setSubmitPasswordError(true);
+    }
+  };
+
   return (
     <div className="container mx-auto p-4">
       <div className="mb-6 text-center">
@@ -391,10 +423,7 @@ const ScoreKeeperPage = () => {
                 {isGameStarted && (
                   <button 
                     className="btn btn-primary w-full"
-                    onClick={() => {
-                      // TODO: Handle results submission
-                      console.log('Submitting results...');
-                    }}
+                    onClick={handleSubmitResults}
                   >
                     Submit Results
                   </button>
@@ -630,6 +659,108 @@ const ScoreKeeperPage = () => {
           </div>
           <form method="dialog" className="modal-backdrop">
             <button onClick={() => setSelectedMatch(null)}>close</button>
+          </form>
+        </dialog>
+      )}
+
+      {/* Submit Password Modal */}
+      {showSubmitPasswordModal && (
+        <dialog className="modal modal-open">
+          <div className="modal-box">
+            <h3 className="font-bold text-lg mb-4">Confirm Results Submission</h3>
+            <p className="text-gray-600 dark:text-gray-400 mb-4">
+              Please enter password to submit the final results.
+            </p>
+            <form onSubmit={handleSubmitPasswordVerify}>
+              <div className="form-control">
+                <input
+                  type="password"
+                  id="submit-password"
+                  className={`input input-bordered ${submitPasswordError ? 'input-error' : ''}`}
+                  placeholder="Enter password"
+                  autoComplete="off"
+                />
+                {submitPasswordError && (
+                  <label className="label">
+                    <span className="label-text-alt text-error">Incorrect password</span>
+                  </label>
+                )}
+              </div>
+              <div className="modal-action">
+                <button 
+                  type="button"
+                  className="btn btn-outline"
+                  onClick={() => {
+                    setShowSubmitPasswordModal(false);
+                    setSubmitPasswordError(false);
+                  }}
+                >
+                  Cancel
+                </button>
+                <button type="submit" className="btn btn-primary">
+                  Submit Results
+                </button>
+              </div>
+            </form>
+          </div>
+          <form method="dialog" className="modal-backdrop">
+            <button onClick={() => {
+              setShowSubmitPasswordModal(false);
+              setSubmitPasswordError(false);
+            }}>
+              close
+            </button>
+          </form>
+        </dialog>
+      )}
+
+      {/* Submit Warning Modal */}
+      {showSubmitWarning && (
+        <dialog className="modal modal-open">
+          <div className="modal-box border-2 border-warning">
+            <div className="flex items-start gap-3 mb-4">
+              <svg 
+                className="w-6 h-6 text-warning flex-shrink-0 mt-1" 
+                fill="none" 
+                viewBox="0 0 24 24" 
+                stroke="currentColor"
+              >
+                <path 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round" 
+                  strokeWidth={2} 
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" 
+                />
+              </svg>
+              <div>
+                <h3 className="font-bold text-lg text-warning">Warning: Incomplete Matches</h3>
+                <p className="text-gray-600 dark:text-gray-400 mt-2">
+                  Some matches have not been completed. Submitting now will finalize the game with missing scores.
+                </p>
+              </div>
+            </div>
+            <div className="modal-action">
+              <button 
+                className="btn btn-outline"
+                onClick={() => setShowSubmitWarning(false)}
+              >
+                Go Back
+              </button>
+              <button 
+                className="btn btn-warning"
+                onClick={() => {
+                  setShowSubmitWarning(false);
+                  setTimeout(() => {
+                    setShowSubmitPasswordModal(true);
+                  }, 100);
+                }}
+              >
+                Submit Incomplete Results
+              </button>
+            </div>
+          </div>
+          <form method="dialog" className="modal-backdrop">
+            <button onClick={() => setShowSubmitWarning(false)}>close</button>
           </form>
         </dialog>
       )}
