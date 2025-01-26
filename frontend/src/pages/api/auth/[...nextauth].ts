@@ -22,6 +22,18 @@ export default NextAuth({
       else if (new URL(url).origin === baseUrl) return url;
       return baseUrl;
     },
+    async jwt({ token, account }) {
+      // Persist the OAuth access_token to the token right after signin
+      if (account) {
+        token.accessToken = account.id_token;
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      // Send token to client
+      session.accessToken = token.accessToken as string;
+      return session;
+    },
   },
   pages: {
     signIn: '/admin/login',

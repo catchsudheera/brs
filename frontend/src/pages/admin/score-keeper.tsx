@@ -5,6 +5,7 @@ import { capitalizeFirstLetter } from '@/utils/string';
 import { gameStorageService } from '@/services/gameStorageService';
 import type { GameScore } from '@/services/gameStorageService';
 import { validateEditPassword } from '@/utils/password';
+import { useSession, getSession } from 'next-auth/react';
 
 interface MatchCombination {
   team1: string[];
@@ -105,6 +106,10 @@ const ScoreKeeperPage = () => {
   const [showCancelWarning, setShowCancelWarning] = useState(false);
   const [showCancelPasswordModal, setShowCancelPasswordModal] = useState(false);
   const [cancelPasswordError, setCancelPasswordError] = useState(false);
+  const { data: session } = useSession();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitProgress, setSubmitProgress] = useState(0);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   
   // Fetch game data from IndexedDB
   React.useEffect(() => {
@@ -194,6 +199,127 @@ const ScoreKeeperPage = () => {
       }
     } else {
       setCancelPasswordError(true);
+    }
+  };
+
+  const submitMatchResult = async (
+    date: string,
+    team1Players: number[],
+    team2Players: number[],
+    team1Score: number,
+    team2Score: number
+  ) => {
+    const session = await getSession();
+    
+    const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/v2/encounters/${date}/add`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session?.accessToken}`,
+      },
+      body: JSON.stringify({
+        team1: {
+          player1: team1Players[0],
+          player2: team1Players[1],
+          setPoints: team1Score
+        },
+        team2: {
+          player1: team2Players[0],
+          player2: team2Players[1],
+          setPoints: team2Score
+        }
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to submit result: ${response.statusText}`);
+    }
+  };
+
+  const handleFinalSubmit = async () => {
+    if (!gameData || typeof gameId !== 'string') return;
+
+    setIsSubmitting(true);
+    setSubmitProgress(0);
+    setSubmitError(null);
+
+    const date = gameId; // Since gameId is the date in YYYY-MM-DD format
+    let totalMatches = 0;
+    let completedMatches = 0;
+
+    // Count total matches to submit
+    Object.entries(gameData.scores).forEach(([groupName, matches]) => {
+      Object.entries(matches).forEach(([matchIndex, score]) => {
+        if (score.team1Score > 0 || score.team2Score > 0) {
+          totalMatches++;
+        }
+      });
+    });
+
+    try {
+      for (const [groupName, matches] of Object.entries(gameData.scores)) {
+        const groupPlayers = gameData.groups[groupName];
+        
+        for (const [matchIndex, score] of Object.entries(matches)) {
+          // Skip if already submitted or no scores
+          if (score.isSubmitted || (score.team1Score === 0 && score.team2Score === 0)) {
+            continue;
+          }
+
+          const matchCombinations = getMatchCombinations(
+            groupPlayers.map(id => players.find(p => p.id === id)?.name || '')
+          );
+          const match = matchCombinations[parseInt(matchIndex)];
+          
+          // Get player IDs for both teams
+          const team1Players = match.team1.map(name => 
+            players.find(p => p.name === name)?.id
+          ).filter((id): id is number => id !== undefined);
+          
+          const team2Players = match.team2.map(name => 
+            players.find(p => p.name === name)?.id
+          ).filter((id): id is number => id !== undefined);
+
+          try {
+            await submitMatchResult(
+              date,
+              team1Players,
+              team2Players,
+              score.team1Score,
+              score.team2Score
+            );
+
+            // Mark as submitted in IndexedDB
+            const updatedScores = {
+              ...gameData.scores,
+              [groupName]: {
+                ...gameData.scores[groupName],
+                [matchIndex]: {
+                  ...score,
+                  isSubmitted: true
+                }
+              }
+            };
+            await gameStorageService.updateGameScores(gameId, updatedScores);
+            
+            completedMatches++;
+            setSubmitProgress((completedMatches / totalMatches) * 100);
+            
+          } catch (error) {
+            console.error('Failed to submit match:', error);
+            setSubmitError(`Failed to submit some results. Please try again.`);
+            return;
+          }
+        }
+      }
+
+      // All results submitted successfully
+      router.push('/admin/dashboard');
+    } catch (error) {
+      console.error('Submission error:', error);
+      setSubmitError('An error occurred during submission.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -340,11 +466,6 @@ const ScoreKeeperPage = () => {
     }
   };
 
-  const handleFinalSubmit = () => {
-    // TODO: Handle final submission logic
-    console.log('Final submission...');
-  };
-
   const handleSubmitPasswordVerify = (e: React.FormEvent) => {
     e.preventDefault();
     const passwordInput = (document.getElementById('submit-password') as HTMLInputElement).value;
@@ -352,7 +473,6 @@ const ScoreKeeperPage = () => {
     if (validateEditPassword(passwordInput)) {
       setShowSubmitPasswordModal(false);
       setSubmitPasswordError(false);
-      setShowSubmitWarning(false);
       handleFinalSubmit();
     } else {
       setSubmitPasswordError(true);
@@ -898,6 +1018,29 @@ const ScoreKeeperPage = () => {
               close
             </button>
           </form>
+        </dialog>
+      )}
+
+      {/* Submission Progress Modal */}
+      {isSubmitting && (
+        <dialog className="modal modal-open">
+          <div className="modal-box">
+            <h3 className="font-bold text-lg mb-4">Submitting Results</h3>
+            <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700 mb-4">
+              <div 
+                className="bg-emerald-600 h-2.5 rounded-full transition-all duration-300" 
+                style={{ width: `${submitProgress}%` }}
+              ></div>
+            </div>
+            <p className="text-center text-sm text-gray-600 dark:text-gray-400">
+              {submitProgress.toFixed(0)}% Complete
+            </p>
+            {submitError && (
+              <div className="mt-4 p-4 bg-error/10 border border-error rounded-lg">
+                <p className="text-error text-sm">{submitError}</p>
+              </div>
+            )}
+          </div>
         </dialog>
       )}
     </div>

@@ -6,14 +6,17 @@ export interface Game {
   };
 }
 
+export interface MatchResult {
+  team1Score: number;
+  team2Score: number;
+  isSubmitted?: boolean;
+}
+
 export interface GameScore extends Game {
   isStarted?: boolean;
   scores: {
     [groupName: string]: {
-      [matchIndex: number]: {
-        team1Score: number;
-        team2Score: number;
-      };
+      [matchIndex: number]: MatchResult;
     };
   };
 }
