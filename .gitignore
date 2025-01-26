@@ -1,4 +1,4 @@
-# Compiled class file
+.gitignore# Compiled class file
 *.class
 
 # Log file
@@ -25,3 +25,5 @@ replay_pid*
 /frontend/.next/
 /frontend/node_modules/
 /frontend/.idea
+/.idea/.gitignore
+/.idea/*

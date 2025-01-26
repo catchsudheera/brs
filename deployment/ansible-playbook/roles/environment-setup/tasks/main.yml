@@ -18,7 +18,7 @@
 
 - name: Install Docker and Docker-compose
   block:
-    - name: Installing dependecies for docker installation
+    - name: Installing dependencies for docker installation
       apt:
         name: [ libffi-dev, libssl-dev, python3, python3-pip, sed, nfs-common, python3-requests, python3-docker ]
         update_cache: yes
@@ -43,11 +43,6 @@
          name: '{{ user_name }}'
          groups: docker
          append: yes
-
-    - name: Install docker-compose
-      apt:
-        name: [docker-compose]
-        update_cache: yes
 
 - name: Add docker network for application containers to use
   shell: "docker network inspect {{ docker_network_name }} || docker network create {{ docker_network_name }}"
