@@ -36,12 +36,4 @@ services:
     ports:
       - "3000:3000"
 
-  ddns:
-    image: linuxshots/namecheap-ddns:latest
-    container_name: ddns
-    restart: unless-stopped
-    environment:
-      NC_HOST: "{{ ddns_host }}"
-      NC_DOMAIN: "{{ ddns_domain }}"
-      NC_PASS: "{{ ddns_password }}"
       
