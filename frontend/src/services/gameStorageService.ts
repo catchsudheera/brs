@@ -164,6 +164,21 @@ class GameStorageService {
       transaction.oncomplete = () => db.close();
     });
   }
+
+  async deleteGame(gameId: string): Promise<void> {
+    const db = await this.initDB();
+
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction([this.gamesStoreName], 'readwrite');
+      const store = transaction.objectStore(this.gamesStoreName);
+      const request = store.delete(gameId);
+
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => resolve();
+
+      transaction.oncomplete = () => db.close();
+    });
+  }
 }
 
 export const gameStorageService = new GameStorageService(); 

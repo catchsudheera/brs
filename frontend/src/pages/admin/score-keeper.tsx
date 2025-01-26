@@ -102,6 +102,9 @@ const ScoreKeeperPage = () => {
   const [showSubmitWarning, setShowSubmitWarning] = useState(false);
   const [showSubmitPasswordModal, setShowSubmitPasswordModal] = useState(false);
   const [submitPasswordError, setSubmitPasswordError] = useState(false);
+  const [showCancelWarning, setShowCancelWarning] = useState(false);
+  const [showCancelPasswordModal, setShowCancelPasswordModal] = useState(false);
+  const [cancelPasswordError, setCancelPasswordError] = useState(false);
   
   // Fetch game data from IndexedDB
   React.useEffect(() => {
@@ -164,6 +167,34 @@ const ScoreKeeperPage = () => {
       pathname: '/admin/game-day',
       query: { gameId }
     });
+  };
+
+  const handleCancelGame = () => {
+    setShowCancelWarning(true);
+  };
+
+  const handleCancelConfirm = () => {
+    setShowCancelWarning(false);
+    setShowCancelPasswordModal(true);
+  };
+
+  const handleCancelPasswordVerify = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const passwordInput = (document.getElementById('cancel-password') as HTMLInputElement).value;
+    
+    if (validateEditPassword(passwordInput)) {
+      try {
+        if (typeof gameId === 'string') {
+          await gameStorageService.deleteGame(gameId);
+          router.push('/admin/dashboard');
+        }
+      } catch (error) {
+        console.error('Failed to delete game:', error);
+        // Optionally show error notification
+      }
+    } else {
+      setCancelPasswordError(true);
+    }
   };
 
   if (isLoading) {
@@ -419,14 +450,22 @@ const ScoreKeeperPage = () => {
             {/* Actions Section */}
             <div className="space-y-4">
               <h3 className="text-md font-medium">Actions</h3>
-              <div className="p-6 bg-base-200 rounded-lg">
+              <div className="p-6 bg-base-200 rounded-lg space-y-4">
                 {isGameStarted && (
-                  <button 
-                    className="btn btn-primary w-full"
-                    onClick={handleSubmitResults}
-                  >
-                    Submit Results
-                  </button>
+                  <>
+                    <button 
+                      className="btn btn-primary w-full"
+                      onClick={handleSubmitResults}
+                    >
+                      Submit Results
+                    </button>
+                    <button 
+                      className="btn btn-error btn-outline w-full"
+                      onClick={handleCancelGame}
+                    >
+                      Cancel Game
+                    </button>
+                  </>
                 )}
               </div>
             </div>
@@ -761,6 +800,103 @@ const ScoreKeeperPage = () => {
           </div>
           <form method="dialog" className="modal-backdrop">
             <button onClick={() => setShowSubmitWarning(false)}>close</button>
+          </form>
+        </dialog>
+      )}
+
+      {/* Cancel Warning Modal */}
+      {showCancelWarning && (
+        <dialog className="modal modal-open">
+          <div className="modal-box border-2 border-error">
+            <div className="flex items-start gap-3 mb-4">
+              <svg 
+                className="w-6 h-6 text-error flex-shrink-0 mt-1" 
+                fill="none" 
+                viewBox="0 0 24 24" 
+                stroke="currentColor"
+              >
+                <path 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round" 
+                  strokeWidth={2} 
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" 
+                />
+              </svg>
+              <div>
+                <h3 className="font-bold text-lg text-error">Warning: Cancel Game</h3>
+                <p className="text-gray-600 dark:text-gray-400 mt-2">
+                  This will delete all recorded scores and cannot be undone. Are you sure you want to continue?
+                </p>
+              </div>
+            </div>
+            <div className="modal-action">
+              <button 
+                className="btn btn-outline"
+                onClick={() => setShowCancelWarning(false)}
+              >
+                Go Back
+              </button>
+              <button 
+                className="btn btn-error"
+                onClick={handleCancelConfirm}
+              >
+                Cancel Game
+              </button>
+            </div>
+          </div>
+          <form method="dialog" className="modal-backdrop">
+            <button onClick={() => setShowCancelWarning(false)}>close</button>
+          </form>
+        </dialog>
+      )}
+
+      {/* Cancel Password Modal */}
+      {showCancelPasswordModal && (
+        <dialog className="modal modal-open">
+          <div className="modal-box">
+            <h3 className="font-bold text-lg mb-4">Confirm Game Cancellation</h3>
+            <p className="text-gray-600 dark:text-gray-400 mb-4">
+              Please enter password to confirm game cancellation.
+            </p>
+            <form onSubmit={handleCancelPasswordVerify}>
+              <div className="form-control">
+                <input
+                  type="password"
+                  id="cancel-password"
+                  className={`input input-bordered ${cancelPasswordError ? 'input-error' : ''}`}
+                  placeholder="Enter password"
+                  autoComplete="off"
+                />
+                {cancelPasswordError && (
+                  <label className="label">
+                    <span className="label-text-alt text-error">Incorrect password</span>
+                  </label>
+                )}
+              </div>
+              <div className="modal-action">
+                <button 
+                  type="button"
+                  className="btn btn-outline"
+                  onClick={() => {
+                    setShowCancelPasswordModal(false);
+                    setCancelPasswordError(false);
+                  }}
+                >
+                  Go Back
+                </button>
+                <button type="submit" className="btn btn-error">
+                  Confirm Cancellation
+                </button>
+              </div>
+            </form>
+          </div>
+          <form method="dialog" className="modal-backdrop">
+            <button onClick={() => {
+              setShowCancelPasswordModal(false);
+              setCancelPasswordError(false);
+            }}>
+              close
+            </button>
           </form>
         </dialog>
       )}
