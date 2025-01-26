@@ -20,3 +20,7 @@ api:
 
 server:
   forward-headers-strategy: NATIVE
+
+google:
+  client:
+    id: test-client-id
