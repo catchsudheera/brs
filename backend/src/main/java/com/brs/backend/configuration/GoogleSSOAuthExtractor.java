@@ -42,7 +42,7 @@ public class GoogleSSOAuthExtractor {
 
     public Optional<Authentication> extract(HttpServletRequest request) {
         log.info("List of headers in the call {}", Collections.list(request.getHeaderNames()));
-        String providedKey = request.getHeader(Constants.API_KEY_HEADER_NAME_GOOGLE_SSO);
+        String providedKey = sanitizeBearerToken(request.getHeader(Constants.API_KEY_HEADER_NAME_GOOGLE_SSO));
         log.info("Authenticating for header {}", providedKey);
         if(providedKey == null || providedKey.isEmpty()) {
             return Optional.empty();
@@ -56,6 +56,11 @@ public class GoogleSSOAuthExtractor {
             return Optional.of(new ApiKeyAuth(providedKey, AuthorityUtils.NO_AUTHORITIES));
         }
         return Optional.empty();
+    }
+
+
+    private String sanitizeBearerToken(String bearerToken) {
+        return bearerToken.replace("Bearer ","");
     }
 
 }
