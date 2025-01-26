@@ -80,11 +80,11 @@ const NavigationComponent = () => {
                   <Link href='/' className='flex-shrink-0 flex items-center'>
                     <img
                       className='block h-10 w-auto'
-                      src='/badminton-almere-logo.webp'
+                      src='/dutch-lankan-shuttle-masters-logo.jpeg'
                       alt='Badminton Almere'
                     />
                     <div className='text-xl font-bold text-white ml-4 tracking-tight'>
-                      Badminton Almere
+                      Dutch Lankan Shuttle Masters
                     </div>
                   </Link>
 
