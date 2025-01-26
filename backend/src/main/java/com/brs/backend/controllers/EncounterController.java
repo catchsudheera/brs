@@ -3,6 +3,7 @@ package com.brs.backend.controllers;
 import com.brs.backend.core.RankScoreCalculator;
 import com.brs.backend.core.RankScoreCalculatorProvider;
 import com.brs.backend.dto.EncounterResult;
+import com.brs.backend.dto.EncounterResultV2;
 import com.brs.backend.dto.PlayerEncounterHistoryRecord;
 import com.brs.backend.model.Encounter;
 import com.brs.backend.model.Player;
@@ -68,6 +69,18 @@ public class EncounterController {
         return "ok";
     }
 
+    @PostMapping("/v2/encounters/{date}/add")
+    private String addEncountersV2(
+            @PathVariable LocalDate date,
+            @RequestBody EncounterResultV2 result
+    ) {
+        log.info("V2 endpoint Adding team 1 : {} and team 2 : {} for date : {}", result.team1(), result.team2(), date);
+
+        Encounter saved = persistEncounterResultV2(date, result);
+        log.info("Saved : {}", saved.getId());
+        return "ok";
+    }
+
     @PostMapping(value = "/encounters/add-by-file", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Parameter(name = "x-api-key", required = true, example = "sample-api-key", in = ParameterIn.HEADER)
     private String addEncountersByFile(@RequestParam("file") MultipartFile file) {
@@ -113,6 +126,11 @@ public class EncounterController {
         return encounterService.getPlayerEncounterHistory(teamAp1, teamAp2, teamBp1, teamBp2);
     }
 
+    @PostMapping("/v2/validate")
+    private String processToken(@PathVariable LocalDate date) {
+        return "Wade Goda";
+    }
+
     @PostMapping("/encounters/{date}/process")
     @Parameter(name = "x-api-key", required = true, example = "sample-api-key", in = ParameterIn.HEADER)
     private String processEncounter(@PathVariable LocalDate date) {
@@ -152,12 +170,30 @@ public class EncounterController {
         return "Done";
     }
 
+    @PostMapping("/v2/encounters/{date}/process")
+    private String processEncounterV2(@PathVariable LocalDate date) {
+        return processEncounter(date);
+    }
+
 
     private Encounter persistEncounterResult(LocalDate date, EncounterResult result) {
         Encounter encounter = Encounter.builder()
                 .encounterDate(date)
                 .team1(playerUtil.getTeamPlayerIdsString(result.team1()))
                 .team2(playerUtil.getTeamPlayerIdsString(result.team2()))
+                .processed(false)
+                .team1SetPoints(result.team1().setPoints())
+                .team2SetPoints(result.team2().setPoints())
+                .build();
+
+        return encounterRepository.save(encounter);
+    }
+
+    private Encounter persistEncounterResultV2(LocalDate date, EncounterResultV2 result) {
+        Encounter encounter = Encounter.builder()
+                .encounterDate(date)
+                .team1(playerUtil.getTeamPlayerIdsStringV2(result.team1()))
+                .team2(playerUtil.getTeamPlayerIdsStringV2(result.team2()))
                 .processed(false)
                 .team1SetPoints(result.team1().setPoints())
                 .team2SetPoints(result.team2().setPoints())

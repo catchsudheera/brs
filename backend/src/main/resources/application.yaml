@@ -13,9 +13,14 @@ host:
 
 api:
   key: sample-api-key
+  admin-emails : test@test.com, test2@test.com
   tg:
     key: sample-telegram-key
     group: sample-group-id
 
 server:
   forward-headers-strategy: NATIVE
+
+google:
+  client:
+    id: test-client-id
