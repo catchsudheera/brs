@@ -11,6 +11,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.stereotype.Component;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -40,7 +41,9 @@ public class GoogleSSOAuthExtractor {
 
 
     public Optional<Authentication> extract(HttpServletRequest request) {
+        log.info("List of headers in the call {}", Collections.list(request.getHeaderNames()));
         String providedKey = request.getHeader(Constants.API_KEY_HEADER_NAME_GOOGLE_SSO);
+        log.info("Authenticating for header {}", providedKey);
         if(providedKey == null || providedKey.isEmpty()) {
             return Optional.empty();
         }
