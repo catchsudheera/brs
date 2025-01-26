@@ -14,7 +14,7 @@ host:
 api:
   key: sample-api-key
   admin:
-    emails : test@test.com, test2@test.com
+    emails: test@test.com, test2@test.com
   tg:
     key: sample-telegram-key
     group: sample-group-id
