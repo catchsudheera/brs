@@ -4,6 +4,7 @@ import { usePlayerContext } from '@/contexts/PlayerContext';
 import { capitalizeFirstLetter } from '@/utils/string';
 import { gameStorageService } from '@/services/gameStorageService';
 import type { GameScore } from '@/services/gameStorageService';
+import { validateEditPassword } from '@/utils/password';
 
 interface MatchCombination {
   team1: string[];
@@ -95,6 +96,9 @@ const ScoreKeeperPage = () => {
   const [activeGroup, setActiveGroup] = useState<string>('');
   const [isGameStarted, setIsGameStarted] = useState(false);
   const [selectedMatch, setSelectedMatch] = useState<SelectedMatch | null>(null);
+  const [passwordModalOpen, setPasswordModalOpen] = useState(false);
+  const [pendingMatch, setPendingMatch] = useState<SelectedMatch | null>(null);
+  const [passwordError, setPasswordError] = useState(false);
   
   // Fetch game data from IndexedDB
   React.useEffect(() => {
@@ -110,6 +114,7 @@ const ScoreKeeperPage = () => {
             scores: game.scores || {}  // Ensure scores object exists
           };
           setGameData(gameWithScores);
+          setIsGameStarted(!!game.isStarted); // Set from stored value
           
           // Set initial active group
           if (Object.keys(game.groups).length > 0 && !activeGroup) {
@@ -240,18 +245,55 @@ const ScoreKeeperPage = () => {
     });
   };
 
-  const handleStart = () => {
-    setIsGameStarted(true);
+  const handleStart = async () => {
+    if (!gameData || typeof gameId !== 'string') return;
+
+    try {
+      await gameStorageService.updateGameStarted(gameId, true);
+      setIsGameStarted(true);
+    } catch (error) {
+      console.error('Failed to update game started state:', error);
+      // Optionally show an error message to the user
+    }
   };
 
   const handleMatchClick = (groupName: string, matchIndex: number, match: MatchCombination) => {
     if (!isGameStarted) return;
-    setSelectedMatch({
-      groupName,
-      matchIndex,
-      team1: match.team1,
-      team2: match.team2
-    });
+    
+    // Check if match already has scores
+    const existingScore = gameData?.scores?.[groupName]?.[matchIndex];
+    if (existingScore && (existingScore.team1Score > 0 || existingScore.team2Score > 0)) {
+      // Store the match details and show password modal
+      setPendingMatch({
+        groupName,
+        matchIndex,
+        team1: match.team1,
+        team2: match.team2
+      });
+      setPasswordModalOpen(true);
+    } else {
+      // For new scores, no password needed
+      setSelectedMatch({
+        groupName,
+        matchIndex,
+        team1: match.team1,
+        team2: match.team2
+      });
+    }
+  };
+
+  const handlePasswordSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const passwordInput = (document.getElementById('edit-password') as HTMLInputElement).value;
+    
+    if (validateEditPassword(passwordInput)) {
+      setPasswordModalOpen(false);
+      setPasswordError(false);
+      setSelectedMatch(pendingMatch);
+      setPendingMatch(null);
+    } else {
+      setPasswordError(true);
+    }
   };
 
   return (
@@ -460,7 +502,57 @@ const ScoreKeeperPage = () => {
         </div>
       )}
 
-      {/* Score Input Modal */}
+      {/* Password Modal */}
+      {passwordModalOpen && (
+        <dialog className="modal modal-open">
+          <div className="modal-box">
+            <h3 className="font-bold text-lg mb-4">Enter Password to Edit Score</h3>
+            <form onSubmit={handlePasswordSubmit}>
+              <div className="form-control">
+                <input
+                  type="password"
+                  id="edit-password"
+                  className={`input input-bordered ${passwordError ? 'input-error' : ''}`}
+                  placeholder="Enter password"
+                  autoComplete="off"
+                />
+                {passwordError && (
+                  <label className="label">
+                    <span className="label-text-alt text-error">Incorrect password</span>
+                  </label>
+                )}
+              </div>
+              <div className="modal-action">
+                <button 
+                  type="button"
+                  className="btn btn-outline"
+                  onClick={() => {
+                    setPasswordModalOpen(false);
+                    setPasswordError(false);
+                    setPendingMatch(null);
+                  }}
+                >
+                  Cancel
+                </button>
+                <button type="submit" className="btn btn-primary">
+                  Confirm
+                </button>
+              </div>
+            </form>
+          </div>
+          <form method="dialog" className="modal-backdrop">
+            <button onClick={() => {
+              setPasswordModalOpen(false);
+              setPasswordError(false);
+              setPendingMatch(null);
+            }}>
+              close
+            </button>
+          </form>
+        </dialog>
+      )}
+
+      {/* Existing Score Input Modal */}
       {selectedMatch && (
         <dialog className="modal modal-open">
           <div className="modal-box">
