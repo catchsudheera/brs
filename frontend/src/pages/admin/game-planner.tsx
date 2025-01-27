@@ -6,8 +6,6 @@ import { capitalizeFirstLetter } from '@/utils/string';
 import { gameStorageService } from '@/services/gameStorageService';
 import type { Player } from '@/types/player';
 
-const AUTH_ENABLED = process.env.NEXT_AUTH_ENABLED === 'true';
-
 const MIN_PLAYERS = 4;
 const MAX_PLAYERS = 20;
 const MAX_GROUPS = 4;
@@ -66,12 +64,12 @@ const GamePlannerPage = () => {
 
   // Only redirect if auth is enabled
   React.useEffect(() => {
-    if (AUTH_ENABLED && status === 'unauthenticated') {
+    if (status === 'unauthenticated') {
       router.push('/admin/login');
     }
   }, [status, router]);
 
-  if (AUTH_ENABLED && status === 'loading') {
+  if (status === 'loading') {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <div className="loading loading-spinner loading-lg"></div>
