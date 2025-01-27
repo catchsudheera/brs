@@ -6,9 +6,6 @@ group_name: "{{ gv_local_brs_group }}"
 group_gid: "{{ gv_local_brs_gid }}"
 user_home: "{{ gv_local_brs_user_home }}"
 
-# Docker network setup
-docker_network_name: "{{ gv_docker_network_name }}"
-
 # Directory setup
 
 ## Server data location type. Options : [local, nfs]

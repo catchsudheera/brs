@@ -10,8 +10,6 @@ gv_local_brs_group: brs-users
 gv_local_brs_gid: 1000
 gv_local_brs_user_home: "/home/{{ gv_local_brs_user }}"
 
-gv_docker_network_name: brs-server-network
-
 # Storage location type. Options : [local, nfs]
 gv_storage_location_type: local
 

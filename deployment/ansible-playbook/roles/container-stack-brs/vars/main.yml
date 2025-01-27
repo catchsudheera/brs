@@ -6,11 +6,10 @@ server_data_dir_group: "{{ gv_local_brs_group }}"
 server_data_dir_group_id: "{{ gv_local_brs_gid }}"
 
 server_timezone: "{{ gv_server_timezone }}"
-# Container stack
 
+# Container stack
 container_data_root: "{{ gv_container_data_root }}"
 brs_container_stack_location: "{{ gv_local_brs_user_home }}/.container-stack-brs"
-docker_network_name: "{{ gv_docker_network_name }}"
 
 # Mysql
 
