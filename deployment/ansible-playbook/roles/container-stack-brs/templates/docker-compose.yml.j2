@@ -1,4 +1,3 @@
-version: '3.8'
 services:
   db:
     image: mysql:8.3.0
@@ -33,12 +32,12 @@ services:
     restart: unless-stopped
     environment:
       NEXT_PUBLIC_BACKEND_URL: {{ backend_host_url }}
-      NEXTAUTH_URL: {{  }}
-      NEXTAUTH_SECRET: {{  }}
-      GOOGLE_CLIENT_ID: {{  }}
-      GOOGLE_CLIENT_SECRET: {{  }}
-      ALLOWED_ADMIN_EMAILS: {{  }}
-      NEXT_PUBLIC_AUTH_ENABLED: {{  }}
+      NEXTAUTH_URL: {{ nextauth_url }}
+      NEXTAUTH_SECRET: {{ nextauth_secret }}
+      GOOGLE_CLIENT_ID: {{ google_client_id }}
+      GOOGLE_CLIENT_SECRET: {{ google_client_secret }}
+      ALLOWED_ADMIN_EMAILS: {{ allowed_admin_emails }}
+      NEXT_PUBLIC_AUTH_ENABLED: {{ next_public_auth_enabled }}
     ports:
       - "3000:3000"
 
@@ -48,16 +47,16 @@ services:
     cap_add:
       - NET_ADMIN
     environment:
-      - PUID={{ server_data_dir_user_id }}
-      - PGID={{ server_data_dir_group_id }}
-      - TZ={{ server_timezone }}
-      - URL={{ server_domain_name }}
-      - SUBDOMAINS=wildcard
-      - VALIDATION=dns
-      - DNSPLUGIN=cloudflare
-      - EMAIL={{ notification_email }}
+      PUID: {{ server_data_dir_user_id }}
+      PGID: {{ server_data_dir_group_id }}
+      TZ: {{ server_timezone }}
+      URL: {{ server_domain_name }}
+      SUBDOMAINS: wildcard
+      VALIDATION: dns
+      DNSPLUGIN: cloudflare
+      EMAIL: {{ notification_email }}
 {% if use_lets_encrypt_staging_server == true %}
-      - STAGING=true
+      STAGING: true
 {% endif %}
     volumes:
       - {{ swag_config_path }}:/config
@@ -70,14 +69,15 @@ services:
       timeout: 30s
       retries: 10
       start_period: 2m
-    restart: always
+    restart: unless-stopped
 
   cloudflare-ddns:
+    container_name: cloudflare-ddns
     image: oznu/cloudflare-ddns:latest
-    restart: always
+    restart: unless-stopped
     environment:
-      - API_KEY: {{ cloudflare_ddns_api_key }}
-      - ZONE: {{ cloudflare_ddns_zone }}
-      - SUBDOMAIN=subdomain
-      - PROXIED=false
+      API_KEY: {{ cloudflare_ddns_api_key }}
+      ZONE: {{ cloudflare_ddns_zone }}
+      SUBDOMAIN: subdomain
+      PROXIED: false
 
