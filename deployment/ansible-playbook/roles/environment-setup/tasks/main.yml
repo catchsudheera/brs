@@ -44,9 +44,6 @@
          groups: docker
          append: yes
 
-- name: Add docker network for application containers to use
-  shell: "docker network inspect {{ docker_network_name }} || docker network create {{ docker_network_name }}"
-
 - name: Create server data directories
   block:
     - name: Mount server data NFS and add docker systemd dependency
