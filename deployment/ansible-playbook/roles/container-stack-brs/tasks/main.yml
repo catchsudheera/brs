@@ -13,6 +13,13 @@
     owner: "{{ server_data_dir_user }}"
     group: "{{ server_data_dir_group }}"
 
+- name: Create SWAG directories
+  file:
+    path: "{{ swag_config_path }}"
+    state: directory
+    owner: "{{ server_data_dir_user }}"
+    group: "{{ server_data_dir_group }}"
+
 - name: Create Mysql data directories
   file:
     path: "{{ mysql_config_path }}/var-lib-mysql"
