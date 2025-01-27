@@ -6,7 +6,7 @@ import { capitalizeFirstLetter } from '@/utils/string';
 import { gameStorageService } from '@/services/gameStorageService';
 import type { Player } from '@/types/player';
 
-const AUTH_ENABLED = process.env.NEXT_PUBLIC_AUTH_ENABLED === 'true';
+const AUTH_ENABLED = process.env.NEXT_AUTH_ENABLED === 'true';
 
 const MIN_PLAYERS = 4;
 const MAX_PLAYERS = 20;
