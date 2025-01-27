@@ -32,8 +32,52 @@ services:
     container_name: frontend
     restart: unless-stopped
     environment:
-      BACKEND_URL: {{ backend_host_url }}
+      NEXT_PUBLIC_BACKEND_URL: {{ backend_host_url }}
+      NEXTAUTH_URL: {{  }}
+      NEXTAUTH_SECRET: {{  }}
+      GOOGLE_CLIENT_ID: {{  }}
+      GOOGLE_CLIENT_SECRET: {{  }}
+      ALLOWED_ADMIN_EMAILS: {{  }}
+      NEXT_PUBLIC_AUTH_ENABLED: {{  }}
     ports:
       - "3000:3000"
 
-      
+  swag:
+    image: lscr.io/linuxserver/swag
+    container_name: swag
+    cap_add:
+      - NET_ADMIN
+    environment:
+      - PUID={{ server_data_dir_user_id }}
+      - PGID={{ server_data_dir_group_id }}
+      - TZ={{ server_timezone }}
+      - URL={{ server_domain_name }}
+      - SUBDOMAINS=wildcard
+      - VALIDATION=dns
+      - DNSPLUGIN=cloudflare
+      - EMAIL={{ notification_email }}
+{% if use_lets_encrypt_staging_server == true %}
+      - STAGING=true
+{% endif %}
+    volumes:
+      - {{ swag_config_path }}:/config
+    ports:
+      - 443:443
+      - 80:80
+    healthcheck:
+      test: ["CMD-SHELL", "curl -L -k -s -X GET -I  https://localhost:443 | grep 'HTTP/2 200' || exit 1"]
+      interval: 2m
+      timeout: 30s
+      retries: 10
+      start_period: 2m
+    restart: always
+
+  cloudflare-ddns:
+    image: oznu/cloudflare-ddns:latest
+    restart: always
+    environment:
+      - API_KEY: {{ cloudflare_ddns_api_key }}
+      - ZONE: {{ cloudflare_ddns_zone }}
+      - SUBDOMAIN=subdomain
+      - PROXIED=false
+
