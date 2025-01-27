@@ -31,7 +31,7 @@ nextauth_secret: "{{ gv_nextauth_secret }}"
 google_client_id: "{{ gv_google_client_id }}"
 google_client_secret: "{{ gv_google_client_secret }}"
 allowed_admin_emails: "{{ gv_allowed_admin_emails }}"
-next_public_auth_enabled: "{{ gv_next_public_auth_enabled }}"
+next_auth_enabled: "{{ gv_next_auth_enabled }}"
 
 #SWAG
 server_domain_name: "{{ gv_server_domain_name }}"
