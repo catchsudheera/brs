@@ -42,6 +42,20 @@
     group: "{{ server_data_dir_group }}"
     mode: '0400'
 
+- name: Copy nginx default config
+  copy:
+    src: default.conf
+    dest: "{{ swag_config_path }}/nginx/site-confs/default.conf"
+    owner: "{{ server_data_dir_user }}"
+    group: "{{ server_data_dir_group }}"
+
+- name: Copy backend container subdomain config
+  copy:
+    src: backend.subdomain.conf
+    dest: "{{ swag_config_path }}/nginx/proxy-confs/backend.subdomain.conf"
+    owner: "{{ server_data_dir_user }}"
+    group: "{{ server_data_dir_group }}"
+
 - name: Start Docker containers using docker-compose
   community.docker.docker_compose_v2:
     project_src: "{{ brs_container_stack_location }}"
