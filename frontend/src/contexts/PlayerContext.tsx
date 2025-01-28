@@ -31,7 +31,7 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({
       setLoading(true);
       try {
         const response = await axios.get<Player[]>(
-          process.env.NEXT_PUBLIC_BACKEND_URL + '/players',
+          'https://brs.aragorn-media-server.duckdns.org/players',
         );
         const processedData = response.data.map((player) => ({
           ...player,

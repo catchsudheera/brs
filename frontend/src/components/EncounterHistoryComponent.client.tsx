@@ -148,7 +148,7 @@ const EncounterHistoryComponent = () => {
     setIsLoading(true);
     try {
       const res = await fetch(
-         `${process.env.NEXT_PUBLIC_BACKEND_URL}/encounters-for-players?teamAp1=${teamA1}&teamAp2=${teamA2}&teamBp1=${teamB1}&teamBp2=${teamB2}`
+        `https://brs.aragorn-media-server.duckdns.org/encounters-for-players?teamAp1=${teamA1}&teamAp2=${teamA2}&teamBp1=${teamB1}&teamBp2=${teamB2}`
       );
       const data = await res.json();
       setResult(data);
