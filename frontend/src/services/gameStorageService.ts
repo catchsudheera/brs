@@ -6,13 +6,17 @@ export interface Game {
   };
 }
 
+export interface MatchResult {
+  team1Score: number;
+  team2Score: number;
+  isSubmitted?: boolean;
+}
+
 export interface GameScore extends Game {
+  isStarted?: boolean;
   scores: {
     [groupName: string]: {
-      [matchIndex: number]: {
-        team1Score: number;
-        team2Score: number;
-      };
+      [matchIndex: number]: MatchResult;
     };
   };
 }
@@ -119,6 +123,58 @@ class GameStorageService {
         groups,
         scores: {} // Reset scores when groups are updated
       });
+
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => resolve();
+
+      transaction.oncomplete = () => db.close();
+    });
+  }
+
+  async getAllGames(): Promise<GameScore[]> {
+    const db = await this.initDB();
+    
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction([this.gamesStoreName], 'readonly');
+      const store = transaction.objectStore(this.gamesStoreName);
+      const request = store.getAll();
+
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => resolve(request.result);
+
+      transaction.oncomplete = () => db.close();
+    });
+  }
+
+  async updateGameStarted(gameId: string, isStarted: boolean): Promise<void> {
+    const db = await this.initDB();
+    const game = await this.getGame(gameId);
+
+    if (!game) throw new Error('Game not found');
+
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction([this.gamesStoreName], 'readwrite');
+      const store = transaction.objectStore(this.gamesStoreName);
+
+      const request = store.put({
+        ...game,
+        isStarted
+      });
+
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => resolve();
+
+      transaction.oncomplete = () => db.close();
+    });
+  }
+
+  async deleteGame(gameId: string): Promise<void> {
+    const db = await this.initDB();
+
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction([this.gamesStoreName], 'readwrite');
+      const store = transaction.objectStore(this.gamesStoreName);
+      const request = store.delete(gameId);
 
       request.onerror = () => reject(request.error);
       request.onsuccess = () => resolve();

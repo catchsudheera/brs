@@ -1,9 +1,11 @@
 import React from 'react';
 import { useRouter } from 'next/router';
 import { usePlayerContext } from '@/contexts/PlayerContext';
-import { capitalizeFirstLetter } from '@/utils/string';
 import { gameStorageService } from '@/services/gameStorageService';
+import { GroupCard } from '@/components/game-day/GroupCard';
+import { NavigationButtons } from '@/components/game-day/NavigationButtons';
 import type { GameScore } from '@/services/gameStorageService';
+import type { Player } from '@/types/player';
 
 const GameDayPage = () => {
   const router = useRouter();
@@ -74,7 +76,7 @@ const GameDayPage = () => {
       .filter((player): player is NonNullable<typeof player> => player !== undefined)
       .sort((a, b) => a.playerRank - b.playerRank);
     return acc;
-  }, {} as Record<string, typeof players>);
+  }, {} as Record<string, Player[]>);
 
   return (
     <div className="container mx-auto p-4">
@@ -89,56 +91,20 @@ const GameDayPage = () => {
 
       <div className="bg-base-100 rounded-lg shadow-lg overflow-hidden">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-base-200">
-          {Object.entries(groups).map(([groupName, players]) => (
-            <div key={groupName} className="p-4">
-              <h2 className="text-lg font-semibold mb-3 pb-2 border-b border-base-200">
-                {groupName}
-                <span className="text-sm font-normal text-gray-500 ml-2">
-                  ({players.length} players)
-                </span>
-              </h2>
-              <div className="space-y-2">
-                {players.map((player, index) => (
-                  <div 
-                    key={player.id}
-                    className={`flex items-center justify-between py-1 ${
-                      index !== players.length - 1 ? 'border-b border-base-200/50' : ''
-                    }`}
-                  >
-                    <div className="flex items-center space-x-2">
-                      <span className="text-sm font-medium">
-                        {capitalizeFirstLetter(player.name)}
-                      </span>
-                      <span className="text-xs text-gray-500">
-                        (#{player.playerRank})
-                      </span>
-                    </div>
-                    <div className="text-xs font-medium text-gray-500">
-                      {player.rankScore.toFixed(1)}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+          {Object.entries(groups).map(([groupName, groupPlayers]) => (
+            <GroupCard
+              key={groupName}
+              groupName={groupName}
+              players={groupPlayers}
+            />
           ))}
         </div>
       </div>
 
-      {/* Navigation Buttons */}
-      <div className="flex justify-between mt-6">
-        <button 
-          className="btn btn-outline"
-          onClick={handleBack}
-        >
-          Back to Selection
-        </button>
-        <button 
-          className="btn btn-primary"
-          onClick={handleContinue}
-        >
-          Continue to Score Keeper
-        </button>
-      </div>
+      <NavigationButtons
+        onBack={handleBack}
+        onContinue={handleContinue}
+      />
     </div>
   );
 };

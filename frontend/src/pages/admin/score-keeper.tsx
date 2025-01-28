@@ -4,6 +4,9 @@ import { usePlayerContext } from '@/contexts/PlayerContext';
 import { capitalizeFirstLetter } from '@/utils/string';
 import { gameStorageService } from '@/services/gameStorageService';
 import type { GameScore } from '@/services/gameStorageService';
+import { validateEditPassword } from '@/utils/password';
+import { useSession, getSession } from 'next-auth/react';
+import { ProcessScoresModal } from '@/components/score-keeper/ProcessScoresModal';
 
 interface MatchCombination {
   team1: string[];
@@ -13,10 +16,11 @@ interface MatchCombination {
 interface MatchScore {
   team1Score: number;
   team2Score: number;
+  isSubmitted?: boolean;
 }
 
 interface GroupScores {
-  [matchIndex: number]: MatchScore;
+  [matchIndex: string]: MatchScore;
 }
 
 interface AllScores {
@@ -95,6 +99,23 @@ const ScoreKeeperPage = () => {
   const [activeGroup, setActiveGroup] = useState<string>('');
   const [isGameStarted, setIsGameStarted] = useState(false);
   const [selectedMatch, setSelectedMatch] = useState<SelectedMatch | null>(null);
+  const [passwordModalOpen, setPasswordModalOpen] = useState(false);
+  const [pendingMatch, setPendingMatch] = useState<SelectedMatch | null>(null);
+  const [passwordError, setPasswordError] = useState(false);
+  const [showSubmitWarning, setShowSubmitWarning] = useState(false);
+  const [showSubmitPasswordModal, setShowSubmitPasswordModal] = useState(false);
+  const [submitPasswordError, setSubmitPasswordError] = useState(false);
+  const [showCancelWarning, setShowCancelWarning] = useState(false);
+  const [showCancelPasswordModal, setShowCancelPasswordModal] = useState(false);
+  const [cancelPasswordError, setCancelPasswordError] = useState(false);
+  const { data: session } = useSession();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitProgress, setSubmitProgress] = useState(0);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [showProcessModal, setShowProcessModal] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [processError, setProcessError] = useState<string | null>(null);
+  const [processSuccess, setProcessSuccess] = useState(false);
   
   // Fetch game data from IndexedDB
   React.useEffect(() => {
@@ -110,6 +131,7 @@ const ScoreKeeperPage = () => {
             scores: game.scores || {}  // Ensure scores object exists
           };
           setGameData(gameWithScores);
+          setIsGameStarted(!!game.isStarted); // Set from stored value
           
           // Set initial active group
           if (Object.keys(game.groups).length > 0 && !activeGroup) {
@@ -158,6 +180,215 @@ const ScoreKeeperPage = () => {
     });
   };
 
+  const handleCancelGame = () => {
+    setShowCancelWarning(true);
+  };
+
+  const handleCancelConfirm = () => {
+    setShowCancelWarning(false);
+    setShowCancelPasswordModal(true);
+  };
+
+  const handleCancelPasswordVerify = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const passwordInput = (document.getElementById('cancel-password') as HTMLInputElement).value;
+    
+    if (validateEditPassword(passwordInput)) {
+      try {
+        if (typeof gameId === 'string') {
+          await gameStorageService.deleteGame(gameId);
+          router.push('/admin/dashboard');
+        }
+      } catch (error) {
+        console.error('Failed to delete game:', error);
+        // Optionally show error notification
+      }
+    } else {
+      setCancelPasswordError(true);
+    }
+  };
+
+  const submitMatchResult = async (
+    date: string,
+    team1Players: number[],
+    team2Players: number[],
+    team1Score: number,
+    team2Score: number
+  ) => {
+    const session = await getSession();
+    
+    const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/v2/encounters/${date}/add`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session?.accessToken}`,
+      },
+      body: JSON.stringify({
+        team1: {
+          player1: team1Players[0],
+          player2: team1Players[1],
+          setPoints: team1Score
+        },
+        team2: {
+          player1: team2Players[0],
+          player2: team2Players[1],
+          setPoints: team2Score
+        }
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to submit result: ${response.statusText}`);
+    }
+  };
+
+  const handleProcessScores = async () => {
+    setIsProcessing(true);
+    setProcessError(null);
+    
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/v2/encounters/${gameId}/process`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${session?.accessToken}`,
+          }
+        }
+      );
+
+      const errorText = await response.text();
+      
+      if (!response.ok) {
+        throw new Error(
+          response.status === 403 
+            ? 'Not authorized to process scores' 
+            : errorText || 'Failed to process scores'
+        );
+      }
+
+      // Delete game from IndexedDB on success
+      if (typeof gameId === 'string') {
+        await gameStorageService.deleteGame(gameId);
+      }
+      
+      // Set success state
+      setProcessSuccess(true);
+    } catch (error) {
+      console.error('Error processing scores:', error);
+      setProcessError(error instanceof Error ? error.message : 'Failed to process scores');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleFinalSubmit = async () => {
+    if (!gameData || typeof gameId !== 'string') return;
+
+    // First check if there are any unsubmitted scores
+    let hasUnsubmittedScores = false;
+    let hasScores = false;
+
+    Object.values(gameData.scores).forEach(matches => {
+      Object.values(matches).forEach(score => {
+        if (score.team1Score > 0 || score.team2Score > 0) {
+          hasScores = true;
+          if (!score.isSubmitted) {
+            hasUnsubmittedScores = true;
+          }
+        }
+      });
+    });
+
+    // If all scores are already submitted, show process modal directly
+    if (hasScores && !hasUnsubmittedScores) {
+      setShowProcessModal(true);
+      return;
+    }
+
+    setIsSubmitting(true);
+    setSubmitProgress(0);
+    setSubmitError(null);
+
+    const date = gameId;
+    let totalMatches = 0;
+    let completedMatches = 0;
+    const updatedScores: AllScores = { ...gameData.scores };
+
+    // Count total unsubmitted matches to submit
+    Object.entries(gameData.scores).forEach(([_, matches]) => {
+      Object.values(matches).forEach(score => {
+        if ((score.team1Score > 0 || score.team2Score > 0) && !score.isSubmitted) {
+          totalMatches++;
+        }
+      });
+    });
+
+    try {
+      for (const [groupName, matches] of Object.entries(gameData.scores)) {
+        const groupPlayers = gameData.groups[groupName];
+        updatedScores[groupName] = { ...matches };
+        
+        for (const [matchIndex, score] of Object.entries(matches)) {
+          // Skip if no scores or already submitted
+          if (score.isSubmitted || (score.team1Score === 0 && score.team2Score === 0)) {
+            continue;
+          }
+
+          const matchCombinations = getMatchCombinations(
+            groupPlayers.map(id => players.find(p => p.id === id)?.name || '')
+          );
+          const matchIndexNum = parseInt(matchIndex);
+          const match = matchCombinations[matchIndexNum];
+          
+          const team1Players = match.team1.map(name => 
+            players.find(p => p.name === name)?.id
+          ).filter((id): id is number => id !== undefined);
+          
+          const team2Players = match.team2.map(name => 
+            players.find(p => p.name === name)?.id
+          ).filter((id): id is number => id !== undefined);
+
+          try {
+            await submitMatchResult(
+              date,
+              team1Players,
+              team2Players,
+              score.team1Score,
+              score.team2Score
+            );
+
+            updatedScores[groupName][matchIndex] = {
+              ...score,
+              isSubmitted: true
+            };
+            
+            completedMatches++;
+            setSubmitProgress((completedMatches / totalMatches) * 100);
+            
+          } catch (error) {
+            console.error('Failed to submit match:', error);
+            setSubmitError(`Failed to submit some results. Please try again.`);
+            return;
+          }
+        }
+      }
+
+      await gameStorageService.updateGameScores(gameId, updatedScores);
+      setGameData({
+        ...gameData,
+        scores: updatedScores
+      });
+
+      setShowProcessModal(true);
+    } catch (error) {
+      console.error('Submission error:', error);
+      setSubmitError('An error occurred during submission.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -196,7 +427,7 @@ const ScoreKeeperPage = () => {
       const groupScores: GroupScores = {};
       
       for (let i = 0; i < matchCount; i++) {
-        groupScores[i] = { team1Score: 0, team2Score: 0 };
+        groupScores[i.toString()] = { team1Score: 0, team2Score: 0 };
       }
       
       setGameData(prev => {
@@ -240,18 +471,78 @@ const ScoreKeeperPage = () => {
     });
   };
 
-  const handleStart = () => {
-    setIsGameStarted(true);
+  const handleStart = async () => {
+    if (!gameData || typeof gameId !== 'string') return;
+
+    try {
+      await gameStorageService.updateGameStarted(gameId, true);
+      setIsGameStarted(true);
+    } catch (error) {
+      console.error('Failed to update game started state:', error);
+      // Optionally show an error message to the user
+    }
   };
 
   const handleMatchClick = (groupName: string, matchIndex: number, match: MatchCombination) => {
     if (!isGameStarted) return;
-    setSelectedMatch({
-      groupName,
-      matchIndex,
-      team1: match.team1,
-      team2: match.team2
-    });
+    
+    // Check if match already has scores
+    const existingScore = gameData?.scores?.[groupName]?.[matchIndex];
+    if (existingScore && (existingScore.team1Score > 0 || existingScore.team2Score > 0)) {
+      // Store the match details and show password modal
+      setPendingMatch({
+        groupName,
+        matchIndex,
+        team1: match.team1,
+        team2: match.team2
+      });
+      setPasswordModalOpen(true);
+    } else {
+      // For new scores, no password needed
+      setSelectedMatch({
+        groupName,
+        matchIndex,
+        team1: match.team1,
+        team2: match.team2
+      });
+    }
+  };
+
+  const handlePasswordSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const passwordInput = (document.getElementById('edit-password') as HTMLInputElement).value;
+    
+    if (validateEditPassword(passwordInput)) {
+      setPasswordModalOpen(false);
+      setPasswordError(false);
+      setSelectedMatch(pendingMatch);
+      setPendingMatch(null);
+    } else {
+      setPasswordError(true);
+    }
+  };
+
+  const handleSubmitResults = () => {
+    const { totalGames, completedGames } = getGameStats(groups, gameData.scores || {});
+    
+    if (completedGames < totalGames) {
+      setShowSubmitWarning(true);
+    } else {
+      setShowSubmitPasswordModal(true);
+    }
+  };
+
+  const handleSubmitPasswordVerify = (e: React.FormEvent) => {
+    e.preventDefault();
+    const passwordInput = (document.getElementById('submit-password') as HTMLInputElement).value;
+    
+    if (validateEditPassword(passwordInput)) {
+      setShowSubmitPasswordModal(false);
+      setSubmitPasswordError(false);
+      handleFinalSubmit();
+    } else {
+      setSubmitPasswordError(true);
+    }
   };
 
   return (
@@ -345,17 +636,22 @@ const ScoreKeeperPage = () => {
             {/* Actions Section */}
             <div className="space-y-4">
               <h3 className="text-md font-medium">Actions</h3>
-              <div className="p-6 bg-base-200 rounded-lg">
+              <div className="p-6 bg-base-200 rounded-lg space-y-4">
                 {isGameStarted && (
-                  <button 
-                    className="btn btn-primary w-full"
-                    onClick={() => {
-                      // TODO: Handle results submission
-                      console.log('Submitting results...');
-                    }}
-                  >
-                    Submit Results
-                  </button>
+                  <>
+                    <button 
+                      className="btn btn-primary w-full"
+                      onClick={handleSubmitResults}
+                    >
+                      Submit Results
+                    </button>
+                    <button 
+                      className="btn btn-error btn-outline w-full"
+                      onClick={handleCancelGame}
+                    >
+                      Cancel Game
+                    </button>
+                  </>
                 )}
               </div>
             </div>
@@ -460,7 +756,57 @@ const ScoreKeeperPage = () => {
         </div>
       )}
 
-      {/* Score Input Modal */}
+      {/* Password Modal */}
+      {passwordModalOpen && (
+        <dialog className="modal modal-open">
+          <div className="modal-box">
+            <h3 className="font-bold text-lg mb-4">Enter Password to Edit Score</h3>
+            <form onSubmit={handlePasswordSubmit}>
+              <div className="form-control">
+                <input
+                  type="password"
+                  id="edit-password"
+                  className={`input input-bordered ${passwordError ? 'input-error' : ''}`}
+                  placeholder="Enter password"
+                  autoComplete="off"
+                />
+                {passwordError && (
+                  <label className="label">
+                    <span className="label-text-alt text-error">Incorrect password</span>
+                  </label>
+                )}
+              </div>
+              <div className="modal-action">
+                <button 
+                  type="button"
+                  className="btn btn-outline"
+                  onClick={() => {
+                    setPasswordModalOpen(false);
+                    setPasswordError(false);
+                    setPendingMatch(null);
+                  }}
+                >
+                  Cancel
+                </button>
+                <button type="submit" className="btn btn-primary">
+                  Confirm
+                </button>
+              </div>
+            </form>
+          </div>
+          <form method="dialog" className="modal-backdrop">
+            <button onClick={() => {
+              setPasswordModalOpen(false);
+              setPasswordError(false);
+              setPendingMatch(null);
+            }}>
+              close
+            </button>
+          </form>
+        </dialog>
+      )}
+
+      {/* Existing Score Input Modal */}
       {selectedMatch && (
         <dialog className="modal modal-open">
           <div className="modal-box">
@@ -541,6 +887,248 @@ const ScoreKeeperPage = () => {
           </form>
         </dialog>
       )}
+
+      {/* Submit Password Modal */}
+      {showSubmitPasswordModal && (
+        <dialog className="modal modal-open">
+          <div className="modal-box">
+            <h3 className="font-bold text-lg mb-4">Confirm Results Submission</h3>
+            <p className="text-gray-600 dark:text-gray-400 mb-4">
+              Please enter password to submit the final results.
+            </p>
+            <form onSubmit={handleSubmitPasswordVerify}>
+              <div className="form-control">
+                <input
+                  type="password"
+                  id="submit-password"
+                  className={`input input-bordered ${submitPasswordError ? 'input-error' : ''}`}
+                  placeholder="Enter password"
+                  autoComplete="off"
+                />
+                {submitPasswordError && (
+                  <label className="label">
+                    <span className="label-text-alt text-error">Incorrect password</span>
+                  </label>
+                )}
+              </div>
+              <div className="modal-action">
+                <button 
+                  type="button"
+                  className="btn btn-outline"
+                  onClick={() => {
+                    setShowSubmitPasswordModal(false);
+                    setSubmitPasswordError(false);
+                  }}
+                >
+                  Cancel
+                </button>
+                <button type="submit" className="btn btn-primary">
+                  Submit Results
+                </button>
+              </div>
+            </form>
+          </div>
+          <form method="dialog" className="modal-backdrop">
+            <button onClick={() => {
+              setShowSubmitPasswordModal(false);
+              setSubmitPasswordError(false);
+            }}>
+              close
+            </button>
+          </form>
+        </dialog>
+      )}
+
+      {/* Submit Warning Modal */}
+      {showSubmitWarning && (
+        <dialog className="modal modal-open">
+          <div className="modal-box border-2 border-warning">
+            <div className="flex items-start gap-3 mb-4">
+              <svg 
+                className="w-6 h-6 text-warning flex-shrink-0 mt-1" 
+                fill="none" 
+                viewBox="0 0 24 24" 
+                stroke="currentColor"
+              >
+                <path 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round" 
+                  strokeWidth={2} 
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" 
+                />
+              </svg>
+              <div>
+                <h3 className="font-bold text-lg text-warning">Warning: Incomplete Matches</h3>
+                <p className="text-gray-600 dark:text-gray-400 mt-2">
+                  Some matches have not been completed. Submitting now will finalize the game with missing scores.
+                </p>
+              </div>
+            </div>
+            <div className="modal-action">
+              <button 
+                className="btn btn-outline"
+                onClick={() => setShowSubmitWarning(false)}
+              >
+                Go Back
+              </button>
+              <button 
+                className="btn btn-warning"
+                onClick={() => {
+                  setShowSubmitWarning(false);
+                  setTimeout(() => {
+                    setShowSubmitPasswordModal(true);
+                  }, 100);
+                }}
+              >
+                Submit Incomplete Results
+              </button>
+            </div>
+          </div>
+          <form method="dialog" className="modal-backdrop">
+            <button onClick={() => setShowSubmitWarning(false)}>close</button>
+          </form>
+        </dialog>
+      )}
+
+      {/* Cancel Warning Modal */}
+      {showCancelWarning && (
+        <dialog className="modal modal-open">
+          <div className="modal-box border-2 border-error">
+            <div className="flex items-start gap-3 mb-4">
+              <svg 
+                className="w-6 h-6 text-error flex-shrink-0 mt-1" 
+                fill="none" 
+                viewBox="0 0 24 24" 
+                stroke="currentColor"
+              >
+                <path 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round" 
+                  strokeWidth={2} 
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" 
+                />
+              </svg>
+              <div>
+                <h3 className="font-bold text-lg text-error">Warning: Cancel Game</h3>
+                <p className="text-gray-600 dark:text-gray-400 mt-2">
+                  This will delete all recorded scores and cannot be undone. Are you sure you want to continue?
+                </p>
+              </div>
+            </div>
+            <div className="modal-action">
+              <button 
+                className="btn btn-outline"
+                onClick={() => setShowCancelWarning(false)}
+              >
+                Go Back
+              </button>
+              <button 
+                className="btn btn-error"
+                onClick={handleCancelConfirm}
+              >
+                Cancel Game
+              </button>
+            </div>
+          </div>
+          <form method="dialog" className="modal-backdrop">
+            <button onClick={() => setShowCancelWarning(false)}>close</button>
+          </form>
+        </dialog>
+      )}
+
+      {/* Cancel Password Modal */}
+      {showCancelPasswordModal && (
+        <dialog className="modal modal-open">
+          <div className="modal-box">
+            <h3 className="font-bold text-lg mb-4">Confirm Game Cancellation</h3>
+            <p className="text-gray-600 dark:text-gray-400 mb-4">
+              Please enter password to confirm game cancellation.
+            </p>
+            <form onSubmit={handleCancelPasswordVerify}>
+              <div className="form-control">
+                <input
+                  type="password"
+                  id="cancel-password"
+                  className={`input input-bordered ${cancelPasswordError ? 'input-error' : ''}`}
+                  placeholder="Enter password"
+                  autoComplete="off"
+                />
+                {cancelPasswordError && (
+                  <label className="label">
+                    <span className="label-text-alt text-error">Incorrect password</span>
+                  </label>
+                )}
+              </div>
+              <div className="modal-action">
+                <button 
+                  type="button"
+                  className="btn btn-outline"
+                  onClick={() => {
+                    setShowCancelPasswordModal(false);
+                    setCancelPasswordError(false);
+                  }}
+                >
+                  Go Back
+                </button>
+                <button type="submit" className="btn btn-error">
+                  Confirm Cancellation
+                </button>
+              </div>
+            </form>
+          </div>
+          <form method="dialog" className="modal-backdrop">
+            <button onClick={() => {
+              setShowCancelPasswordModal(false);
+              setCancelPasswordError(false);
+            }}>
+              close
+            </button>
+          </form>
+        </dialog>
+      )}
+
+      {/* Submission Progress Modal */}
+      {isSubmitting && (
+        <dialog className="modal modal-open">
+          <div className="modal-box">
+            <h3 className="font-bold text-lg mb-4">Submitting Results</h3>
+            <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700 mb-4">
+              <div 
+                className="bg-emerald-600 h-2.5 rounded-full transition-all duration-300" 
+                style={{ width: `${submitProgress}%` }}
+              ></div>
+            </div>
+            <p className="text-center text-sm text-gray-600 dark:text-gray-400">
+              {submitProgress.toFixed(0)}% Complete
+            </p>
+            {submitError && (
+              <div className="mt-4 p-4 bg-error/10 border border-error rounded-lg">
+                <p className="text-error text-sm">{submitError}</p>
+              </div>
+            )}
+          </div>
+        </dialog>
+      )}
+
+      <ProcessScoresModal
+        isOpen={showProcessModal}
+        isProcessing={isProcessing}
+        error={processError}
+        success={processSuccess}
+        onProcess={handleProcessScores}
+        onRetry={handleProcessScores}
+        onClose={() => {
+          if (processSuccess || (!processError && !isProcessing)) {
+            setShowProcessModal(false);
+            setProcessError(null);
+            setProcessSuccess(false);
+            router.push('/admin/dashboard');
+          } else {
+            setShowProcessModal(false);
+            setProcessError(null);
+          }
+        }}
+      />
     </div>
   );
 };

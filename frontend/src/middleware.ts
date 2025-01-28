@@ -1,7 +1,7 @@
 import { withAuth } from 'next-auth/middleware';
 import { NextResponse } from 'next/server';
 
-const AUTH_ENABLED = process.env.NEXT_PUBLIC_AUTH_ENABLED === 'true';
+const AUTH_ENABLED = process.env.NEXT_AUTH_ENABLED === 'true';
 
 export default withAuth(
   function middleware(req) {

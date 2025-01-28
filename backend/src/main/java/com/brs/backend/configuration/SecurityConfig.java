@@ -48,7 +48,8 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
         //    TODO : Remove following hardcode once deployed the new config version
         configuration.setAllowedOrigins(Arrays.asList(frontendUrl, "https://apl.aragorn-media-server.duckdns.org", "http://localhost:3000"));
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedMethods(Arrays.asList("GET","POST","PUT","DELETE","OPTIONS"));
+        configuration.setAllowedHeaders(Arrays.asList("Content-Type", "Authorization"));
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
