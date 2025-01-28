@@ -16,10 +16,11 @@ interface MatchCombination {
 interface MatchScore {
   team1Score: number;
   team2Score: number;
+  isSubmitted?: boolean;
 }
 
 interface GroupScores {
-  [matchIndex: number]: MatchScore;
+  [matchIndex: string]: MatchScore;
 }
 
 interface AllScores {
@@ -312,7 +313,7 @@ const ScoreKeeperPage = () => {
     const date = gameId;
     let totalMatches = 0;
     let completedMatches = 0;
-    let updatedScores = { ...gameData.scores };
+    const updatedScores: AllScores = { ...gameData.scores };
 
     // Count total unsubmitted matches to submit
     Object.entries(gameData.scores).forEach(([_, matches]) => {
@@ -337,7 +338,8 @@ const ScoreKeeperPage = () => {
           const matchCombinations = getMatchCombinations(
             groupPlayers.map(id => players.find(p => p.id === id)?.name || '')
           );
-          const match = matchCombinations[parseInt(matchIndex)];
+          const matchIndexNum = parseInt(matchIndex);
+          const match = matchCombinations[matchIndexNum];
           
           const team1Players = match.team1.map(name => 
             players.find(p => p.name === name)?.id
@@ -425,7 +427,7 @@ const ScoreKeeperPage = () => {
       const groupScores: GroupScores = {};
       
       for (let i = 0; i < matchCount; i++) {
-        groupScores[i] = { team1Score: 0, team2Score: 0 };
+        groupScores[i.toString()] = { team1Score: 0, team2Score: 0 };
       }
       
       setGameData(prev => {
