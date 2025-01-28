@@ -127,7 +127,7 @@ public class EncounterController {
     }
 
     @PostMapping("/v2/validate")
-    private String processToken(@PathVariable LocalDate date) {
+    private String processToken() {
         return "Wade Goda";
     }
 
