@@ -5,6 +5,7 @@ on: workflow_dispatch
 jobs:
   push-frontend-image:
     runs-on: ubuntu-latest
+    environment: production-apl-aragon-duckdns
     defaults:
       run:
         working-directory: './frontend'
@@ -21,6 +22,7 @@ jobs:
 
       - name: 'Build and push'
         run: |
+          echo $NEXT_PUBLIC_BACKEND_URL >> .env 
           docker build . --tag ghcr.io/catchsudheera/brs-frontend:v1.2
           docker push ghcr.io/catchsudheera/brs-frontend:v1.2
 
