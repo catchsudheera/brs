@@ -30,14 +30,6 @@ services:
     image: ghcr.io/catchsudheera/brs-frontend:v1.2
     container_name: frontend
     restart: unless-stopped
-    environment:
-      NEXT_PUBLIC_BACKEND_URL: {{ backend_host_url }}
-      NEXTAUTH_URL: {{ nextauth_url }}
-      NEXTAUTH_SECRET: {{ nextauth_secret }}
-      GOOGLE_CLIENT_ID: {{ google_client_id }}
-      GOOGLE_CLIENT_SECRET: {{ google_client_secret }}
-      ALLOWED_ADMIN_EMAILS: {{ allowed_admin_emails }}
-      NEXT_AUTH_ENABLED: {{ next_auth_enabled }}
     ports:
       - "3000:3000"
 
@@ -76,7 +68,7 @@ services:
     image: oznu/cloudflare-ddns:latest
     restart: unless-stopped
     environment:
-      API_KEY: {{ cloudflare_ddns_api_key }}
+      API_KEY: {{ cloudflare_api_token }}
       ZONE: {{ cloudflare_ddns_zone }}
       SUBDOMAIN: subdomain
       PROXIED: false
