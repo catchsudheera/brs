@@ -2,6 +2,7 @@ interface ProcessScoresModalProps {
   isOpen: boolean;
   isProcessing: boolean;
   error: string | null;
+  success: boolean;
   onProcess: () => void;
   onRetry: () => void;
   onClose: () => void;
@@ -11,6 +12,7 @@ export const ProcessScoresModal = ({
   isOpen,
   isProcessing,
   error,
+  success,
   onProcess,
   onRetry,
   onClose
@@ -21,7 +23,7 @@ export const ProcessScoresModal = ({
     <dialog className="modal modal-open">
       <div className="modal-box">
         <h3 className="font-bold text-lg mb-4">
-          {error ? 'Processing Error' : 'Results Submitted'}
+          {error ? 'Processing Error' : success ? 'Processing Complete' : 'Results Submitted'}
         </h3>
         
         {error ? (
@@ -43,6 +45,21 @@ export const ProcessScoresModal = ({
                 type="button"
               >
                 Retry
+              </button>
+            </div>
+          </>
+        ) : success ? (
+          <>
+            <p className="text-gray-600 dark:text-gray-400 mb-4">
+              All scores have been processed successfully.
+            </p>
+            <div className="modal-action">
+              <button 
+                className="btn btn-primary"
+                onClick={onClose}
+                type="button"
+              >
+                Close
               </button>
             </div>
           </>

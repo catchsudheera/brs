@@ -114,6 +114,7 @@ const ScoreKeeperPage = () => {
   const [showProcessModal, setShowProcessModal] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [processError, setProcessError] = useState<string | null>(null);
+  const [processSuccess, setProcessSuccess] = useState(false);
   
   // Fetch game data from IndexedDB
   React.useEffect(() => {
@@ -246,7 +247,7 @@ const ScoreKeeperPage = () => {
     
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/v2/encounters/process`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/v2/encounters/${gameId}/process`,
         {
           method: 'POST',
           headers: {
@@ -265,8 +266,13 @@ const ScoreKeeperPage = () => {
         );
       }
 
-      // Only redirect on success
-      router.push('/admin/dashboard');
+      // Delete game from IndexedDB on success
+      if (typeof gameId === 'string') {
+        await gameStorageService.deleteGame(gameId);
+      }
+      
+      // Set success state
+      setProcessSuccess(true);
     } catch (error) {
       console.error('Error processing scores:', error);
       setProcessError(error instanceof Error ? error.message : 'Failed to process scores');
@@ -278,18 +284,40 @@ const ScoreKeeperPage = () => {
   const handleFinalSubmit = async () => {
     if (!gameData || typeof gameId !== 'string') return;
 
+    // First check if there are any unsubmitted scores
+    let hasUnsubmittedScores = false;
+    let hasScores = false;
+
+    Object.values(gameData.scores).forEach(matches => {
+      Object.values(matches).forEach(score => {
+        if (score.team1Score > 0 || score.team2Score > 0) {
+          hasScores = true;
+          if (!score.isSubmitted) {
+            hasUnsubmittedScores = true;
+          }
+        }
+      });
+    });
+
+    // If all scores are already submitted, show process modal directly
+    if (hasScores && !hasUnsubmittedScores) {
+      setShowProcessModal(true);
+      return;
+    }
+
     setIsSubmitting(true);
     setSubmitProgress(0);
     setSubmitError(null);
 
-    const date = gameId; // Since gameId is the date in YYYY-MM-DD format
+    const date = gameId;
     let totalMatches = 0;
     let completedMatches = 0;
+    let updatedScores = { ...gameData.scores };
 
-    // Count total matches to submit
-    Object.entries(gameData.scores).forEach(([groupName, matches]) => {
-      Object.entries(matches).forEach(([matchIndex, score]) => {
-        if (score.team1Score > 0 || score.team2Score > 0) {
+    // Count total unsubmitted matches to submit
+    Object.entries(gameData.scores).forEach(([_, matches]) => {
+      Object.values(matches).forEach(score => {
+        if ((score.team1Score > 0 || score.team2Score > 0) && !score.isSubmitted) {
           totalMatches++;
         }
       });
@@ -298,9 +326,10 @@ const ScoreKeeperPage = () => {
     try {
       for (const [groupName, matches] of Object.entries(gameData.scores)) {
         const groupPlayers = gameData.groups[groupName];
+        updatedScores[groupName] = { ...matches };
         
         for (const [matchIndex, score] of Object.entries(matches)) {
-          // Skip if already submitted or no scores
+          // Skip if no scores or already submitted
           if (score.isSubmitted || (score.team1Score === 0 && score.team2Score === 0)) {
             continue;
           }
@@ -310,7 +339,6 @@ const ScoreKeeperPage = () => {
           );
           const match = matchCombinations[parseInt(matchIndex)];
           
-          // Get player IDs for both teams
           const team1Players = match.team1.map(name => 
             players.find(p => p.name === name)?.id
           ).filter((id): id is number => id !== undefined);
@@ -328,18 +356,10 @@ const ScoreKeeperPage = () => {
               score.team2Score
             );
 
-            // Mark as submitted in IndexedDB
-            const updatedScores = {
-              ...gameData.scores,
-              [groupName]: {
-                ...gameData.scores[groupName],
-                [matchIndex]: {
-                  ...score,
-                  isSubmitted: true
-                }
-              }
+            updatedScores[groupName][matchIndex] = {
+              ...score,
+              isSubmitted: true
             };
-            await gameStorageService.updateGameScores(gameId, updatedScores);
             
             completedMatches++;
             setSubmitProgress((completedMatches / totalMatches) * 100);
@@ -351,6 +371,12 @@ const ScoreKeeperPage = () => {
           }
         }
       }
+
+      await gameStorageService.updateGameScores(gameId, updatedScores);
+      setGameData({
+        ...gameData,
+        scores: updatedScores
+      });
 
       setShowProcessModal(true);
     } catch (error) {
@@ -1086,12 +1112,14 @@ const ScoreKeeperPage = () => {
         isOpen={showProcessModal}
         isProcessing={isProcessing}
         error={processError}
+        success={processSuccess}
         onProcess={handleProcessScores}
         onRetry={handleProcessScores}
         onClose={() => {
-          if (!processError && !isProcessing) {
+          if (processSuccess || (!processError && !isProcessing)) {
             setShowProcessModal(false);
             setProcessError(null);
+            setProcessSuccess(false);
             router.push('/admin/dashboard');
           } else {
             setShowProcessModal(false);
