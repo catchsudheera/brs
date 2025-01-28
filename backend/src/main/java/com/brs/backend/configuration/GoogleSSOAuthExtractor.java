@@ -1,6 +1,5 @@
 package com.brs.backend.configuration;
 
-import com.brs.backend.services.GoogleSSOService;
 import com.brs.backend.util.Constants;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.Payload;
@@ -10,7 +9,6 @@ import com.google.api.client.json.gson.GsonFactory;
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.AuthorityUtils;
@@ -24,9 +22,6 @@ import java.util.Set;
 @Component
 @Slf4j
 public class GoogleSSOAuthExtractor {
-
-    @Autowired
-    private GoogleSSOService googleSSOService;
 
     @Value("${api.admin.emails}")
     private String authenticatedEmailsString;
@@ -52,15 +47,10 @@ public class GoogleSSOAuthExtractor {
         for (String email : authenticatedEmailsString.split(",")) {
             authenticatedEmails.add(email.trim().toLowerCase());
         }
-
     }
 
 
     public Optional<Authentication> extract(HttpServletRequest request) {
-        if (verifier == null) {
-            log.error("This should not happen. added just in case to check"); // FIXME remove this
-            init();
-        }
         try {
             String authHeader = request.getHeader(Constants.API_KEY_HEADER_NAME_GOOGLE_SSO);
             if (authHeader == null || authHeader.isEmpty()) {
@@ -90,7 +80,7 @@ public class GoogleSSOAuthExtractor {
                 return Optional.of(new ApiKeyAuth(idTokenString, AuthorityUtils.NO_AUTHORITIES));
             } else {
                 log.error("Email not in authorized list");
-                return Optional.of(new ApiKeyAuth(idTokenString, AuthorityUtils.NO_AUTHORITIES)); // FIXME remove this
+                return Optional.empty();
             }
 
         } catch (Exception e) {
@@ -101,7 +91,7 @@ public class GoogleSSOAuthExtractor {
 
 
     private String sanitizeBearerToken(String bearerToken) {
-        return bearerToken.replace("Bearer ","").trim();
+        return bearerToken.replace("Bearer ", "").trim();
     }
 
 }
