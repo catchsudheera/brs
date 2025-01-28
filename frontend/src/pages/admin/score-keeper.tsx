@@ -6,6 +6,7 @@ import { gameStorageService } from '@/services/gameStorageService';
 import type { GameScore } from '@/services/gameStorageService';
 import { validateEditPassword } from '@/utils/password';
 import { useSession, getSession } from 'next-auth/react';
+import { ProcessScoresModal } from '@/components/score-keeper/ProcessScoresModal';
 
 interface MatchCombination {
   team1: string[];
@@ -110,6 +111,9 @@ const ScoreKeeperPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitProgress, setSubmitProgress] = useState(0);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [showProcessModal, setShowProcessModal] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [processError, setProcessError] = useState<string | null>(null);
   
   // Fetch game data from IndexedDB
   React.useEffect(() => {
@@ -236,6 +240,41 @@ const ScoreKeeperPage = () => {
     }
   };
 
+  const handleProcessScores = async () => {
+    setIsProcessing(true);
+    setProcessError(null);
+    
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/v2/encounters/process`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${session?.accessToken}`,
+          }
+        }
+      );
+
+      const errorText = await response.text();
+      
+      if (!response.ok) {
+        throw new Error(
+          response.status === 403 
+            ? 'Not authorized to process scores' 
+            : errorText || 'Failed to process scores'
+        );
+      }
+
+      // Only redirect on success
+      router.push('/admin/dashboard');
+    } catch (error) {
+      console.error('Error processing scores:', error);
+      setProcessError(error instanceof Error ? error.message : 'Failed to process scores');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   const handleFinalSubmit = async () => {
     if (!gameData || typeof gameId !== 'string') return;
 
@@ -313,8 +352,7 @@ const ScoreKeeperPage = () => {
         }
       }
 
-      // All results submitted successfully
-      router.push('/admin/dashboard');
+      setShowProcessModal(true);
     } catch (error) {
       console.error('Submission error:', error);
       setSubmitError('An error occurred during submission.');
@@ -1043,6 +1081,24 @@ const ScoreKeeperPage = () => {
           </div>
         </dialog>
       )}
+
+      <ProcessScoresModal
+        isOpen={showProcessModal}
+        isProcessing={isProcessing}
+        error={processError}
+        onProcess={handleProcessScores}
+        onRetry={handleProcessScores}
+        onClose={() => {
+          if (!processError && !isProcessing) {
+            setShowProcessModal(false);
+            setProcessError(null);
+            router.push('/admin/dashboard');
+          } else {
+            setShowProcessModal(false);
+            setProcessError(null);
+          }
+        }}
+      />
     </div>
   );
 };
