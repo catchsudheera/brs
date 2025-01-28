@@ -35,7 +35,7 @@ export const RankingHistoryProvider: React.FC<{ children: ReactNode }> = ({
       setLoading(true);
       try {
         const response = await axios.get<PlayerHistory[]>(
-          'https://brs.aragorn-media-server.duckdns.org/players/history?type=RANK',
+          process.env.NEXT_PUBLIC_BACKEND_URL + '/players/history?type=RANK',
         );
 
         const transformedData = transformDataForGraph(response.data);
