@@ -28,7 +28,7 @@ public class GoogleSSOAuthExtractor {
     @Autowired
     private GoogleSSOService googleSSOService;
 
-    @Value("${api.admin-emails}")
+    @Value("${api.admin.emails}")
     private String authenticatedEmailsString;
 
     @Value("${google.client.id}")
