@@ -24,7 +24,8 @@ jobs:
         run: |
           echo "$NEXT_PUBLIC_BACKEND_URL" >> .env 
           echo "${{secrets.ALLOWED_ADMIN_EMAILS}}" >> .env
-          cat .env  >> $GITHUB_OUTPUT
+          echo "{markdown content}" >> $GITHUB_STEP_SUMMARY
+          cat .env  >> $GITHUB_STEP_SUMMARY
           docker build . --tag ghcr.io/catchsudheera/brs-frontend:v2.0
           docker push ghcr.io/catchsudheera/brs-frontend:v2.0
 
