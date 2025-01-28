@@ -38,7 +38,7 @@ const PlayerEncountersCompactComponent: React.FC<
       setLoading(true);
       try {
         const response = await axios.get<EncountersResponse>(
-            `${process.env.NEXT_PUBLIC_BACKEND_URL}/players/${playerId}/encounters`,
+          `https://brs.aragorn-media-server.duckdns.org/players/${playerId}/encounters`,
         );
         const groupedByDate = groupBy(
           response.data.encounterHistory,
