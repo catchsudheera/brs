@@ -8,5 +8,15 @@ declare module 'next-auth' {
       image?: string | null;
     };
     accessToken?: string;
+    error?: "RefreshAccessTokenError";
+  }
+}
+
+declare module 'next-auth/jwt' {
+  interface JWT {
+    id_token?: string;
+    expires_at?: number;
+    refresh_token?: string;
+    error?: 'RefreshAccessTokenError';
   }
 } 
