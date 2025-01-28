@@ -1,4 +1,4 @@
-name: BACKEND Build and publish images to ghcr
+name: Common BACKEND Build
 
 on: workflow_dispatch
 
