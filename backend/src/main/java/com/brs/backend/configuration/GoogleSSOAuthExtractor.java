@@ -44,10 +44,11 @@ public class GoogleSSOAuthExtractor {
                 .setAudience(Collections.singletonList(clientId))
                 .build();
 
-        if (authenticatedEmailsString != null) {
+        authenticatedEmails = new HashSet<>();
+        if (authenticatedEmailsString == null) {
+            log.warn("No list of admin emails provided");
             return;
         }
-        authenticatedEmails = new HashSet<>();
         for (String email : authenticatedEmailsString.split(",")) {
             authenticatedEmails.add(email.trim().toLowerCase());
         }
@@ -56,6 +57,10 @@ public class GoogleSSOAuthExtractor {
 
 
     public Optional<Authentication> extract(HttpServletRequest request) {
+        if (verifier == null) {
+            log.error("This should not happen. added just in case to check"); // FIXME remove this
+            init();
+        }
         try {
             String authHeader = request.getHeader(Constants.API_KEY_HEADER_NAME_GOOGLE_SSO);
             if (authHeader == null || authHeader.isEmpty()) {
