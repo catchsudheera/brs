@@ -1,4 +1,4 @@
-name: [APL-Arangorn]FRONTEND Build and publish images to ghcr
+name: apl-Arangorn FRONTEND Build
 
 on: workflow_dispatch
 

@@ -1,4 +1,4 @@
-name: [dutchlankanshuttlemasters] FRONTEND Build
+name: dutchlankanshuttlemasters FRONTEND Build
 
 on: workflow_dispatch
 
