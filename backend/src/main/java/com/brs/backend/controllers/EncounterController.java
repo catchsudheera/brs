@@ -17,9 +17,11 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -75,10 +77,14 @@ public class EncounterController {
             @RequestBody EncounterResultV2 result
     ) {
         log.info("V2 endpoint Adding team 1 : {} and team 2 : {} for date : {}", result.team1(), result.team2(), date);
+        try {
+            Encounter saved = persistEncounterResultV2(date, result);
+            return "ok";
+        } catch (RuntimeException e) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "Could not save the entry", e);
+        }
 
-        Encounter saved = persistEncounterResultV2(date, result);
-        log.info("Saved : {}", saved.getId());
-        return "ok";
     }
 
     @PostMapping(value = "/encounters/add-by-file", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -122,7 +128,7 @@ public class EncounterController {
                                                                       @RequestParam(required = false) Integer teamAp2,
                                                                       @RequestParam(required = false) Integer teamBp1,
                                                                       @RequestParam(required = false) Integer teamBp2
-                                        ) {
+    ) {
         return encounterService.getPlayerEncounterHistory(teamAp1, teamAp2, teamBp1, teamBp2);
     }
 

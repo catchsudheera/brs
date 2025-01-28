@@ -13,7 +13,7 @@ import java.io.IOException;
 
 @Component
 @RequiredArgsConstructor
-public class ApiKeyAuthFilter extends OncePerRequestFilter {
+public class HybridSecurityFilter extends OncePerRequestFilter {
 
     private final ApiKeyAuthExtractor apiKeyExtractor;
     private final GoogleSSOAuthExtractor googleSSOAuthExtractor;
@@ -27,7 +27,6 @@ public class ApiKeyAuthFilter extends OncePerRequestFilter {
             apiKeyExtractor.extract(request)
                     .ifPresent(SecurityContextHolder.getContext()::setAuthentication);
         }
-
         filterChain.doFilter(request, response);
     }
 }
