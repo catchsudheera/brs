@@ -44,7 +44,7 @@ gv_nextauth_secret: <value-goes-here>
 gv_google_client_id: <value-goes-here>
 gv_google_client_secret: <value-goes-here>
 gv_allowed_admin_emails: <value-goes-here>
-gv_next_public_auth_enabled: <value-goes-here>
+gv_next_auth_enabled: <value-goes-here>
 
 
 # SWAG
