@@ -38,14 +38,8 @@ gv_frontend_host_url: https://whatever-your-hostname.com
 gv_backend_api_key: sample-api-key
 
 
-# FRONTEND
-gv_nextauth_url: <value-goes-here>
-gv_nextauth_secret: <value-goes-here>
-gv_google_client_id: <value-goes-here>
-gv_google_client_secret: <value-goes-here>
-gv_allowed_admin_emails: <value-goes-here>
-gv_next_auth_enabled: <value-goes-here>
-
+# common for SWAG and CLOUDFLARE DDNS
+gv_cloudflare_api_token: <cloudflare-custom-token-not-the-global-key>
 
 # SWAG
 gv_server_domain_name: whatever-your-hostname.com
@@ -54,5 +48,4 @@ gv_use_lets_encrypt_staging_server: true
 
 
 # CLOUDFLARE DDNS
-gv_cloudflare_ddns_api_key: <api_key>
-gv_cloudflare_ddns_zone: <zone>
+gv_cloudflare_ddns_zone: <zone-hostname-not-the-id>
