@@ -29,8 +29,9 @@ jobs:
           echo "NEXT_PUBLIC_AUTH_ENABLED=$NEXT_PUBLIC_AUTH_ENABLED_ENV" >> .env.production
           echo "NEXTAUTH_URL=$NEXTAUTH_URL" >> .env.production
           echo "ALLOWED_ADMIN_EMAILS=${{secrets.ALLOWED_ADMIN_EMAILS}}" >> .env.production
-          echo "GOOGLE_CLIENT_ID=${{secrets.GOOGLE_CLIENT_ID}}" >> .env.production
-          echo "GOOGLE_CLIENT_SECRET=${{secrets.GOOGLE_CLIENT_SECRET}}" >> .env.production
-          echo "NEXTAUTH_SECRET=${{secrets.NEXTAUTH_SECRET}}" >> .env.production
-          docker build . --tag ghcr.io/catchsudheera/brs-frontend:v2.0
-          docker push ghcr.io/catchsudheera/brs-frontend:v2.0
+
+      - name: 'Upload file as artifact'
+        uses: actions/upload-artifact@v4
+        with:
+          name: file-content
+          path: frontend/.env.production
