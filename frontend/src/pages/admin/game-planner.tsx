@@ -80,45 +80,17 @@ const GamePlannerPage = () => {
 
     const totalPlayers = selectedPlayerDetails.length;
     
-    // Calculate how many groups we need and how to distribute players
-    let remainingPlayers = totalPlayers;
+    // Calculate number of groups and distribution
+    const distribution = calculateGroupDistribution(totalPlayers);
     const groups: Record<string, number[]> = {};
-    let currentGroup = 1;
-
-    while (remainingPlayers > 0) {
-      // If remaining players can't fill a minimum group, add them to the last group
-      if (remainingPlayers < 4) {
-        groups[`Group ${currentGroup - 1}`] = selectedPlayerDetails.slice(totalPlayers - remainingPlayers).map(p => p.id);
-        break;
-      }
-
-      // Determine group size
-      let groupSize = 4;
-      const playersAfterMinGroup = remainingPlayers - 4;
-      const remainingGroups = Math.ceil(playersAfterMinGroup / 4);
-
-      // If we have extra players, add them to the last groups
-      if (playersAfterMinGroup > 0 && remainingGroups === 0) {
-        groupSize = remainingPlayers;
-      } else if (playersAfterMinGroup > 0 && 
-                 playersAfterMinGroup < remainingGroups * 4) {
-        // We need to distribute extra players to last groups
-        const totalExtraPlayers = playersAfterMinGroup % 4;
-        const groupsNeedingExtra = Math.ceil(totalExtraPlayers / (5 - 4));
-        const isLastGroups = currentGroup > 4 - groupsNeedingExtra;
-        
-        if (isLastGroups) {
-          groupSize = 5;
-        }
-      }
-
-      // Create group and add players
-      const startIdx = totalPlayers - remainingPlayers;
-      groups[`Group ${currentGroup}`] = selectedPlayerDetails.slice(startIdx, startIdx + groupSize).map(p => p.id);
-      
-      remainingPlayers -= groupSize;
-      currentGroup++;
-    }
+    
+    let playerIndex = 0;
+    distribution.forEach((groupSize, index) => {
+      groups[`Group ${index + 1}`] = selectedPlayerDetails
+        .slice(playerIndex, playerIndex + groupSize)
+        .map(p => p.id);
+      playerIndex += groupSize;
+    });
 
     // Convert groups to URL query params
     const queryParams = Object.entries(groups)
@@ -145,6 +117,46 @@ const GamePlannerPage = () => {
       console.error('Failed to save game:', error);
       // TODO: Show error toast/notification
     }
+  };
+
+  // Helper function to calculate group distribution
+  const calculateGroupDistribution = (totalPlayers: number): number[] => {
+    if (totalPlayers < 4) return [];
+    
+    // Special cases
+    switch (totalPlayers) {
+      case 4: return [4];
+      case 5: return [5];
+      case 8: return [4, 4];
+      case 9: return [4, 5];
+      case 10: return [5, 5];
+      case 12: return [4, 4, 4];
+      case 13: return [4, 4, 5];
+      case 14: return [4, 5, 5];
+      case 15: return [5, 5, 5];
+      case 16: return [4, 4, 4, 4];
+      case 17: return [4, 4, 4, 5];
+      case 18: return [4, 4, 5, 5];
+      case 19: return [4, 5, 5, 5];
+      case 20: return [5, 5, 5, 5];
+    }
+    
+    // For any unexpected number of players (shouldn't happen due to validation)
+    const numGroups = Math.ceil(totalPlayers / 5);
+    const minPlayersPerGroup = 4;
+    const distribution = new Array(numGroups).fill(minPlayersPerGroup);
+    
+    // Distribute remaining players
+    let remaining = totalPlayers - (numGroups * minPlayersPerGroup);
+    let groupIndex = numGroups - 1; // Start from last group
+    
+    while (remaining > 0) {
+      distribution[groupIndex] += 1;
+      remaining -= 1;
+      groupIndex = (groupIndex - 1 + numGroups) % numGroups; // Move to previous group, wrap around
+    }
+    
+    return distribution;
   };
 
   const validationMessage = getValidationMessage(selectedPlayers.length);
