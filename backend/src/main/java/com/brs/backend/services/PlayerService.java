@@ -55,8 +55,14 @@ public class PlayerService {
                     Period period = Period.between(LocalDate.now(), e.getRankSince());
                     int diff = Math.abs(period.getDays());
                     return new PlayerInfo(e.getId(), e.getName(), e.getRankScore(), e.getPlayerRank(),
-                            h.orElseThrow().getPlayerOldRank(), e.getColorHex(), e.getHighestRank(), diff + " day(s)");
+                            h.orElseGet(() -> getMaxRank(e)).getPlayerOldRank(), e.getColorHex(), e.getHighestRank(), diff + " day(s)");
                 })
                 .toList();
+    }
+
+    private ScoreHistory getMaxRank(Player e) {
+        var dummyScoreHistory = new ScoreHistory();
+        dummyScoreHistory.setPlayerOldRank(e.getPlayerRank());
+        return dummyScoreHistory;
     }
 }
