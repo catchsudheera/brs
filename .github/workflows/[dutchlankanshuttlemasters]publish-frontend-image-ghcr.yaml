@@ -36,4 +36,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: file-content
-          path: ./frontend/.env.production
+          path: frontend/.env.production
