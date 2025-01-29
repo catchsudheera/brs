@@ -7,6 +7,9 @@ import { usePlayerContext } from '@/contexts/PlayerContext';
 import { capitalizeFirstLetter } from '@/utils/string';
 import { useSession, signIn, signOut } from 'next-auth/react';
 
+// Add build identifier from env
+const BUILD_IDENTIFIER = process.env.NEXT_PUBLIC_BUILD_IDENTIFIER;
+
 const navigation = [
   { name: 'Ranking', href: '/' },
   { name: 'Encounters', href: '#' },
@@ -334,6 +337,11 @@ const NavigationComponent = () => {
                       Login
                     </Disclosure.Button>
                   )}
+
+                  {/* Add build identifier for mobile */}
+                  <div className="px-3 py-2 text-sm text-gray-500">
+                    Build: {BUILD_IDENTIFIER}
+                  </div>
                 </div>
               )}
             </Disclosure.Panel>

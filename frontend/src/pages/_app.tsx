@@ -1,25 +1,22 @@
 import '../app/globals.css';
 import type { AppProps } from 'next/app';
-import LayoutComponent from '@/components/LayoutComponent';
+import Layout from '@/components/layout/Layout';
 import NavigationComponent from '@/components/NavigationComponent';
 import React from 'react';
 import { PlayerProvider } from '@/contexts/PlayerContext';
 import { RankingHistoryProvider } from '@/contexts/RankingHistoryContext';
 import { SessionProvider } from 'next-auth/react';
 
-function MyApp({ Component, pageProps: { session, ...pageProps } }: AppProps) {
+export default function App({ Component, pageProps: { session, ...pageProps } }: AppProps) {
   return (
     <SessionProvider session={session}>
-      <LayoutComponent>
-        <PlayerProvider>
+      <PlayerProvider>
+        <Layout>
           <RankingHistoryProvider>
-            <NavigationComponent />
             <Component {...pageProps} />
           </RankingHistoryProvider>
-        </PlayerProvider>
-      </LayoutComponent>
+        </Layout>
+      </PlayerProvider>
     </SessionProvider>
   );
 }
-
-export default MyApp;
