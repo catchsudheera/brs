@@ -21,15 +21,16 @@ jobs:
           password: ${{secrets.GHCR_PUSH_TOKEN}}
 
       - name: 'Build and push'
+        env:
+          NEXT_PUBLIC_BACKEND_URL: $NEXT_PUBLIC_BACKEND_URL
+          NEXT_PUBLIC_AUTH_ENABLED: $NEXT_PUBLIC_AUTH_ENABLED
         run: |
-          echo "NEXT_PUBLIC_BACKEND_URL=$NEXT_PUBLIC_BACKEND_URL" >> .env 
-          echo "NEXTAUTH_URL=$NEXTAUTH_URL" >> .env 
-          echo "NEXT_PUBLIC_AUTH_ENABLED=$NEXT_PUBLIC_AUTH_ENABLED" >> .env 
-          echo "ALLOWED_ADMIN_EMAILS=${{secrets.ALLOWED_ADMIN_EMAILS}}" >> .env
-          echo "GOOGLE_CLIENT_ID=${{secrets.GOOGLE_CLIENT_ID}}" >> .env
-          echo "GOOGLE_CLIENT_SECRET=${{secrets.GOOGLE_CLIENT_SECRET}}" >> .env
-          echo "NEXTAUTH_SECRET=${{secrets.NEXTAUTH_SECRET}}" >> .env
+          echo "NEXT_PUBLIC_BACKEND_URL=$NEXT_PUBLIC_BACKEND_URL" >> .env.production
+          echo "NEXTAUTH_URL=$NEXTAUTH_URL" >> .env.production
+          echo "NEXT_PUBLIC_AUTH_ENABLED=$NEXT_PUBLIC_AUTH_ENABLED" >> .env.production
+          echo "ALLOWED_ADMIN_EMAILS=${{secrets.ALLOWED_ADMIN_EMAILS}}" >> .env.production
+          echo "GOOGLE_CLIENT_ID=${{secrets.GOOGLE_CLIENT_ID}}" >> .env.production
+          echo "GOOGLE_CLIENT_SECRET=${{secrets.GOOGLE_CLIENT_SECRET}}" >> .env.production
+          echo "NEXTAUTH_SECRET=${{secrets.NEXTAUTH_SECRET}}" >> .env.production
           docker build . --tag ghcr.io/catchsudheera/brs-frontend:v2.0
           docker push ghcr.io/catchsudheera/brs-frontend:v2.0
-          rm .env
-
