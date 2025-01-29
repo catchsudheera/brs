@@ -5,7 +5,7 @@ on: workflow_dispatch
 jobs:
   push-frontend-image:
     runs-on: ubuntu-latest
-    environment: production-dutchlankanshuttlemasters.nl
+    environment: production-dutchlankanshuttlemasters
     defaults:
       run:
         working-directory: './frontend'
@@ -36,4 +36,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: file-content
-          path: .env.production
+          path: ./frontend/.env.production
