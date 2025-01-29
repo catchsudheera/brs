@@ -15,8 +15,9 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 ENV NEXT_TELEMETRY_DISABLED 1
+
+# TODO remove - adding for debugging debug
 RUN cat .env.production
-RUN cp .env.production .env
 RUN npm run build
 
 # Production image, copy all the files and run next
@@ -39,6 +40,9 @@ RUN chown nextjs:nodejs .next
 # https://nextjs.org/docs/advanced-features/output-file-tracing
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+
+# TODO remove - adding for debugging debug
+COPY --from=builder --chown=nextjs:nodejs /app/.env.production .env.production
 
 USER nextjs
 
