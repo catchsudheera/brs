@@ -15,8 +15,8 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 ENV NEXT_TELEMETRY_DISABLED 1
-cat .env.production
-cp .env.production .env
+RUN cat .env.production
+RUN cp .env.production .env
 RUN npm run build
 
 # Production image, copy all the files and run next
