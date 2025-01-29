@@ -29,6 +29,6 @@ jobs:
           echo "GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}" >> .env.production
           echo "GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}" >> .env.production
           echo "NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }}" >> .env.production
-          echo "NEXT_PUBLIC_BUILD_IDENTIFIER=$(date -u -d 'Europe/Amsterdam' '+%Y-%m-%d %H:%M:%S')" >> .env.production
+          echo "NEXT_PUBLIC_BUILD_IDENTIFIER=$(TZ=Europe/Amsterdam date '+%Y-%m-%d %H:%M:%S')" >> .env.production
           docker build . --tag ghcr.io/catchsudheera/brs-frontend:v2.0
           docker push ghcr.io/catchsudheera/brs-frontend:v2.0
