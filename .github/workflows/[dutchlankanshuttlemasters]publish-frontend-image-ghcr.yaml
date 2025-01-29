@@ -22,12 +22,12 @@ jobs:
 
       - name: 'Build and push'
         env:
-          NEXT_PUBLIC_BACKEND_URL: $NEXT_PUBLIC_BACKEND_URL
-          NEXT_PUBLIC_AUTH_ENABLED: $NEXT_PUBLIC_AUTH_ENABLED
+          NEXT_PUBLIC_BACKEND_URL: $NEXT_PUBLIC_BACKEND_URL_ENV
+          NEXT_PUBLIC_AUTH_ENABLED: $NEXT_PUBLIC_AUTH_ENABLED_ENV
         run: |
-          echo "NEXT_PUBLIC_BACKEND_URL=$NEXT_PUBLIC_BACKEND_URL" >> .env.production
+          echo "NEXT_PUBLIC_BACKEND_URL=$NEXT_PUBLIC_BACKEND_URL_ENV" >> .env.production
+          echo "NEXT_PUBLIC_AUTH_ENABLED=$NEXT_PUBLIC_AUTH_ENABLED_ENV" >> .env.production
           echo "NEXTAUTH_URL=$NEXTAUTH_URL" >> .env.production
-          echo "NEXT_PUBLIC_AUTH_ENABLED=$NEXT_PUBLIC_AUTH_ENABLED" >> .env.production
           echo "ALLOWED_ADMIN_EMAILS=${{secrets.ALLOWED_ADMIN_EMAILS}}" >> .env.production
           docker build . --tag ghcr.io/catchsudheera/brs-frontend:v2.0
           docker push ghcr.io/catchsudheera/brs-frontend:v2.0
