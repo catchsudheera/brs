@@ -26,5 +26,5 @@ export interface RankingsResponse {
 
 export interface RankingHistoryData {
   date: string;
-  [playerName: string]: string | number;
+  [playerName: string]: string | number | null;
 } 

@@ -70,7 +70,7 @@ export default async function handler(
         topScore,
         averageScore
       },
-      players: enrichedPlayers
+      players: enrichedPlayers as PlayerRankingData[]
     };
 
     res.status(200).json(response);

@@ -43,8 +43,8 @@ const PlayerEncountersCompactComponent: React.FC<PlayerEncountersComponentProps>
   const { stats, encountersByDate, scoreSumByDate } = encounters;
 
   const totalEncounters = Object.values(encountersByDate).flat().length;
-  const allEncounters = Object.values(encountersByDate).flat();
-  const wins = allEncounters.filter(e => e.playerTeamPoints > e.opponentTeamPoints).length;
+  const allEncounters = Object.values(encountersByDate).flat() as Encounter[];
+  const wins = allEncounters.filter((e: Encounter) => e.playerTeamPoints > e.opponentTeamPoints).length;
   const losses = totalEncounters - wins;
   const winRate = totalEncounters > 0 ? (wins / totalEncounters * 100).toFixed(1) : '0';
 
