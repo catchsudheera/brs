@@ -10,7 +10,6 @@ import { getRefreshedSession } from '@/utils/auth';
 import { usePlayers } from '@/hooks/usePlayers';
 import { useGame } from '@/hooks/useGame';
 import { gameService } from '@/services/gameService';
-import { ScoreCard } from '@/components/score-keeper/ScoreCard';
 import { NavigationButtons } from '@/components/game-day/NavigationButtons';
 import type { Player } from '@/types/player';
 
@@ -115,7 +114,7 @@ const ScoreKeeperPage = () => {
 
   // Initialize scores when game loads
   useEffect(() => {
-    if (game) {
+    if (game && players.length > 0) {
       // Initialize scores structure for each group
       const initialScores = Object.keys(game.groups as Record<string, number[]>).reduce((acc, groupName) => {
         const groupPlayers = groups[groupName];
@@ -134,7 +133,7 @@ const ScoreKeeperPage = () => {
       setScores(initialScores);
       setIsGameStarted(game.status === 'IN_PROGRESS');
     }
-  }, [game, players]);
+  }, [game, players, groups]);
 
   // Auth check
   useEffect(() => {
@@ -750,7 +749,7 @@ const ScoreKeeperPage = () => {
                 const team2Won = isPlayed && matchScore.team2Score > matchScore.team1Score;
 
                 return (
-                  <div
+                  <div 
                     key={idx} 
                     className={`bg-base-200 rounded-lg p-3 ${isGameStarted ? 'cursor-pointer hover:bg-base-300' : ''}`}
                     onClick={() => handleMatchClick(activeGroup, idx, match)}
