@@ -8,6 +8,7 @@ import PlayerEncounterComponent from './PlayerEncounterComponent';
 import { Disclosure } from '@headlessui/react';
 import { ChevronUpIcon } from '@heroicons/react/24/solid';
 import Link from 'next/link';
+import { usePlayerEncounters } from '@/hooks/usePlayerEncounters';
 
 interface PlayerEncountersComponentProps {
   playerId: string | string[] | undefined;
@@ -15,10 +16,7 @@ interface PlayerEncountersComponentProps {
 
 const PlayerEncountersCompactComponent: React.FC<PlayerEncountersComponentProps> = ({ playerId }) => {
   const { players, isLoading: playersLoading } = usePlayers();
-  const [encountersByDate, setEncountersByDate] = useState<Record<string, Encounter[]>>({});
-  const [scoreSumByDate, setScoreSumByDate] = useState<Record<string, number>>({});
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+  const { encounters, isLoading: encountersLoading, error } = usePlayerEncounters(playerId);
   const [player, setPlayer] = useState<Player | null>(null);
 
   useEffect(() => {
@@ -28,41 +26,7 @@ const PlayerEncountersCompactComponent: React.FC<PlayerEncountersComponentProps>
     }
   }, [players, playerId, playersLoading]);
 
-  useEffect(() => {
-    const fetchEncounters = async () => {
-      if (!playerId) return;
-      setLoading(true);
-      try {
-        const response = await axios.get<EncountersResponse>(
-            `${process.env.NEXT_PUBLIC_BACKEND_URL}/players/${playerId}/encounters`,
-        );
-        const groupedByDate = groupBy(
-          response.data.encounterHistory,
-          (encounter) => encounter.encounterDate,
-        );
-        setEncountersByDate(groupedByDate);
-        
-        const sumByDate = sumBy(
-          response.data.encounterHistory,
-          (encounter) => encounter.encounterDate,
-        );
-
-        setScoreSumByDate(sumByDate);
-      } catch (error) {
-        console.error(
-          'There was an error fetching the encounters data:',
-          error,
-        );
-        setError('Failed to fetch encounters data.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchEncounters();
-  }, [playerId]);
-
-  if (loading || playersLoading) return (
+  if (encountersLoading || playersLoading) return (
     <div className="flex justify-center items-center min-h-[200px]">
       <div className="loading loading-spinner loading-lg"></div>
     </div>
@@ -70,9 +34,13 @@ const PlayerEncountersCompactComponent: React.FC<PlayerEncountersComponentProps>
 
   if (error) return (
     <div className="alert alert-error">
-      <span>Error: {error}</span>
+      <span>Error: {error.message}</span>
     </div>
   );
+
+  if (!encounters) return null;
+
+  const { stats, encountersByDate, scoreSumByDate } = encounters;
 
   const totalEncounters = Object.values(encountersByDate).flat().length;
   const allEncounters = Object.values(encountersByDate).flat();
