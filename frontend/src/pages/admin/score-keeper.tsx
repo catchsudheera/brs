@@ -122,20 +122,16 @@ const ScoreKeeperPage = () => {
         const matches = getMatchCombinations(groupPlayers.map(p => p.name));
         
         acc[groupName] = matches.reduce((matchScores, _, index) => {
-          matchScores[index] = { team1Score: 0, team2Score: 0 };
+          // Get existing score from database or initialize new one
+          const existingScore = (game.scores as any)?.[groupName]?.[index.toString()] || { team1Score: 0, team2Score: 0 };
+          matchScores[index.toString()] = existingScore;
           return matchScores;
         }, {} as Record<string, MatchScore>);
         
         return acc;
       }, {} as Record<string, Record<string, MatchScore>>);
 
-      // Merge with existing scores if any
-      const existingScores = game.scores as unknown as Record<string, Record<string, MatchScore>>;
-      setScores({
-        ...initialScores,
-        ...(existingScores || {})
-      });
-      
+      setScores(initialScores);
       setIsGameStarted(game.status === 'IN_PROGRESS');
     }
   }, [game, players]);
@@ -180,25 +176,33 @@ const ScoreKeeperPage = () => {
   }, [gameId, activeGroup, playersLoading]);
 
   const handleScoreSubmit = async (team1Score: number, team2Score: number) => {
-    if (!selectedMatch || !gameData || typeof gameId !== 'string') return;
+    if (!selectedMatch || !gameId) return;
 
+    try {
+      // Update local state
     const newScores = {
-      ...gameData.scores || {},
+        ...scores,
       [selectedMatch.groupName]: {
-        ...(gameData.scores?.[selectedMatch.groupName] || {}),
+          ...scores[selectedMatch.groupName],
         [selectedMatch.matchIndex]: { team1Score, team2Score }
       }
     };
+      setScores(newScores);
 
-    try {
-      await gameStorageService.updateGameScores(gameId, newScores);
-      setGameData({
-        ...gameData,
-        scores: newScores
+      // Update DB
+      await gameService.updateGame(gameId as string, {
+        scores: newScores,
+        status: 'IN_PROGRESS'
       });
+
+      // Refresh game data
+      await mutate();
+      
+      // Close score input
       setSelectedMatch(null);
     } catch (error) {
       console.error('Failed to update scores:', error);
+      // Optionally show error message to user
     }
   };
 
@@ -736,14 +740,14 @@ const ScoreKeeperPage = () => {
             <h2 className="text-lg font-semibold mb-3">Matches</h2>
             <div className="space-y-3">
               {getMatchCombinations(groups[activeGroup].map(p => p.name)).map((match, idx) => {
-                const matchScore = gameData?.scores?.[activeGroup]?.[idx];
+                const matchScore = scores[activeGroup]?.[idx];
                 const hasScore = !!matchScore;
                 const isPlayed = hasScore && (matchScore.team1Score > 0 || matchScore.team2Score > 0);
                 const team1Won = isPlayed && matchScore.team1Score > matchScore.team2Score;
                 const team2Won = isPlayed && matchScore.team2Score > matchScore.team1Score;
 
                 return (
-                  <div 
+                  <div
                     key={idx} 
                     className={`bg-base-200 rounded-lg p-3 ${isGameStarted ? 'cursor-pointer hover:bg-base-300' : ''}`}
                     onClick={() => handleMatchClick(activeGroup, idx, match)}
