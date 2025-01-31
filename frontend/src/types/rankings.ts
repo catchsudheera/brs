@@ -22,4 +22,9 @@ export interface PlayerRankingData {
 export interface RankingsResponse {
   stats: RankingStats;
   players: PlayerRankingData[];
+}
+
+export interface RankingHistoryData {
+  date: string;
+  [playerName: string]: string | number;
 } 
