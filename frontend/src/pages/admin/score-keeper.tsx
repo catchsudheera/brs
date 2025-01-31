@@ -7,6 +7,7 @@ import type { GameScore } from '@/services/gameStorageService';
 import { validateEditPassword } from '@/utils/password';
 import { useSession, getSession } from 'next-auth/react';
 import { ProcessScoresModal } from '@/components/score-keeper/ProcessScoresModal';
+import { getRefreshedSession } from '@/utils/auth';
 
 interface MatchCombination {
   team1: string[];
@@ -215,13 +216,17 @@ const ScoreKeeperPage = () => {
     team1Score: number,
     team2Score: number
   ) => {
-    const session = await getSession();
+    // Get fresh session before submitting
+    const session = await getRefreshedSession();
+    if (!session?.accessToken) {
+      throw new Error("No access token available");
+    }
     
     const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/v2/encounters/${date}/add`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${session?.accessToken}`,
+        'Authorization': `Bearer ${session.accessToken}`,
       },
       body: JSON.stringify({
         team1: {
@@ -247,12 +252,18 @@ const ScoreKeeperPage = () => {
     setProcessError(null);
     
     try {
+      // Get fresh session before processing
+      const session = await getRefreshedSession();
+      if (!session?.accessToken) {
+        throw new Error("No access token available");
+      }
+
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/v2/encounters/${gameId}/process`,
         {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${session?.accessToken}`,
+            'Authorization': `Bearer ${session.accessToken}`,
           }
         }
       );
