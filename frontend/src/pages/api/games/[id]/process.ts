@@ -2,6 +2,10 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import prisma from '@/lib/prisma';
 import { requireAuth, AuthSession } from '@/lib/auth';
 
+function formatDate(date: Date): string {
+  return date.toISOString().split('T')[0];
+}
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
@@ -34,6 +38,8 @@ export default async function handler(
       return res.status(404).json({ message: 'Game not found' });
     }
 
+    const gameDate = formatDate(game.createdAt);
+
     const scores = game.scores as Record<string, Record<string, { team1Score: number; team2Score: number; submitted?: boolean }>>;
     
     // Verify all scores are submitted
@@ -51,10 +57,11 @@ export default async function handler(
 
     // Call external API to process scores
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_BACKEND_URL}/v2/encounters/${id}/process`,
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/v2/encounters/${gameDate}/process`,
       {
         method: 'POST',
         headers: {
+          'Content-Type': 'application/json',
           'Authorization': `Bearer ${accessToken}`,
         }
       }

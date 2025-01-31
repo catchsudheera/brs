@@ -49,8 +49,9 @@ export default async function handler(
       await prisma.game.delete({
         where: { id }
       });
-      res.status(204).end();
+      res.status(200).json({ message: 'Game deleted successfully' });
     } catch (error) {
+      console.error('Delete Game API Error:', error);
       res.status(500).json({ message: 'Failed to delete game' });
     }
   } else {

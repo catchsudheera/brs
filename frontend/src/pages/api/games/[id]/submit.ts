@@ -2,6 +2,10 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import prisma from '@/lib/prisma';
 import { requireAuth } from '@/lib/auth';
 
+function formatDate(date: Date): string {
+  return date.toISOString().split('T')[0];
+}
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
@@ -10,7 +14,7 @@ export default async function handler(
     return res.status(405).json({ message: 'Method not allowed' });
   }
 
-  // Check authentication
+  // Get auth session
   const session = await requireAuth(req, res);
   if (!session) return;
 
@@ -44,8 +48,24 @@ export default async function handler(
         if (score.submitted) continue;
 
         try {
+          const gameDate = formatDate(game.createdAt);
+          
+          console.log(`Submitting match for Game ${id}:`, {
+            group: groupName,
+            match: parseInt(matchIndex) + 1,
+            team1: {
+              players: [groups[groupName][0], groups[groupName][1]],
+              score: score.team1Score
+            },
+            team2: {
+              players: [groups[groupName][2], groups[groupName][3]],
+              score: score.team2Score
+            },
+            date: gameDate
+          });
+
           const response = await fetch(
-            `${process.env.NEXT_PUBLIC_BACKEND_URL}/v2/encounters/${id}/add`,
+            `${process.env.NEXT_PUBLIC_BACKEND_URL}/v2/encounters/${gameDate}/add`,
             {
               method: 'POST',
               headers: {
@@ -68,6 +88,7 @@ export default async function handler(
           );
 
           if (response.ok) {
+            console.log(`✓ Successfully submitted match ${parseInt(matchIndex) + 1} for ${groupName}`);
             // Mark individual score as submitted on success
             updatedScores[groupName][matchIndex] = {
               ...score,
@@ -80,6 +101,7 @@ export default async function handler(
               data: { scores: updatedScores }
             });
           } else {
+            console.error(`✗ Failed to submit match ${parseInt(matchIndex) + 1} for ${groupName}:`, response.statusText);
             hasErrors = true;
             errors.push({
               group: groupName,
@@ -88,6 +110,7 @@ export default async function handler(
             });
           }
         } catch (error) {
+          console.error(`✗ Error submitting match ${parseInt(matchIndex) + 1} for ${groupName}:`, error);
           hasErrors = true;
           errors.push({
             group: groupName,

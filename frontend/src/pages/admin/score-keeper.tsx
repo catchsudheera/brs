@@ -102,6 +102,11 @@ const ScoreKeeperPage = () => {
   const [processError, setProcessError] = useState<string | null>(null);
   const [processSuccess, setProcessSuccess] = useState(false);
   const [scores, setScores] = useState<Record<string, Record<string, MatchScore>>>({});
+  const [failedMatches, setFailedMatches] = useState<Array<{
+    group: string;
+    match: string;
+    error: string;
+  }>>([]);
 
   // Memoize groups calculation
   const groups = useMemo(() => {
@@ -230,29 +235,48 @@ const ScoreKeeperPage = () => {
   };
 
   const handleCancelGame = () => {
+    // Show warning modal first
     setShowCancelWarning(true);
   };
 
   const handleCancelConfirm = () => {
+    // Close warning modal and show password modal
     setShowCancelWarning(false);
     setShowCancelPasswordModal(true);
   };
 
   const handleCancelPasswordVerify = async (e: React.FormEvent) => {
     e.preventDefault();
-    const passwordInput = (document.getElementById('cancel-password') as HTMLInputElement).value;
-    
-    if (validateEditPassword(passwordInput)) {
-      try {
-        if (typeof gameId === 'string') {
-          await gameStorageService.deleteGame(gameId);
-          router.push('/admin/dashboard', undefined, { shallow: false });
-        }
-      } catch (error) {
-        console.error('Failed to delete game:', error);
-        // Optionally show error notification
+    const form = e.target as HTMLFormElement;
+    const password = (form.elements.namedItem('password') as HTMLInputElement).value;
+
+    try {
+      // First validate password on FE
+      const isValid = await validateEditPassword(password);
+      if (!isValid) {
+        setCancelPasswordError(true);
+        return;
       }
-    } else {
+
+      // If password is valid, call API to delete game
+      if (typeof gameId === 'string') {
+        const response = await fetch(`/api/games/${gameId}`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({}),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to delete game');
+        }
+
+        // Only redirect after successful deletion
+        router.push('/admin/dashboard', undefined, { shallow: false });
+      }
+    } catch (error) {
+      console.error('Error verifying password:', error);
       setCancelPasswordError(true);
     }
   };
@@ -281,25 +305,31 @@ const ScoreKeeperPage = () => {
     setIsSubmitting(true);
     setSubmitProgress(0);
     setSubmitError(null);
+    setFailedMatches([]);
 
     try {
-      const result = await gameService.submitGame(gameId);
+      const response = await gameService.submitGame(gameId);
       
       // Handle partial success
-      if ('errors' in result) {
-        setSubmitError('Some matches failed to submit. Please try again for failed matches.');
-        console.error('Failed matches:', result.errors);
-      } else {
-        // All matches submitted successfully, proceed to process
-        await handleProcessScores();
+      if ('errors' in response) {
+        setFailedMatches(response.errors);
+        setSubmitError('Some matches failed to submit. Please check the errors below and try again.');
+        // Keep modal open when there are errors
+        return;
       }
+
+      // All matches submitted successfully, proceed to process
+      setIsSubmitting(false);
+      await handleProcessScores();
     } catch (error) {
       console.error('Submission error:', error);
       setSubmitError('Failed to submit game results');
-    } finally {
-      setIsSubmitting(false);
-      setShowProcessModal(false);
+      // Keep modal open on error
+      return;
     }
+
+    // Only close if we reach here (complete success)
+    setIsSubmitting(false);
   };
 
   const handleStart = async () => {
@@ -880,101 +910,80 @@ const ScoreKeeperPage = () => {
       )}
 
       {/* Cancel Warning Modal */}
-      {showCancelWarning && (
-        <dialog className="modal modal-open">
-          <div className="modal-box border-2 border-error">
-            <div className="flex items-start gap-3 mb-4">
-              <svg 
-                className="w-6 h-6 text-error flex-shrink-0 mt-1" 
-                fill="none" 
-                viewBox="0 0 24 24" 
-                stroke="currentColor"
-              >
-                <path 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
-                  strokeWidth={2} 
-                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" 
-                />
-              </svg>
-              <div>
-                <h3 className="font-bold text-lg text-error">Warning: Cancel Game</h3>
-                <p className="text-gray-600 dark:text-gray-400 mt-2">
-                  This will delete all recorded scores and cannot be undone. Are you sure you want to continue?
-                </p>
-              </div>
+      <dialog className={`modal ${showCancelWarning ? 'modal-open' : ''}`}>
+        <div className="modal-box">
+          <h3 className="font-bold text-lg mb-4">Cancel Game</h3>
+          <p className="text-gray-600 dark:text-gray-400 mb-4">
+            Are you sure you want to cancel this game? All scores and progress will be permanently deleted.
+          </p>
+          <div className="modal-action">
+            <button 
+              className="btn btn-outline"
+              onClick={() => setShowCancelWarning(false)}
+            >
+              Go Back
+            </button>
+            <button 
+              className="btn btn-error"
+              onClick={handleCancelConfirm}
+            >
+              Yes, Cancel Game
+            </button>
+          </div>
+        </div>
+        <form method="dialog" className="modal-backdrop">
+          <button onClick={() => setShowCancelWarning(false)}>close</button>
+        </form>
+      </dialog>
+
+      {/* Cancel Password Modal */}
+      <dialog className={`modal ${showCancelPasswordModal ? 'modal-open' : ''}`}>
+        <div className="modal-box">
+          <h3 className="font-bold text-lg mb-4">Confirm Game Cancellation</h3>
+          <p className="text-gray-600 dark:text-gray-400 mb-4">
+            Please enter password to confirm game cancellation.
+          </p>
+          <form onSubmit={handleCancelPasswordVerify}>
+            <div className="form-control">
+              <input
+                type="password"
+                id="password"
+                className={`input input-bordered ${cancelPasswordError ? 'input-error' : ''}`}
+                placeholder="Enter password"
+                autoComplete="off"
+              />
+              {cancelPasswordError && (
+                <label className="label">
+                  <span className="label-text-alt text-error">Incorrect password</span>
+                </label>
+              )}
             </div>
             <div className="modal-action">
               <button 
+                type="button"
                 className="btn btn-outline"
-                onClick={() => setShowCancelWarning(false)}
+                onClick={() => {
+                  setShowCancelPasswordModal(false);
+                  setCancelPasswordError(false);
+                }}
               >
                 Go Back
               </button>
-              <button 
-                className="btn btn-error"
-                onClick={handleCancelConfirm}
-              >
-                Cancel Game
+              <button type="submit" className="btn btn-error">
+                Confirm Cancellation
               </button>
             </div>
-          </div>
-          <form method="dialog" className="modal-backdrop">
-            <button onClick={() => setShowCancelWarning(false)}>close</button>
           </form>
-        </dialog>
-      )}
-
-      {/* Cancel Password Modal */}
-      {showCancelPasswordModal && (
-        <dialog className="modal modal-open">
-          <div className="modal-box">
-            <h3 className="font-bold text-lg mb-4">Confirm Game Cancellation</h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-4">
-              Please enter password to confirm game cancellation.
-            </p>
-            <form onSubmit={handleCancelPasswordVerify}>
-              <div className="form-control">
-                <input
-                  type="password"
-                  id="cancel-password"
-                  className={`input input-bordered ${cancelPasswordError ? 'input-error' : ''}`}
-                  placeholder="Enter password"
-                  autoComplete="off"
-                />
-                {cancelPasswordError && (
-                  <label className="label">
-                    <span className="label-text-alt text-error">Incorrect password</span>
-                  </label>
-                )}
-              </div>
-              <div className="modal-action">
-                <button 
-                  type="button"
-                  className="btn btn-outline"
-                  onClick={() => {
-                    setShowCancelPasswordModal(false);
-                    setCancelPasswordError(false);
-                  }}
-                >
-                  Go Back
-                </button>
-                <button type="submit" className="btn btn-error">
-                  Confirm Cancellation
-                </button>
-              </div>
-            </form>
-          </div>
-          <form method="dialog" className="modal-backdrop">
-            <button onClick={() => {
-              setShowCancelPasswordModal(false);
-              setCancelPasswordError(false);
-            }}>
-              close
-            </button>
-          </form>
-        </dialog>
-      )}
+        </div>
+        <form method="dialog" className="modal-backdrop">
+          <button onClick={() => {
+            setShowCancelPasswordModal(false);
+            setCancelPasswordError(false);
+          }}>
+            close
+          </button>
+        </form>
+      </dialog>
 
       {/* Submission Progress Modal */}
       {isSubmitting && (
@@ -987,12 +996,46 @@ const ScoreKeeperPage = () => {
                 style={{ width: `${submitProgress}%` }}
               ></div>
             </div>
-            <p className="text-center text-sm text-gray-600 dark:text-gray-400">
+            <p className="text-center text-sm text-gray-600 dark:text-gray-400 mb-4">
               {submitProgress.toFixed(0)}% Complete
             </p>
+            
             {submitError && (
               <div className="mt-4 p-4 bg-error/10 border border-error rounded-lg">
-                <p className="text-error text-sm">{submitError}</p>
+                <p className="text-error text-sm mb-2">{submitError}</p>
+                
+                {failedMatches.length > 0 && (
+                  <div className="mt-4">
+                    <h4 className="font-medium mb-2">Failed Matches:</h4>
+                    <div className="max-h-48 overflow-y-auto">
+                      {failedMatches.map((error, index) => (
+                        <div key={index} className="text-sm mb-2 p-2 bg-base-200 rounded">
+                          <p><span className="font-medium">{error.group}</span> - Match {parseInt(error.match) + 1}</p>
+                          <p className="text-error text-xs mt-1">{error.error}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                <div className="mt-4 flex justify-end gap-2">
+                  <button 
+                    className="btn btn-sm btn-outline"
+                    onClick={() => {
+                      setIsSubmitting(false);
+                      setSubmitError(null);
+                      setFailedMatches([]);
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    className="btn btn-sm btn-primary"
+                    onClick={() => handleFinalSubmit()}
+                  >
+                    Retry All
+                  </button>
+                </div>
               </div>
             )}
           </div>
