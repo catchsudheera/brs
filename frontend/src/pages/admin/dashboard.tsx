@@ -61,6 +61,26 @@ const DashboardPage = () => {
     }
   };
 
+  const getGameStats = (game: Game) => {
+    const scores = game.scores as Record<string, Record<string, MatchScore>>;
+    const groups = game.groups as Record<string, number[]>;
+    
+    let totalGames = 0;
+    let completedGames = 0;
+
+    Object.entries(groups).forEach(([groupName]) => {
+      const groupScores = scores[groupName] || {};
+      Object.values(groupScores).forEach(score => {
+        totalGames++;
+        if (score.team1Score > 0 || score.team2Score > 0) {
+          completedGames++;
+        }
+      });
+    });
+
+    return { totalGames, completedGames };
+  };
+
   return (
     <div className="min-h-screen bg-base-100">
       <div className="container mx-auto px-4 py-8">
@@ -107,15 +127,35 @@ const DashboardPage = () => {
                             {format(new Date(game.createdAt), 'PPp')}
                           </p>
                         </div>
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadgeClasses(game.status)}`}>
-                          {(game.status || 'DRAFT').replace('_', ' ')}
-                        </span>
-                      </div>
-                      {game.scores && (
-                        <div className="mt-2 text-sm text-base-content/70">
-                          Current Scores: {JSON.stringify(game.scores)}
+                        <div className="flex items-center gap-3">
+                          {game.status === 'IN_PROGRESS' && (
+                            <span className="relative flex h-3 w-3">
+                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                              <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                            </span>
+                          )}
+                          <div className="flex flex-col items-end gap-2">
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadgeClasses(game.status)}`}>
+                              {(game.status || 'DRAFT').replace('_', ' ')}
+                            </span>
+                            {game.status === 'IN_PROGRESS' && (() => {
+                              const { completedGames, totalGames } = getGameStats(game);
+                              const progress = Math.round((completedGames / totalGames) * 100);
+                              return (
+                                <div className="w-32">
+                                  <div className="text-xs text-right mb-1">{completedGames}/{totalGames} completed</div>
+                                  <div className="w-full bg-base-300 rounded-full h-1.5">
+                                    <div 
+                                      className="bg-primary h-1.5 rounded-full transition-all duration-500"
+                                      style={{ width: `${progress}%` }}
+                                    />
+                                  </div>
+                                </div>
+                              );
+                            })()}
+                          </div>
                         </div>
-                      )}
+                      </div>
                     </div>
                   ))}
                 </div>
