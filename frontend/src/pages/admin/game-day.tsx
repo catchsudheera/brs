@@ -1,15 +1,15 @@
 import React from 'react';
 import { useRouter } from 'next/router';
-import { usePlayerContext } from '@/contexts/PlayerContext';
 import { gameStorageService } from '@/services/gameStorageService';
 import { GroupCard } from '@/components/game-day/GroupCard';
 import { NavigationButtons } from '@/components/game-day/NavigationButtons';
 import type { GameScore } from '@/services/gameStorageService';
 import type { Player } from '@/types/player';
+import { usePlayers } from '@/hooks/usePlayers';
 
 const GameDayPage = () => {
   const router = useRouter();
-  const { players } = usePlayerContext();
+  const { players, isLoading: playersLoading } = usePlayers();
   const { gameId } = router.query;
   const [gameData, setGameData] = React.useState<GameScore | null>(null);
   const [isLoading, setIsLoading] = React.useState(true);
