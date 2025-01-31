@@ -53,7 +53,7 @@ const NavigationComponent = () => {
 
   const renderPlayersList = () => {
     if (isLoading) return null;
-    
+
     return players
       .sort((a, b) => a.name.localeCompare(b.name))
       .map((player) => (
@@ -77,13 +77,12 @@ const NavigationComponent = () => {
     <>
       {/* Placeholder div to prevent content jump when nav becomes fixed */}
       <div className={`h-16 ${isScrolled ? 'block' : 'hidden'}`} />
-      
-      <Disclosure as='nav' 
-        className={`${
-          isScrolled 
+
+      <Disclosure as='nav'
+        className={`${isScrolled
             ? 'fixed top-0 left-0 right-0 animate-slideDown z-[100]'
             : 'relative z-[100]'
-        } bg-gradient-to-r from-gray-900 to-gray-800 shadow-lg`}
+          } bg-gradient-to-r from-gray-900 to-gray-800 shadow-lg`}
       >
         {({ open }) => (
           <>
@@ -104,7 +103,7 @@ const NavigationComponent = () => {
                 {/* Logo and brand */}
                 <div className='flex-1 flex items-center justify-center sm:items-stretch sm:justify-start'>
                   <Link href='/' className='flex-shrink-0 flex items-center'>
-                    <Image 
+                    <Image
                       src={`/dutch-lankan-shuttle-masters-logo.jpeg?v=${BUILD_IDENTIFIER}`}
                       alt="Dutch Lankan Shuttle Masters"
                       width={40}
@@ -135,7 +134,7 @@ const NavigationComponent = () => {
 
                       {/* Player Encounters Dropdown */}
                       <Menu as="div" className="relative">
-                        <Menu.Button 
+                        <Menu.Button
                           className={classNames(
                             isEncountersPage()
                               ? 'bg-emerald-600 text-white'
@@ -248,7 +247,7 @@ const NavigationComponent = () => {
                   <Disclosure>
                     {({ open }) => (
                       <>
-                        <Disclosure.Button 
+                        <Disclosure.Button
                           className={classNames(
                             isEncountersPage()
                               ? 'bg-emerald-600 text-white'
@@ -258,13 +257,23 @@ const NavigationComponent = () => {
                         >
                           <span>Encounters</span>
                           <ChevronDownIcon
-                            className={`${
-                              open ? 'transform rotate-180' : ''
-                            } w-5 h-5 text-gray-400`}
+                            className={`${open ? 'transform rotate-180' : ''
+                              } w-5 h-5 text-gray-400`}
                           />
                         </Disclosure.Button>
                         <Disclosure.Panel className="px-4 pt-2 pb-2 space-y-1">
-                          {renderPlayersList()}
+                          {players
+                            .sort((a, b) => a.name.localeCompare(b.name))
+                            .map((player) => (
+                              <Link
+                                key={player.id}
+                                href={`/player/${player.id}/encounters`}
+                                className="block px-3 py-2 text-base text-gray-300 hover:bg-gray-700 hover:text-white rounded-md"
+                                onClick={() => close()}
+                              >
+                                {capitalizeFirstLetter(player.name)}
+                              </Link>
+                            ))}
                         </Disclosure.Panel>
                       </>
                     )}
