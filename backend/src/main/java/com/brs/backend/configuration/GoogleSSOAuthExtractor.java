@@ -69,6 +69,14 @@ public class GoogleSSOAuthExtractor {
             boolean verificationResult = verifier.verify(idToken);
             log.info("verificationResult [{}]", verificationResult);
 
+            boolean issuerValid = verifier.getIssuers() == null || idToken.verifyIssuer(verifier.getIssuers());
+            log.info("issuerValid [{}]", issuerValid);
+            boolean audienceValid = verifier.getAudience() == null || idToken.verifyAudience(verifier.getAudience());
+            log.info("audienceValid [{}]", audienceValid);
+            boolean timeValid = idToken.verifyTime(verifier.getClock().currentTimeMillis(), verifier.getAcceptableTimeSkewSeconds());
+            log.info("timeValid [{}]", timeValid);
+            boolean tokenPayloadValid = issuerValid && audienceValid && timeValid;
+            log.info("tokenPayloadValid [{}]", tokenPayloadValid);
             boolean validated = false;
             for (PublicKey publicKey : verifier.getPublicKeys()) {
                 if (idToken.verifySignature(publicKey)) {
