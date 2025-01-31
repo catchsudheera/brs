@@ -16,7 +16,7 @@ const GamePlannerPage = () => {
   const [selectedPlayers, setSelectedPlayers] = useState<number[]>([]);
   const { data: session, status } = useSession();
   const [isEditing, setIsEditing] = useState(false);
-  const { gameId } = router.query;
+  const gameId = router.query.gameId as string;
   const { game, isLoading: gameLoading } = useGame(gameId as string);
 
   // Load existing game data if editing
@@ -86,12 +86,12 @@ const GamePlannerPage = () => {
     try {
       const gameData = {
         groups,
-        scores: {}, // Initialize empty scores object
-        status: 'DRAFT'
+        scores: {},
+        status: 'DRAFT' as const
       };
 
       if (isEditing && gameId) {
-        await gameService.updateGame(gameId as string, gameData);
+        await gameService.updateGame(gameId, gameData);
         router.push(`/admin/game-day?gameId=${gameId}`);
       } else {
         const newGame = await gameService.createGame(gameData);

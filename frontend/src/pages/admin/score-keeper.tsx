@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import { capitalizeFirstLetter } from '@/utils/string';
 import { gameStorageService } from '@/services/gameStorageService';
@@ -77,7 +77,7 @@ const areValidMatchScores = (team1Score: number, team2Score: number): boolean =>
 const ScoreKeeperPage = () => {
   const router = useRouter();
   const { players, isLoading: playersLoading } = usePlayers();
-  const { gameId } = router.query;
+  const gameId = router.query.gameId as string;
   const { data: session, status } = useSession();
   const { game, isLoading: gameLoading, mutate } = useGame(gameId as string);
   const [gameData, setGameData] = React.useState<GameScore | null>(null);
@@ -111,6 +111,23 @@ const ScoreKeeperPage = () => {
       .sort((a, b) => a.playerRank - b.playerRank);
     return acc;
   }, {} as Record<string, Player[]>);
+
+  // Define initializeGroupScores first
+  const initializeGroupScores = useCallback((groupName: string) => {
+    if (!scores[groupName]) {
+      setScores(prev => ({
+        ...prev,
+        [groupName]: {} as Record<string, MatchScore>
+      }));
+    }
+  }, [scores]);
+
+  // Then use it in useEffect
+  useEffect(() => {
+    if (activeGroup && game) {
+      initializeGroupScores(activeGroup);
+    }
+  }, [activeGroup, game, initializeGroupScores]);
 
   // Initialize scores when game loads
   useEffect(() => {
@@ -237,82 +254,16 @@ const ScoreKeeperPage = () => {
     }
   };
 
-  const submitMatchResult = async (
-    date: string,
-    team1Players: number[],
-    team2Players: number[],
-    team1Score: number,
-    team2Score: number
-  ) => {
-    // Get fresh session before submitting
-    const session = await getRefreshedSession();
-    if (!session?.accessToken) {
-      throw new Error("No access token available");
-    }
-    
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/v2/encounters/${date}/add`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${session.accessToken}`,
-      },
-      body: JSON.stringify({
-        team1: {
-          player1: team1Players[0],
-          player2: team1Players[1],
-          setPoints: team1Score
-        },
-        team2: {
-          player1: team2Players[0],
-          player2: team2Players[1],
-          setPoints: team2Score
-        }
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error(`Failed to submit result: ${response.statusText}`);
-    }
-  };
-
   const handleProcessScores = async () => {
+    if (!gameId) return;
+    
     setIsProcessing(true);
     setProcessError(null);
     
     try {
-      // Get fresh session before processing
-      const session = await getRefreshedSession();
-      if (!session?.accessToken) {
-        throw new Error("No access token available");
-      }
-
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/v2/encounters/${gameId}/process`,
-        {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${session.accessToken}`,
-          }
-        }
-      );
-
-      const errorText = await response.text();
-      
-      if (!response.ok) {
-        throw new Error(
-          response.status === 403 
-            ? 'Not authorized to process scores' 
-            : errorText || 'Failed to process scores'
-        );
-      }
-
-      // Delete game from IndexedDB on success
-      if (typeof gameId === 'string') {
-        await gameStorageService.deleteGame(gameId);
-      }
-      
-      // Set success state
+      await gameService.processGame(gameId);
       setProcessSuccess(true);
+      router.push('/admin/dashboard');
     } catch (error) {
       console.error('Error processing scores:', error);
       setProcessError(error instanceof Error ? error.message : 'Failed to process scores');
@@ -322,109 +273,29 @@ const ScoreKeeperPage = () => {
   };
 
   const handleFinalSubmit = async () => {
-    if (!gameData || typeof gameId !== 'string') return;
-
-    // First check if there are any unsubmitted scores
-    let hasUnsubmittedScores = false;
-    let hasScores = false;
-
-    Object.values(gameData.scores).forEach(matches => {
-      Object.values(matches).forEach(score => {
-        if (score.team1Score > 0 || score.team2Score > 0) {
-          hasScores = true;
-          if (!score.isSubmitted) {
-            hasUnsubmittedScores = true;
-          }
-        }
-      });
-    });
-
-    // If all scores are already submitted, show process modal directly
-    if (hasScores && !hasUnsubmittedScores) {
-      setShowProcessModal(true);
-      return;
-    }
+    if (!gameId) return;
 
     setIsSubmitting(true);
     setSubmitProgress(0);
     setSubmitError(null);
 
-    const date = gameId;
-    let totalMatches = 0;
-    let completedMatches = 0;
-    const updatedScores: AllScores = { ...gameData.scores };
-
-    // Count total unsubmitted matches to submit
-    Object.entries(gameData.scores).forEach(([_, matches]) => {
-      Object.values(matches).forEach(score => {
-        if ((score.team1Score > 0 || score.team2Score > 0) && !score.isSubmitted) {
-          totalMatches++;
-        }
-      });
-    });
-
     try {
-      for (const [groupName, matches] of Object.entries(gameData.scores)) {
-        const groupPlayers = groups[groupName];
-        updatedScores[groupName] = { ...matches };
-        
-        for (const [matchIndex, score] of Object.entries(matches)) {
-          // Skip if no scores or already submitted
-          if (score.isSubmitted || (score.team1Score === 0 && score.team2Score === 0)) {
-            continue;
-          }
-
-          const matchCombinations = getMatchCombinations(
-            groupPlayers.map(player => players.find(p => p.id === player.id)?.name || '')
-          );
-          const matchIndexNum = parseInt(matchIndex);
-          const match = matchCombinations[matchIndexNum];
-          
-          const team1Players = match.team1.map(name => 
-            players.find(p => p.name === name)?.id
-          ).filter((id): id is number => id !== undefined);
-          
-          const team2Players = match.team2.map(name => 
-            players.find(p => p.name === name)?.id
-          ).filter((id): id is number => id !== undefined);
-
-          try {
-            await submitMatchResult(
-              date,
-              team1Players,
-              team2Players,
-              score.team1Score,
-              score.team2Score
-            );
-
-            updatedScores[groupName][matchIndex] = {
-              ...score,
-              isSubmitted: true
-            };
-            
-            completedMatches++;
-            setSubmitProgress((completedMatches / totalMatches) * 100);
-            
-          } catch (error) {
-            console.error('Failed to submit match:', error);
-            setSubmitError(`Failed to submit some results. Please try again.`);
-            return;
-          }
-        }
+      const result = await gameService.submitGame(gameId);
+      
+      // Handle partial success
+      if ('errors' in result) {
+        setSubmitError('Some matches failed to submit. Please try again for failed matches.');
+        console.error('Failed matches:', result.errors);
+      } else {
+        // All matches submitted successfully, proceed to process
+        await handleProcessScores();
       }
-
-      await gameStorageService.updateGameScores(gameId, updatedScores);
-      setGameData({
-        ...gameData,
-        scores: updatedScores
-      });
-
-      setShowProcessModal(true);
     } catch (error) {
       console.error('Submission error:', error);
-      setSubmitError('An error occurred during submission.');
+      setSubmitError('Failed to submit game results');
     } finally {
       setIsSubmitting(false);
+      setShowProcessModal(false);
     }
   };
 
@@ -440,23 +311,6 @@ const ScoreKeeperPage = () => {
       // Optionally show an error message to the user
     }
   };
-
-  // Initialize scores for a group if not exists
-  const initializeGroupScores = (groupName: string) => {
-    if (!scores[groupName]) {
-      setScores(prev => ({
-        ...prev,
-        [groupName]: {} as Record<string, MatchScore>
-      }));
-    }
-  };
-
-  // When switching groups, ensure scores exist
-  useEffect(() => {
-    if (activeGroup && game) {
-      initializeGroupScores(activeGroup);
-    }
-  }, [activeGroup, game]);
 
   if (status === 'loading' || gameLoading) {
     return (
@@ -553,39 +407,6 @@ const ScoreKeeperPage = () => {
       handleFinalSubmit();
     } else {
       setSubmitPasswordError(true);
-    }
-  };
-
-  const handleSubmit = async () => {
-    if (!gameId) return;
-
-    setIsSubmitting(true);
-    try {
-      await gameService.updateGame(gameId as string, {
-        scores,
-        status: 'IN_PROGRESS'
-      });
-      await mutate(); // Refresh game data
-    } catch (error) {
-      console.error('Failed to update scores:', error);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleFinish = async () => {
-    if (!gameId) return;
-
-    setIsSubmitting(true);
-    try {
-      await gameService.updateGame(gameId as string, {
-        scores,
-        status: 'COMPLETED'
-      });
-      router.push('/admin/dashboard');
-    } catch (error) {
-      console.error('Failed to complete game:', error);
-      setIsSubmitting(false);
     }
   };
 

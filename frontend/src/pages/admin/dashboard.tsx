@@ -6,6 +6,8 @@ import { PlusIcon } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 import { useEffect } from 'react';
 import { format } from 'date-fns';
+import type { Game } from '@prisma/client';
+import type { MatchScore } from '@/types/game';
 
 const DashboardPage = () => {
   const router = useRouter();
@@ -62,7 +64,7 @@ const DashboardPage = () => {
   };
 
   const getGameStats = (game: Game) => {
-    const scores = game.scores as Record<string, Record<string, MatchScore>>;
+    const scores = (game.scores as unknown) as Record<string, Record<string, MatchScore>>;
     const groups = game.groups as Record<string, number[]>;
     
     let totalGames = 0;

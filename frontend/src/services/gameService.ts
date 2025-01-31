@@ -2,8 +2,14 @@ import type { Game } from '@prisma/client';
 
 export interface GameInput {
   groups: Record<string, number[]>;
-  scores?: Record<string, number>;
+  scores?: Record<string, Record<string, MatchScore>>;
   status?: 'DRAFT' | 'IN_PROGRESS' | 'COMPLETED';
+}
+
+interface MatchScore {
+  team1Score: number;
+  team2Score: number;
+  submitted?: boolean;
 }
 
 export const gameService = {
@@ -46,6 +52,24 @@ export const gameService = {
       headers: { 'Content-Type': 'application/json' },
     });
     if (!response.ok) throw new Error('Failed to start game');
+    return response.json();
+  },
+
+  submitGame: async (id: string): Promise<Game> => {
+    const response = await fetch(`/api/games/${id}/submit`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    if (!response.ok) throw new Error('Failed to submit game');
+    return response.json();
+  },
+
+  processGame: async (id: string): Promise<Game> => {
+    const response = await fetch(`/api/games/${id}/process`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    if (!response.ok) throw new Error('Failed to process game');
     return response.json();
   },
 }; 
