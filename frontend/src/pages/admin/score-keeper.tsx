@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/router';
 import { capitalizeFirstLetter } from '@/utils/string';
 import { gameStorageService } from '@/services/gameStorageService';
@@ -103,54 +103,41 @@ const ScoreKeeperPage = () => {
   const [processSuccess, setProcessSuccess] = useState(false);
   const [scores, setScores] = useState<Record<string, Record<string, MatchScore>>>({});
 
-  // Convert player IDs to full player objects first
-  const groups = Object.entries(game?.groups as Record<string, number[]> || {}).reduce((acc, [groupName, playerIds]) => {
-    acc[groupName] = playerIds
-      .map(id => players.find(p => p.id === id))
-      .filter((player): player is NonNullable<typeof player> => player !== undefined)
-      .sort((a, b) => a.playerRank - b.playerRank);
-    return acc;
-  }, {} as Record<string, Player[]>);
+  // Memoize groups calculation
+  const groups = useMemo(() => {
+    return Object.entries(game?.groups as Record<string, number[]> || {}).reduce((acc, [groupName, playerIds]) => {
+      acc[groupName] = playerIds
+        .map(id => players.find(p => p.id === id))
+        .filter((player): player is NonNullable<typeof player> => player !== undefined)
+        .sort((a, b) => a.playerRank - b.playerRank);
+      return acc;
+    }, {} as Record<string, Player[]>);
+  }, [game?.groups, players]);
 
-  // Define initializeGroupScores first
-  const initializeGroupScores = useCallback((groupName: string) => {
-    if (!scores[groupName]) {
-      setScores(prev => ({
-        ...prev,
-        [groupName]: {} as Record<string, MatchScore>
-      }));
-    }
-  }, [scores]);
-
-  // Then use it in useEffect
+  // Update score initialization effect
   useEffect(() => {
-    if (activeGroup && game) {
-      initializeGroupScores(activeGroup);
-    }
-  }, [activeGroup, game, initializeGroupScores]);
+    if (!game?.groups || !players.length) return;
 
-  // Initialize scores when game loads
-  useEffect(() => {
-    if (game && players.length > 0) {
-      // Initialize scores structure for each group
-      const initialScores = Object.keys(game.groups as Record<string, number[]>).reduce((acc, groupName) => {
-        const groupPlayers = groups[groupName];
-        const matches = getMatchCombinations(groupPlayers.map(p => p.name));
-        
-        acc[groupName] = matches.reduce((matchScores, _, index) => {
-          // Get existing score from database or initialize new one
-          const existingScore = (game.scores as any)?.[groupName]?.[index.toString()] || { team1Score: 0, team2Score: 0 };
-          matchScores[index.toString()] = existingScore;
-          return matchScores;
-        }, {} as Record<string, MatchScore>);
-        
-        return acc;
-      }, {} as Record<string, Record<string, MatchScore>>);
+    // Initialize scores structure for each group
+    const initialScores = Object.keys(game.groups as Record<string, number[]>).reduce((acc, groupName) => {
+      const groupPlayers = groups[groupName];
+      if (!groupPlayers) return acc;
 
-      setScores(initialScores);
-      setIsGameStarted(game.status === 'IN_PROGRESS');
-    }
-  }, [game, players, groups]);
+      const matches = getMatchCombinations(groupPlayers.map(p => p.name));
+      
+      acc[groupName] = matches.reduce((matchScores, _, index) => {
+        const existingScore = (game.scores as any)?.[groupName]?.[index.toString()] || { team1Score: 0, team2Score: 0 };
+        matchScores[index.toString()] = existingScore;
+        return matchScores;
+      }, {} as Record<string, MatchScore>);
+      
+      return acc;
+    }, {} as Record<string, Record<string, MatchScore>>);
+
+    setScores(initialScores);
+    setIsGameStarted(game.status === 'IN_PROGRESS');
+
+  }, [game?.groups, game?.scores, game?.status, players, groups]); // Explicit dependencies
 
   // Auth check
   useEffect(() => {
@@ -191,6 +178,22 @@ const ScoreKeeperPage = () => {
     fetchGame();
   }, [gameId, activeGroup, playersLoading]);
 
+  // Add cleanup effect
+  useEffect(() => {
+    // Cleanup function
+    return () => {
+      setScores({});
+      setGameData(null);
+      setSelectedMatch(null);
+      setPendingMatch(null);
+      setActiveGroup('Group 1');
+      setIsGameStarted(false);
+      setIsLoading(true);
+      setSubmitError(null);
+      setProcessError(null);
+    };
+  }, []);
+
   const handleScoreSubmit = async (team1Score: number, team2Score: number) => {
     if (!selectedMatch || !gameId) return;
 
@@ -223,7 +226,7 @@ const ScoreKeeperPage = () => {
   };
 
   const handleBack = () => {
-    router.push(`/admin/game-day?gameId=${gameId}`);
+    router.push(`/admin/game-day?gameId=${gameId}`, undefined, { shallow: false });
   };
 
   const handleCancelGame = () => {
@@ -243,7 +246,7 @@ const ScoreKeeperPage = () => {
       try {
         if (typeof gameId === 'string') {
           await gameStorageService.deleteGame(gameId);
-          router.push('/admin/dashboard');
+          router.push('/admin/dashboard', undefined, { shallow: false });
         }
       } catch (error) {
         console.error('Failed to delete game:', error);
@@ -263,7 +266,7 @@ const ScoreKeeperPage = () => {
     try {
       await gameService.processGame(gameId);
       setProcessSuccess(true);
-      router.push('/admin/dashboard');
+      router.push('/admin/dashboard', undefined, { shallow: false });
     } catch (error) {
       console.error('Error processing scores:', error);
       setProcessError(error instanceof Error ? error.message : 'Failed to process scores');
@@ -1008,7 +1011,7 @@ const ScoreKeeperPage = () => {
             setShowProcessModal(false);
             setProcessError(null);
             setProcessSuccess(false);
-            router.push('/admin/dashboard');
+            router.push('/admin/dashboard', undefined, { shallow: false });
           } else {
             setShowProcessModal(false);
             setProcessError(null);
