@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/router';
-import { usePlayerContext } from '@/contexts/PlayerContext';
 import { capitalizeFirstLetter } from '@/utils/string';
 import { gameStorageService } from '@/services/gameStorageService';
 import type { GameScore } from '@/services/gameStorageService';
 import { validateEditPassword } from '@/utils/password';
-import { useSession, getSession } from 'next-auth/react';
+import { useSession } from 'next-auth/react';
 import { ProcessScoresModal } from '@/components/score-keeper/ProcessScoresModal';
+import { getRefreshedSession } from '@/utils/auth';
+import { usePlayers } from '@/hooks/usePlayers';
 
 interface MatchCombination {
   team1: string[];
@@ -92,7 +93,7 @@ const getGameStats = (groups: Record<string, any>, scores: Record<string, any>) 
 
 const ScoreKeeperPage = () => {
   const router = useRouter();
-  const { players } = usePlayerContext();
+  const { players, isLoading: playersLoading } = usePlayers();
   const { gameId } = router.query;
   const [gameData, setGameData] = React.useState<GameScore | null>(null);
   const [isLoading, setIsLoading] = React.useState(true);
@@ -120,15 +121,14 @@ const ScoreKeeperPage = () => {
   // Fetch game data from IndexedDB
   React.useEffect(() => {
     const fetchGame = async () => {
-      if (typeof gameId !== 'string') return;
+      if (typeof gameId !== 'string' || playersLoading) return;
       
       try {
         const game = await gameStorageService.getGame(gameId);
         if (game) {
-          // Initialize scores if they don't exist
           const gameWithScores = {
             ...game,
-            scores: game.scores || {}  // Ensure scores object exists
+            scores: game.scores || {}
           };
           setGameData(gameWithScores);
           setIsGameStarted(!!game.isStarted); // Set from stored value
@@ -148,7 +148,7 @@ const ScoreKeeperPage = () => {
     };
 
     fetchGame();
-  }, [gameId, activeGroup]);
+  }, [gameId, activeGroup, playersLoading]);
 
   const handleScoreSubmit = async (team1Score: number, team2Score: number) => {
     if (!selectedMatch || !gameData || typeof gameId !== 'string') return;
@@ -215,13 +215,17 @@ const ScoreKeeperPage = () => {
     team1Score: number,
     team2Score: number
   ) => {
-    const session = await getSession();
+    // Get fresh session before submitting
+    const session = await getRefreshedSession();
+    if (!session?.accessToken) {
+      throw new Error("No access token available");
+    }
     
     const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/v2/encounters/${date}/add`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${session?.accessToken}`,
+        'Authorization': `Bearer ${session.accessToken}`,
       },
       body: JSON.stringify({
         team1: {
@@ -247,12 +251,18 @@ const ScoreKeeperPage = () => {
     setProcessError(null);
     
     try {
+      // Get fresh session before processing
+      const session = await getRefreshedSession();
+      if (!session?.accessToken) {
+        throw new Error("No access token available");
+      }
+
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/v2/encounters/${gameId}/process`,
         {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${session?.accessToken}`,
+            'Authorization': `Bearer ${session.accessToken}`,
           }
         }
       );
@@ -389,7 +399,7 @@ const ScoreKeeperPage = () => {
     }
   };
 
-  if (isLoading) {
+  if (isLoading || playersLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <div className="loading loading-spinner loading-lg"></div>

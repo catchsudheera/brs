@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { useSession } from 'next-auth/react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import { usePlayerContext } from '@/contexts/PlayerContext';
+import { usePlayers } from '@/hooks/usePlayers';
+import { useSession } from 'next-auth/react';
 import { gameStorageService } from '@/services/gameStorageService';
 import { PlayerCard } from '@/components/game-planner/PlayerCard';
 import { ActionPanel } from '@/components/game-planner/ActionPanel';
@@ -10,15 +10,15 @@ import { isValidPlayerCount } from '@/utils/game-validation';
 const MAX_PLAYERS = 20;
 
 const GamePlannerPage = () => {
-  const { data: session, status } = useSession();
   const router = useRouter();
-  const { players } = usePlayerContext();
+  const { players, isLoading: playersLoading } = usePlayers();
   const [selectedPlayers, setSelectedPlayers] = useState<number[]>([]);
+  const { data: session, status } = useSession();
   const [isEditing, setIsEditing] = useState(false);
   const { gameId } = router.query;
 
   // Load existing game data if editing
-  React.useEffect(() => {
+  useEffect(() => {
     const loadExistingGame = async () => {
       if (typeof gameId === 'string') {
         try {

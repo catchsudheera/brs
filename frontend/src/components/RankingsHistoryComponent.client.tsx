@@ -10,24 +10,32 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import { capitalizeFirstLetter } from '@/utils/string';
-import { usePlayerContext } from '@/contexts/PlayerContext';
-import { useRankingHistoryContext } from '@/contexts/RankingHistoryContext';
+import { usePlayers } from '@/hooks/usePlayers';
+import { useRankingHistory } from '@/hooks/useRankingHistory';
 
 const RankingsHistoryComponent = () => {
-  const { players } = usePlayerContext();
-  const { rankingHistoryData } = useRankingHistoryContext();
-  const [playerColors, setPlayerColors] = useState<{ [key: string]: string }>(
-    {},
-  );
+  const { players, isLoading: playersLoading } = usePlayers();
+  const { rankingHistory, isLoading: historyLoading } = useRankingHistory();
+  const [playerColors, setPlayerColors] = useState<{ [key: string]: string }>({});
   const [highlightedPlayerKey, setHighlightedPlayerKey] = useState<string>();
 
   useEffect(() => {
-    const colorsMapping: { [key: string]: string } = {};
-    players.forEach((player) => {
-      colorsMapping[capitalizeFirstLetter(player.name)] = player.colorHex;
-    });
-    setPlayerColors(colorsMapping);
-  }, [players]);
+    if (!playersLoading && players.length > 0) {
+      const colorsMapping: { [key: string]: string } = {};
+      players.forEach((player) => {
+        colorsMapping[capitalizeFirstLetter(player.name)] = player.colorHex;
+      });
+      setPlayerColors(colorsMapping);
+    }
+  }, [players, playersLoading]);
+
+  if (playersLoading || historyLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-[400px]">
+        <div className="loading loading-spinner loading-lg"></div>
+      </div>
+    );
+  }
 
   const onLegendMouseEnter = (o: any) => {
     const { dataKey } = o;
@@ -62,7 +70,7 @@ const RankingsHistoryComponent = () => {
   return (
     <ResponsiveContainer width='100%' height={400}>
       <LineChart
-        data={rankingHistoryData}
+        data={rankingHistory}
         margin={{
           top: 5,
           right: 30,
@@ -78,8 +86,8 @@ const RankingsHistoryComponent = () => {
           onMouseEnter={onLegendMouseEnter}
           onMouseLeave={onLegendMouseLeave}
         />
-        {rankingHistoryData.length > 0 &&
-          Object.keys(rankingHistoryData[0])
+        {rankingHistory.length > 0 &&
+          Object.keys(rankingHistory[0])
             .filter((key) => key !== 'date')
             .map((key, idx) => {
               return (

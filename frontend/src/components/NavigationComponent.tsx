@@ -3,9 +3,10 @@ import { Disclosure, Menu, Transition } from '@headlessui/react';
 import { Bars3Icon, BellIcon, XMarkIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { usePlayerContext } from '@/contexts/PlayerContext';
 import { capitalizeFirstLetter } from '@/utils/string';
 import { useSession, signIn, signOut } from 'next-auth/react';
+import { usePlayers } from '@/hooks/usePlayers';
+import Image from 'next/image';
 
 // Add build identifier from env
 const BUILD_IDENTIFIER = process.env.NEXT_PUBLIC_BUILD_IDENTIFIER;
@@ -23,7 +24,7 @@ function classNames(...classes: (string | boolean)[]): string {
 
 const NavigationComponent = () => {
   const router = useRouter();
-  const { players } = usePlayerContext();
+  const { players, isLoading } = usePlayers();
   const [theme, setTheme] = useState('emerald');
   const [isScrolled, setIsScrolled] = useState(false);
   const { data: session } = useSession();
@@ -48,6 +49,28 @@ const NavigationComponent = () => {
 
   const isEncountersPage = () => {
     return router.pathname.includes('/player') && router.pathname.includes('/encounters');
+  };
+
+  const renderPlayersList = () => {
+    if (isLoading) return null;
+    
+    return players
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .map((player) => (
+        <Menu.Item key={player.id}>
+          {({ active }) => (
+            <Link
+              href={`/player/${player.id}/encounters`}
+              className={classNames(
+                active ? 'bg-gray-100 text-gray-900' : 'text-gray-700',
+                'block px-4 py-2 text-sm hover:text-emerald-600 transition-colors duration-150'
+              )}
+            >
+              {capitalizeFirstLetter(player.name)}
+            </Link>
+          )}
+        </Menu.Item>
+      ));
   };
 
   return (
@@ -81,10 +104,13 @@ const NavigationComponent = () => {
                 {/* Logo and brand */}
                 <div className='flex-1 flex items-center justify-center sm:items-stretch sm:justify-start'>
                   <Link href='/' className='flex-shrink-0 flex items-center'>
-                    <img
-                      className='block h-10 w-auto'
-                      src='/dutch-lankan-shuttle-masters-logo.jpeg'
-                      alt='Badminton Almere'
+                    <Image 
+                      src={`/dutch-lankan-shuttle-masters-logo.jpeg?v=${BUILD_IDENTIFIER}`}
+                      alt="Dutch Lankan Shuttle Masters"
+                      width={40}
+                      height={40}
+                      className="h-10 w-auto"
+                      priority
                     />
                     <div className='text-xl font-bold text-white ml-4 tracking-tight'>
                       Dutch Lankan Shuttle Masters
@@ -131,23 +157,7 @@ const NavigationComponent = () => {
                         >
                           <Menu.Items className="absolute right-0 mt-2 w-56 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none divide-y divide-gray-100 max-h-96 overflow-y-auto z-[60]">
                             <div className="py-1">
-                              {players
-                                .sort((a, b) => a.name.localeCompare(b.name))
-                                .map((player) => (
-                                  <Menu.Item key={player.id}>
-                                    {({ active }) => (
-                                      <Link
-                                        href={`/player/${player.id}/encounters`}
-                                        className={classNames(
-                                          active ? 'bg-gray-100 text-gray-900' : 'text-gray-700',
-                                          'block px-4 py-2 text-sm hover:text-emerald-600 transition-colors duration-150'
-                                        )}
-                                      >
-                                        {capitalizeFirstLetter(player.name)}
-                                      </Link>
-                                    )}
-                                  </Menu.Item>
-                                ))}
+                              {renderPlayersList()}
                             </div>
                           </Menu.Items>
                         </Transition>
@@ -254,18 +264,7 @@ const NavigationComponent = () => {
                           />
                         </Disclosure.Button>
                         <Disclosure.Panel className="px-4 pt-2 pb-2 space-y-1">
-                          {players
-                            .sort((a, b) => a.name.localeCompare(b.name))
-                            .map((player) => (
-                              <Link
-                                key={player.id}
-                                href={`/player/${player.id}/encounters`}
-                                className="block px-3 py-2 text-base text-gray-300 hover:bg-gray-700 hover:text-white rounded-md"
-                                onClick={() => close()}
-                              >
-                                {capitalizeFirstLetter(player.name)}
-                              </Link>
-                            ))}
+                          {renderPlayersList()}
                         </Disclosure.Panel>
                       </>
                     )}

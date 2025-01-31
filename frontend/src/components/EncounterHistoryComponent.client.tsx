@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { usePlayerContext } from '@/contexts/PlayerContext';
+import { usePlayers } from '@/hooks/usePlayers';
+import { useEncounterHistory } from '@/hooks/useEncounterHistory';
 import { capitalizeFirstLetter } from '@/utils/string';
 
 interface Encounter {
@@ -13,19 +14,19 @@ interface Encounter {
 }
 
 const EncounterHistoryComponent = () => {
-  const { players } = usePlayerContext();
+  const { players, isLoading: playersLoading } = usePlayers();
   const [teamA1, setTeamA1] = useState<number>(0);
   const [teamA2, setTeamA2] = useState<number>(0);
   const [teamB1, setTeamB1] = useState<number>(0);
   const [teamB2, setTeamB2] = useState<number>(0);
-  const [result, setResult] = useState<Encounter[] | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
   const [searchA1, setSearchA1] = useState('');
   const [searchA2, setSearchA2] = useState('');
   const [searchB1, setSearchB1] = useState('');
   const [searchB2, setSearchB2] = useState('');
   const [dropdownOpen, setDropdownOpen] = useState('');
   const resultsRef = useRef<HTMLDivElement>(null);
+
+  const { encounters, isLoading: encountersLoading, fetchEncounters } = useEncounterHistory(teamA1, teamA2, teamB1, teamB2);
 
   const sortedPlayers = useMemo(() => 
     [...players].sort((a, b) => a.name.localeCompare(b.name)),
@@ -145,27 +146,14 @@ const EncounterHistoryComponent = () => {
       return;
     }
 
-    setIsLoading(true);
-    try {
-      const res = await fetch(
-         `${process.env.NEXT_PUBLIC_BACKEND_URL}/encounters-for-players?teamAp1=${teamA1}&teamAp2=${teamA2}&teamBp1=${teamB1}&teamBp2=${teamB2}`
-      );
-      const data = await res.json();
-      setResult(data);
-      
-      // Add small delay to ensure the results are rendered
-      setTimeout(() => {
-        resultsRef.current?.scrollIntoView({ 
-          behavior: 'smooth',
-          block: 'start'
-        });
-      }, 100);
-      
-    } catch (error) {
-      console.error('Error fetching encounters:', error);
-    } finally {
-      setIsLoading(false);
-    }
+    await fetchEncounters();
+    
+    setTimeout(() => {
+      resultsRef.current?.scrollIntoView({ 
+        behavior: 'smooth',
+        block: 'start'
+      });
+    }, 100);
   };
 
   const validationError = getValidationError();
@@ -390,9 +378,9 @@ const EncounterHistoryComponent = () => {
           <button
             type="submit"
             className="btn btn-primary px-8"
-            disabled={!teamA1 || !!validationError || isLoading}
+            disabled={!teamA1 || !!validationError || encountersLoading}
           >
-            {isLoading ? (
+            {encountersLoading ? (
               <>
                 <span className="loading loading-spinner loading-sm"></span>
                 <span className="ml-2">Finding...</span>
@@ -405,13 +393,13 @@ const EncounterHistoryComponent = () => {
       </form>
 
       {/* Results Section */}
-      {result && (
+      {encounters && (
         <div className="mt-8" ref={resultsRef}>
           <div className="bg-base-100 rounded-lg shadow-lg">
             <div className="p-4 border-b border-base-200">
               <h2 className="text-xl font-semibold">Match Results</h2>
             </div>
-            {renderResults(result)}
+            {renderResults(encounters)}
           </div>
         </div>
       )}
