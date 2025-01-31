@@ -85,7 +85,8 @@ const GamePlannerPage = () => {
 
     try {
       const gameData = {
-        groups, // Now includes the properly distributed groups
+        groups,
+        scores: {}, // Initialize empty scores object
         status: 'DRAFT'
       };
 

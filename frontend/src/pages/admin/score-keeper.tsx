@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { capitalizeFirstLetter } from '@/utils/string';
 import { gameStorageService } from '@/services/gameStorageService';
@@ -8,6 +8,11 @@ import { useSession } from 'next-auth/react';
 import { ProcessScoresModal } from '@/components/score-keeper/ProcessScoresModal';
 import { getRefreshedSession } from '@/utils/auth';
 import { usePlayers } from '@/hooks/usePlayers';
+import { useGame } from '@/hooks/useGame';
+import { gameService } from '@/services/gameService';
+import { ScoreCard } from '@/components/score-keeper/ScoreCard';
+import { NavigationButtons } from '@/components/game-day/NavigationButtons';
+import type { Player } from '@/types/player';
 
 interface MatchCombination {
   team1: string[];
@@ -70,34 +75,15 @@ const areValidMatchScores = (team1Score: number, team2Score: number): boolean =>
   );
 };
 
-// Add helper function to count games
-const getGameStats = (groups: Record<string, any>, scores: Record<string, any>) => {
-  let totalGames = 0;
-  let completedGames = 0;
-
-  Object.entries(groups).forEach(([groupName, players]) => {
-    const matchCount = getMatchCombinations((players as any[]).map(p => p.name)).length;
-    totalGames += matchCount;
-    
-    if (scores[groupName]) {
-      Object.values(scores[groupName]).forEach((score: any) => {
-        if (score.team1Score > 0 || score.team2Score > 0) {
-          completedGames++;
-        }
-      });
-    }
-  });
-
-  return { totalGames, completedGames };
-};
-
 const ScoreKeeperPage = () => {
   const router = useRouter();
   const { players, isLoading: playersLoading } = usePlayers();
   const { gameId } = router.query;
+  const { data: session, status } = useSession();
+  const { game, isLoading: gameLoading, mutate } = useGame(gameId as string);
   const [gameData, setGameData] = React.useState<GameScore | null>(null);
   const [isLoading, setIsLoading] = React.useState(true);
-  const [activeGroup, setActiveGroup] = useState<string>('');
+  const [activeGroup, setActiveGroup] = useState<string>('Group 1');
   const [isGameStarted, setIsGameStarted] = useState(false);
   const [selectedMatch, setSelectedMatch] = useState<SelectedMatch | null>(null);
   const [passwordModalOpen, setPasswordModalOpen] = useState(false);
@@ -109,7 +95,6 @@ const ScoreKeeperPage = () => {
   const [showCancelWarning, setShowCancelWarning] = useState(false);
   const [showCancelPasswordModal, setShowCancelPasswordModal] = useState(false);
   const [cancelPasswordError, setCancelPasswordError] = useState(false);
-  const { data: session } = useSession();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitProgress, setSubmitProgress] = useState(0);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -117,6 +102,50 @@ const ScoreKeeperPage = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [processError, setProcessError] = useState<string | null>(null);
   const [processSuccess, setProcessSuccess] = useState(false);
+  const [scores, setScores] = useState<Record<string, Record<string, MatchScore>>>({});
+
+  // Convert player IDs to full player objects first
+  const groups = Object.entries(game?.groups as Record<string, number[]> || {}).reduce((acc, [groupName, playerIds]) => {
+    acc[groupName] = playerIds
+      .map(id => players.find(p => p.id === id))
+      .filter((player): player is NonNullable<typeof player> => player !== undefined)
+      .sort((a, b) => a.playerRank - b.playerRank);
+    return acc;
+  }, {} as Record<string, Player[]>);
+
+  // Initialize scores when game loads
+  useEffect(() => {
+    if (game) {
+      // Initialize scores structure for each group
+      const initialScores = Object.keys(game.groups as Record<string, number[]>).reduce((acc, groupName) => {
+        const groupPlayers = groups[groupName];
+        const matches = getMatchCombinations(groupPlayers.map(p => p.name));
+        
+        acc[groupName] = matches.reduce((matchScores, _, index) => {
+          matchScores[index] = { team1Score: 0, team2Score: 0 };
+          return matchScores;
+        }, {} as Record<string, MatchScore>);
+        
+        return acc;
+      }, {} as Record<string, Record<string, MatchScore>>);
+
+      // Merge with existing scores if any
+      const existingScores = game.scores as unknown as Record<string, Record<string, MatchScore>>;
+      setScores({
+        ...initialScores,
+        ...(existingScores || {})
+      });
+      
+      setIsGameStarted(game.status === 'IN_PROGRESS');
+    }
+  }, [game, players]);
+
+  // Auth check
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/admin/login');
+    }
+  }, [status, router]);
   
   // Fetch game data from IndexedDB
   React.useEffect(() => {
@@ -135,7 +164,7 @@ const ScoreKeeperPage = () => {
           
           // Set initial active group
           if (Object.keys(game.groups).length > 0 && !activeGroup) {
-            setActiveGroup(Object.keys(game.groups)[0]);
+            setActiveGroup('Group 1');
           }
         } else {
           setGameData(null);
@@ -174,10 +203,7 @@ const ScoreKeeperPage = () => {
   };
 
   const handleBack = () => {
-    router.push({
-      pathname: '/admin/game-day',
-      query: { gameId }
-    });
+    router.push(`/admin/game-day?gameId=${gameId}`);
   };
 
   const handleCancelGame = () => {
@@ -336,7 +362,7 @@ const ScoreKeeperPage = () => {
 
     try {
       for (const [groupName, matches] of Object.entries(gameData.scores)) {
-        const groupPlayers = gameData.groups[groupName];
+        const groupPlayers = groups[groupName];
         updatedScores[groupName] = { ...matches };
         
         for (const [matchIndex, score] of Object.entries(matches)) {
@@ -346,7 +372,7 @@ const ScoreKeeperPage = () => {
           }
 
           const matchCombinations = getMatchCombinations(
-            groupPlayers.map(id => players.find(p => p.id === id)?.name || '')
+            groupPlayers.map(player => players.find(p => p.id === player.id)?.name || '')
           );
           const matchIndexNum = parseInt(matchIndex);
           const match = matchCombinations[matchIndexNum];
@@ -399,7 +425,37 @@ const ScoreKeeperPage = () => {
     }
   };
 
-  if (isLoading || playersLoading) {
+  const handleStart = async () => {
+    if (!gameId) return;
+
+    try {
+      await gameService.startGame(gameId as string);
+      setIsGameStarted(true);
+      await mutate(); // Refresh game data
+    } catch (error) {
+      console.error('Failed to start game:', error);
+      // Optionally show an error message to the user
+    }
+  };
+
+  // Initialize scores for a group if not exists
+  const initializeGroupScores = (groupName: string) => {
+    if (!scores[groupName]) {
+      setScores(prev => ({
+        ...prev,
+        [groupName]: {} as Record<string, MatchScore>
+      }));
+    }
+  };
+
+  // When switching groups, ensure scores exist
+  useEffect(() => {
+    if (activeGroup && game) {
+      initializeGroupScores(activeGroup);
+    }
+  }, [activeGroup, game]);
+
+  if (status === 'loading' || gameLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <div className="loading loading-spinner loading-lg"></div>
@@ -407,90 +463,29 @@ const ScoreKeeperPage = () => {
     );
   }
 
-  if (!gameData) {
+  if (!game) {
     return (
       <div className="container mx-auto p-4 text-center">
-        <h1 className="text-2xl font-bold text-red-600">Game not found</h1>
+        <h1 className="text-2xl font-bold text-error">Game not found</h1>
         <button 
           className="btn btn-primary mt-4"
-          onClick={handleBack}
+          onClick={() => router.push('/admin/game-planner')}
         >
-          Back to Game Day
+          Back to Game Planner
         </button>
       </div>
     );
   }
 
-  // Convert player IDs to full player objects
-  const groups = Object.entries(gameData.groups).reduce((acc, [groupName, playerIds]) => {
-    acc[groupName] = playerIds
-      .map(id => players.find(p => p.id === id))
-      .filter((player): player is NonNullable<typeof player> => player !== undefined)
-      .sort((a, b) => a.playerRank - b.playerRank);
-    return acc;
-  }, {} as Record<string, typeof players>);
-
-  // Initialize scores for a group if not exists
-  const initializeGroupScores = (groupName: string) => {
-    if (!gameData.scores[groupName]) {
-      const matchCount = getMatchCombinations(groups[groupName].map(p => p.name)).length;
-      const groupScores: GroupScores = {};
-      
-      for (let i = 0; i < matchCount; i++) {
-        groupScores[i.toString()] = { team1Score: 0, team2Score: 0 };
-      }
-      
-      setGameData(prev => {
-        if (!prev) return prev;
-        return {
-          ...prev,
-          scores: {
-            ...prev.scores,
-            [groupName]: groupScores
-          }
-        };
-      });
-    }
-  };
-
   // Update score for a specific match
-  const handleScoreChange = (
-    groupName: string,
-    matchIndex: number,
-    team: 'team1Score' | 'team2Score',
-    value: string
-  ) => {
-    const numValue = value === '' ? 0 : parseInt(value, 10);
-    if (isNaN(numValue)) return;
-
-    setGameData(prev => {
-      if (!prev) return prev;
-      return {
-        ...prev,
-        scores: {
-          ...prev.scores,
-          [groupName]: {
-            ...prev.scores?.[groupName],
-            [matchIndex]: {
-              ...prev.scores?.[groupName]?.[matchIndex],
-              [team]: numValue
-            }
-          }
-        }
-      };
-    });
-  };
-
-  const handleStart = async () => {
-    if (!gameData || typeof gameId !== 'string') return;
-
-    try {
-      await gameStorageService.updateGameStarted(gameId, true);
-      setIsGameStarted(true);
-    } catch (error) {
-      console.error('Failed to update game started state:', error);
-      // Optionally show an error message to the user
-    }
+  const handleScoreChange = (groupName: string, matchIndex: string, score: MatchScore) => {
+    setScores(prev => ({
+      ...prev,
+      [groupName]: {
+        ...prev[groupName],
+        [matchIndex]: score
+      }
+    }));
   };
 
   const handleMatchClick = (groupName: string, matchIndex: number, match: MatchCombination) => {
@@ -533,7 +528,7 @@ const ScoreKeeperPage = () => {
   };
 
   const handleSubmitResults = () => {
-    const { totalGames, completedGames } = getGameStats(groups, gameData.scores || {});
+    const { totalGames, completedGames } = getGameStats(groups, scores);
     
     if (completedGames < totalGames) {
       setShowSubmitWarning(true);
@@ -553,6 +548,60 @@ const ScoreKeeperPage = () => {
     } else {
       setSubmitPasswordError(true);
     }
+  };
+
+  const handleSubmit = async () => {
+    if (!gameId) return;
+
+    setIsSubmitting(true);
+    try {
+      await gameService.updateGame(gameId as string, {
+        scores,
+        status: 'IN_PROGRESS'
+      });
+      await mutate(); // Refresh game data
+    } catch (error) {
+      console.error('Failed to update scores:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleFinish = async () => {
+    if (!gameId) return;
+
+    setIsSubmitting(true);
+    try {
+      await gameService.updateGame(gameId as string, {
+        scores,
+        status: 'COMPLETED'
+      });
+      router.push('/admin/dashboard');
+    } catch (error) {
+      console.error('Failed to complete game:', error);
+      setIsSubmitting(false);
+    }
+  };
+
+  const getGameStats = (groups: Record<string, Player[]>, scores: Record<string, Record<string, MatchScore>>) => {
+    let totalGames = 0;
+    let completedGames = 0;
+
+    Object.entries(groups).forEach(([groupName, players]) => {
+      const matches = getMatchCombinations(players.map(p => p.name));
+      totalGames += matches.length;
+
+      // Count completed matches
+      if (scores[groupName]) {
+        Object.values(scores[groupName]).forEach(match => {
+          if (match.team1Score > 0 || match.team2Score > 0) {
+            completedGames++;
+          }
+        });
+      }
+    });
+
+    return { totalGames, completedGames };
   };
 
   return (
@@ -616,7 +665,7 @@ const ScoreKeeperPage = () => {
               ) : (
                 <>
                   {(() => {
-                    const { totalGames, completedGames } = getGameStats(groups, gameData.scores || {});
+                    const { totalGames, completedGames } = getGameStats(groups, scores);
                     const progressPercent = Math.round((completedGames / totalGames) * 100);
                     
                     return (
@@ -649,12 +698,12 @@ const ScoreKeeperPage = () => {
               <div className="p-6 bg-base-200 rounded-lg space-y-4">
                 {isGameStarted && (
                   <>
-                    <button 
-                      className="btn btn-primary w-full"
+                  <button 
+                    className="btn btn-primary w-full"
                       onClick={handleSubmitResults}
-                    >
-                      Submit Results
-                    </button>
+                  >
+                    Submit Results
+                  </button>
                     <button 
                       className="btn btn-error btn-outline w-full"
                       onClick={handleCancelGame}
@@ -828,10 +877,10 @@ const ScoreKeeperPage = () => {
                 </div>
                 <input
                   type="number"
-                  min="0"
+                  className="input input-bordered w-full"
+                  defaultValue={scores[selectedMatch.groupName]?.[selectedMatch.matchIndex]?.team1Score || 0}
+                  min={0}
                   max={MAX_POINTS}
-                  className="input input-bordered w-full text-center"
-                  defaultValue={gameData.scores[selectedMatch.groupName]?.[selectedMatch.matchIndex]?.team1Score || 0}
                   id="team1Score"
                   onInput={(e) => {
                     const input = e.target as HTMLInputElement;
@@ -848,10 +897,10 @@ const ScoreKeeperPage = () => {
                 </div>
                 <input
                   type="number"
-                  min="0"
+                  className="input input-bordered w-full"
+                  defaultValue={scores[selectedMatch.groupName]?.[selectedMatch.matchIndex]?.team2Score || 0}
+                  min={0}
                   max={MAX_POINTS}
-                  className="input input-bordered w-full text-center"
-                  defaultValue={gameData.scores[selectedMatch.groupName]?.[selectedMatch.matchIndex]?.team2Score || 0}
                   id="team2Score"
                   onInput={(e) => {
                     const input = e.target as HTMLInputElement;

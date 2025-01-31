@@ -12,6 +12,6 @@ model Game {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   groups    Json     // Store groups as JSON
-  scores    Json?    // Store scores as JSON
+  scores    Json     @default("{}") // Default empty object for scores
   status    String   @default("DRAFT") // DRAFT, IN_PROGRESS, COMPLETED
 } 

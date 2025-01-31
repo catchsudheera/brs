@@ -4,6 +4,6 @@ CREATE TABLE "Game" (
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" DATETIME NOT NULL,
     "groups" JSONB NOT NULL,
-    "scores" JSONB,
+    "scores" JSONB NOT NULL DEFAULT '{}',
     "status" TEXT NOT NULL DEFAULT 'DRAFT'
 );

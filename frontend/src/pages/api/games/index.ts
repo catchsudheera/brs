@@ -17,6 +17,7 @@ export default async function handler(
       const game = await prisma.game.create({
         data: {
           groups,
+          scores: {},
           status: 'DRAFT'
         }
       });

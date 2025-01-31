@@ -39,4 +39,13 @@ export const gameService = {
     });
     if (!response.ok) throw new Error('Failed to delete game');
   },
+
+  startGame: async (id: string): Promise<Game> => {
+    const response = await fetch(`/api/games/${id}/start`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    if (!response.ok) throw new Error('Failed to start game');
+    return response.json();
+  },
 }; 
