@@ -105,7 +105,7 @@ const NavigationComponent = () => {
                 <div className='flex-1 flex items-center justify-center sm:items-stretch sm:justify-start'>
                   <Link href='/' className='flex-shrink-0 flex items-center'>
                     <Image 
-                      src={`/images/logo.png?v=${BUILD_IDENTIFIER}`}
+                      src={`/dutch-lankan-shuttle-masters-logo.jpeg?v=${BUILD_IDENTIFIER}`}
                       alt="Dutch Lankan Shuttle Masters"
                       width={40}
                       height={40}
