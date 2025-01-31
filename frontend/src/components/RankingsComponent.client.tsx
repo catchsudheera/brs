@@ -1,22 +1,11 @@
 import React from 'react';
 import Link from 'next/link';
-import { usePlayerContext } from '@/contexts/PlayerContext';
+import { useRankings } from '@/hooks/useRankings';
 
 const RankingsComponent = () => {
-  const { players, loading, error } = usePlayerContext();
+  const { rankings, error, isLoading } = useRankings();
 
-  const renderRankChange = (currentRank: number, previousRank: number) => {
-    const change = previousRank - currentRank;
-    if (change > 0) {
-      return <span className='text-green-500'>▲ {Math.abs(change)}</span>;
-    } else if (change < 0) {
-      return <span className='text-red-500'>▼ {Math.abs(change)}</span>;
-    } else {
-      return <span className='text-gray-500'> </span>;
-    }
-  };
-
-  if (loading) return (
+  if (isLoading) return (
     <div className="flex justify-center items-center min-h-[200px]">
       <div className="loading loading-spinner loading-lg"></div>
     </div>
@@ -28,14 +17,17 @@ const RankingsComponent = () => {
     </div>
   );
 
-  const sortedPlayers = [...players].sort(
-    (a, b) => a.playerRank - b.playerRank,
-  );
+  if (!rankings) return null;
 
-  const averageScore = players.reduce((acc, p) => acc + p.rankScore, 0) / players.length;
+  const { stats, players } = rankings;
 
-  const formatDays = (days: string) => {
-    return days.replace('(', '').replace(')', '');
+  const renderRankChange = (change: { direction: string; amount: number }) => {
+    if (change.direction === 'up') {
+      return <span className='text-green-500'>▲ {change.amount}</span>;
+    } else if (change.direction === 'down') {
+      return <span className='text-red-500'>▼ {change.amount}</span>;
+    }
+    return <span className='text-gray-500'> </span>;
   };
 
   return (
@@ -50,23 +42,19 @@ const RankingsComponent = () => {
         </p>
       </div>
 
-      {/* Stats Summary - Optimized for mobile */}
+      {/* Stats Summary */}
       <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-6 sm:mb-8">
         <div className="stat bg-base-200 rounded-lg shadow-md p-2 sm:p-4">
           <div className="stat-title text-xs sm:text-sm">Players</div>
-          <div className="stat-value text-lg sm:text-3xl">{players.length}</div>
+          <div className="stat-value text-lg sm:text-3xl">{stats.totalPlayers}</div>
         </div>
         <div className="stat bg-base-200 rounded-lg shadow-md p-2 sm:p-4">
           <div className="stat-title text-xs sm:text-sm">Top Score</div>
-          <div className="stat-value text-lg sm:text-3xl">
-            {Math.max(...players.map(p => p.rankScore)).toFixed(1)}
-          </div>
+          <div className="stat-value text-lg sm:text-3xl">{stats.topScore.toFixed(1)}</div>
         </div>
         <div className="stat bg-base-200 rounded-lg shadow-md p-2 sm:p-4">
           <div className="stat-title text-xs sm:text-sm">Average</div>
-          <div className="stat-value text-lg sm:text-3xl">
-            {averageScore.toFixed(1)}
-          </div>
+          <div className="stat-value text-lg sm:text-3xl">{stats.averageScore.toFixed(1)}</div>
         </div>
       </div>
 
@@ -75,20 +63,18 @@ const RankingsComponent = () => {
         <table className='table w-full'>
           <thead>
             <tr className="bg-base-200">
-              <th className='px-4 py-3 text-center' colSpan={2}>
-                Rank
-              </th>
+              <th className='px-4 py-3 text-center' colSpan={2}>Rank</th>
               <th className='px-4 py-3'>Player</th>
               <th className='px-4 py-3 text-center'>Score</th>
               <th className='px-4 py-3 text-center'>Highest Rank</th>
             </tr>
           </thead>
           <tbody>
-            {sortedPlayers.map((player) => (
+            {players.map((player) => (
               <tr 
                 key={player.id} 
                 className={`hover:bg-base-200 transition-colors duration-150 ${
-                  player.rankScore > averageScore 
+                  player.isAboveAverage 
                     ? 'bg-blue-50 dark:bg-blue-900/10' 
                     : 'bg-amber-50 dark:bg-amber-900/10'
                 }`}
@@ -97,7 +83,7 @@ const RankingsComponent = () => {
                   {player.playerRank}
                 </td>
                 <td className='px-1 py-3 items-center text-center text-xs'>
-                  {renderRankChange(player.playerRank, player.previousRank)}
+                  {renderRankChange(player.rankChange)}
                 </td>
                 <td className='px-4 py-3'>
                   <Link
@@ -111,9 +97,9 @@ const RankingsComponent = () => {
                   {player.rankScore.toFixed(2)}
                 </td>
                 <td className='px-4 py-3 items-center text-center'>
-                  <span className="font-medium">{`${player.highestRank}`}</span>
+                  <span className="font-medium">{player.highestRank}</span>
                   <span className='text-xs text-gray-400 ml-1'>
-                    ({formatDays(player.timeInHighestRank)})
+                    ({player.timeInHighestRank})
                   </span>
                 </td>
               </tr>

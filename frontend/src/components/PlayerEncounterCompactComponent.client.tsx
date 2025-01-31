@@ -2,7 +2,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import axios from 'axios';
 import { EncountersResponse, Encounter } from '@/types/encounter';
 import { capitalizeFirstLetter, groupBy, sumBy } from '@/utils/string';
-import { usePlayerContext } from '@/contexts/PlayerContext';
+import { usePlayers } from '@/hooks/usePlayers';
 import { Player } from '@/types/player';
 import PlayerEncounterComponent from './PlayerEncounterComponent';
 import { Disclosure } from '@headlessui/react';
@@ -13,24 +13,20 @@ interface PlayerEncountersComponentProps {
   playerId: string | string[] | undefined;
 }
 
-const PlayerEncountersCompactComponent: React.FC<
-  PlayerEncountersComponentProps
-> = ({ playerId }) => {
-  const { players } = usePlayerContext();
-  const [encountersByDate, setEncountersByDate] = useState<
-    Record<string, Encounter[]>
-  >({});
+const PlayerEncountersCompactComponent: React.FC<PlayerEncountersComponentProps> = ({ playerId }) => {
+  const { players, isLoading: playersLoading } = usePlayers();
+  const [encountersByDate, setEncountersByDate] = useState<Record<string, Encounter[]>>({});
   const [scoreSumByDate, setScoreSumByDate] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [player, setPlayer] = useState<Player | null>(null);
 
   useEffect(() => {
-    if (players.length > 0) {
-      const player = players.find((player) => player.id === Number(playerId));
-      setPlayer(player || null);
+    if (!playersLoading && players.length > 0) {
+      const foundPlayer = players.find((p: Player) => p.id === Number(playerId));
+      setPlayer(foundPlayer || null);
     }
-  }, [players, playerId]);
+  }, [players, playerId, playersLoading]);
 
   useEffect(() => {
     const fetchEncounters = async () => {
@@ -66,7 +62,7 @@ const PlayerEncountersCompactComponent: React.FC<
     fetchEncounters();
   }, [playerId]);
 
-  if (loading) return (
+  if (loading || playersLoading) return (
     <div className="flex justify-center items-center min-h-[200px]">
       <div className="loading loading-spinner loading-lg"></div>
     </div>
