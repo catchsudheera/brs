@@ -36,6 +36,8 @@ gv_mysql_root_password: <password>
 gv_backend_host_url: https://whatever-your-hostname.com
 gv_frontend_host_url: https://whatever-your-hostname.com
 gv_backend_api_key: sample-api-key
+gv_google_client_id: <client-id>
+gv_api_admin_emails: <csv-of-emails>
 
 
 # common for SWAG and CLOUDFLARE DDNS

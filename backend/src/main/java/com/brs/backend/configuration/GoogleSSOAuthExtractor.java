@@ -59,7 +59,6 @@ public class GoogleSSOAuthExtractor {
 
             String idTokenString = sanitizeBearerToken(authHeader);
             GoogleIdToken idToken = verifier.verify(idTokenString);
-
             if (idToken == null) {
                 log.error("Invalid ID token");
                 return Optional.empty();
