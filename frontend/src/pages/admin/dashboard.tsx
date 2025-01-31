@@ -50,6 +50,17 @@ const DashboardPage = () => {
     }
   };
 
+  const getGameLink = (game: Game) => {
+    switch (game.status) {
+      case 'IN_PROGRESS':
+        return `/admin/score-keeper?gameId=${game.id}`;
+      case 'COMPLETED':
+        return `/admin/game-day?gameId=${game.id}`; // Could also create a summary view
+      default: // DRAFT
+        return `/admin/game-day?gameId=${game.id}`;
+    }
+  };
+
   return (
     <div className="min-h-screen bg-base-100">
       <div className="container mx-auto px-4 py-8">
@@ -87,7 +98,7 @@ const DashboardPage = () => {
                     <div
                       key={game.id}
                       className="border border-base-200 rounded-lg p-4 hover:bg-base-200 transition-colors cursor-pointer"
-                      onClick={() => router.push(`/admin/score-keeper?gameId=${game.id}`)}
+                      onClick={() => router.push(getGameLink(game))}
                     >
                       <div className="flex justify-between items-center">
                         <div>
