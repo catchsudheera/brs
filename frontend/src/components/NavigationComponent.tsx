@@ -6,6 +6,7 @@ import { useRouter } from 'next/router';
 import { capitalizeFirstLetter } from '@/utils/string';
 import { useSession, signIn, signOut } from 'next-auth/react';
 import { usePlayers } from '@/hooks/usePlayers';
+import Image from 'next/image';
 
 // Add build identifier from env
 const BUILD_IDENTIFIER = process.env.NEXT_PUBLIC_BUILD_IDENTIFIER;
@@ -103,10 +104,13 @@ const NavigationComponent = () => {
                 {/* Logo and brand */}
                 <div className='flex-1 flex items-center justify-center sm:items-stretch sm:justify-start'>
                   <Link href='/' className='flex-shrink-0 flex items-center'>
-                    <img
-                      className='block h-10 w-auto'
-                      src='/dutch-lankan-shuttle-masters-logo.jpeg'
-                      alt='Badminton Almere'
+                    <Image 
+                      src={`/images/logo.png?v=${BUILD_IDENTIFIER}`}
+                      alt="Dutch Lankan Shuttle Masters"
+                      width={40}
+                      height={40}
+                      className="h-10 w-auto"
+                      priority
                     />
                     <div className='text-xl font-bold text-white ml-4 tracking-tight'>
                       Dutch Lankan Shuttle Masters

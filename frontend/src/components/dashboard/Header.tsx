@@ -1,5 +1,6 @@
 import { format } from 'date-fns';
 import { useSession, signOut } from 'next-auth/react';
+import Image from 'next/image';
 
 export const DashboardHeader = () => {
   const { data: session } = useSession();
@@ -18,10 +19,13 @@ export const DashboardHeader = () => {
       
       <div className="flex items-center gap-3 border-t sm:border-none pt-4 sm:pt-0">
         {session?.user?.image && (
-          <img
+          <Image
             src={session.user.image}
             alt="Profile"
+            width={40}
+            height={40}
             className="w-8 h-8 sm:w-10 sm:h-10 rounded-full ring-2 ring-emerald-500/20"
+            priority
           />
         )}
         <div className="flex-1 sm:text-right">
