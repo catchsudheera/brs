@@ -14,9 +14,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.stereotype.Component;
 
-import java.io.IOException;
-import java.security.GeneralSecurityException;
-import java.security.PublicKey;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Optional;
@@ -61,31 +58,7 @@ public class GoogleSSOAuthExtractor {
             }
 
             String idTokenString = sanitizeBearerToken(authHeader);
-            log.info("Authneticating for token [{}]", idTokenString);
-
-//            GoogleIdToken idToken = verifier.verify(idTokenString);
-            GoogleIdToken idToken = GoogleIdToken.parse(verifier.getJsonFactory(), idTokenString);
-            log.info("Got token [{}]", idToken.getPayload());
-            boolean verificationResult = verifier.verify(idToken);
-            log.info("verificationResult [{}]", verificationResult);
-
-            boolean issuerValid = verifier.getIssuers() == null || idToken.verifyIssuer(verifier.getIssuers());
-            log.info("issuerValid [{}]", issuerValid);
-            boolean audienceValid = verifier.getAudience() == null || idToken.verifyAudience(verifier.getAudience());
-            log.info("audienceValid [{}]", audienceValid);
-            boolean timeValid = idToken.verifyTime(verifier.getClock().currentTimeMillis(), verifier.getAcceptableTimeSkewSeconds());
-            log.info("timeValid [{}]", timeValid);
-            boolean tokenPayloadValid = issuerValid && audienceValid && timeValid;
-            log.info("tokenPayloadValid [{}]", tokenPayloadValid);
-            boolean validated = false;
-            for (PublicKey publicKey : verifier.getPublicKeys()) {
-                if (idToken.verifySignature(publicKey)) {
-                    validated = true;
-                    break;
-                }
-            }
-            log.info("validation result {}", validated);
-            log.info("id token returned: {}", idToken);
+            GoogleIdToken idToken = verifier.verify(idTokenString);
             if (idToken == null) {
                 log.error("Invalid ID token");
                 return Optional.empty();
