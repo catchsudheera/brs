@@ -7,6 +7,7 @@ import { capitalizeFirstLetter } from '@/utils/string';
 import { useSession, signIn, signOut } from 'next-auth/react';
 import { usePlayers } from '@/hooks/usePlayers';
 import Image from 'next/image';
+import { useLiveGames } from '@/hooks/useLiveGames';
 
 // Add build identifier from env
 const BUILD_IDENTIFIER = process.env.NEXT_PUBLIC_BUILD_IDENTIFIER;
@@ -22,12 +23,20 @@ function classNames(...classes: (string | boolean)[]): string {
   return classes.filter(Boolean).join(' ');
 }
 
+interface LiveGame {
+  id: string;
+  progress: number;
+  createdAt: string;
+}
+
 const NavigationComponent = () => {
   const router = useRouter();
   const { players, isLoading } = usePlayers();
   const [theme, setTheme] = useState('emerald');
   const [isScrolled, setIsScrolled] = useState(false);
   const { data: session } = useSession();
+  const { liveGames, isLoading: liveGamesLoading } = useLiveGames();
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   useEffect(() => {
     document.body.setAttribute('data-theme', theme);
@@ -162,6 +171,77 @@ const NavigationComponent = () => {
                         </Transition>
                       </Menu>
 
+                      {/* Live Games Dropdown */}
+                      <Menu as="div" className="relative">
+                        <Menu.Button
+                          className={classNames(
+                            'text-gray-300 hover:bg-gray-700 hover:text-white',
+                            'px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150 inline-flex items-center',
+                            liveGames.length > 0 && 'relative animate-glow bg-red-500/10'
+                          )}
+                        >
+                          <div className="flex items-center gap-2">
+                            {liveGames.length > 0 && (
+                              <span className="animate-pulse bg-red-500 w-2 h-2 rounded-full"></span>
+                            )}
+                            Live
+                            <ChevronDownIcon className="h-5 w-5" aria-hidden="true" />
+                          </div>
+                        </Menu.Button>
+                        <Transition
+                          as={Fragment}
+                          enter="transition ease-out duration-100"
+                          enterFrom="transform opacity-0 scale-95"
+                          enterTo="transform opacity-100 scale-100"
+                          leave="transition ease-in duration-75"
+                          leaveFrom="transform opacity-100 scale-100"
+                          leaveTo="transform opacity-0 scale-95"
+                        >
+                          <Menu.Items className="absolute right-0 mt-2 w-64 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                            <div className="py-1">
+                              {liveGamesLoading ? (
+                                <div className="text-center py-2">
+                                  <span className="loading loading-spinner loading-sm"></span>
+                                </div>
+                              ) : liveGames.length > 0 ? (
+                                liveGames.map((game) => (
+                                  <Menu.Item key={game.id}>
+                                    {({ active }) => (
+                                      <Link
+                                        href={`/game-viewer?gameId=${game.id}`}
+                                        className={classNames(
+                                          active ? 'bg-gray-100' : '',
+                                          'block px-4 py-2 text-sm text-gray-700'
+                                        )}
+                                      >
+                                        <div className="w-full">
+                                          <div className="flex justify-between items-center mb-1">
+                                            <span>Game #{game.id.slice(-4)}</span>
+                                            <span className="text-sm opacity-70">
+                                              {game.progress}%
+                                            </span>
+                                          </div>
+                                          <div className="w-full bg-gray-200 rounded-full h-1.5">
+                                            <div 
+                                              className="bg-emerald-600 h-1.5 rounded-full transition-all duration-500"
+                                              style={{ width: `${game.progress}%` }}
+                                            />
+                                          </div>
+                                        </div>
+                                      </Link>
+                                    )}
+                                  </Menu.Item>
+                                ))
+                              ) : (
+                                <div className="text-center py-2 text-gray-500">
+                                  No live games
+                                </div>
+                              )}
+                            </div>
+                          </Menu.Items>
+                        </Transition>
+                      </Menu>
+
                       {/* Remaining navigation items */}
                       {navigation.slice(2).map((item) => (
                         <Link
@@ -274,6 +354,65 @@ const NavigationComponent = () => {
                                 {capitalizeFirstLetter(player.name)}
                               </Link>
                             ))}
+                        </Disclosure.Panel>
+                      </>
+                    )}
+                  </Disclosure>
+
+                  {/* Live Games Section */}
+                  <Disclosure>
+                    {({ open }) => (
+                      <>
+                        <Disclosure.Button
+                          className={classNames(
+                            'text-gray-300 hover:bg-gray-700 hover:text-white',
+                            'flex w-full justify-between px-3 py-2 text-base font-medium rounded-md',
+                            liveGames.length > 0 && 'relative animate-glow bg-red-500/10'
+                          )}
+                        >
+                          <div className="flex items-center gap-2">
+                            {liveGames.length > 0 && (
+                              <span className="animate-pulse bg-red-500 w-2 h-2 rounded-full"></span>
+                            )}
+                            <span>Live</span>
+                          </div>
+                          <ChevronDownIcon
+                            className={`${open ? 'transform rotate-180' : ''} w-5 h-5 text-gray-400`}
+                          />
+                        </Disclosure.Button>
+                        <Disclosure.Panel className="px-4 pt-2 pb-2 space-y-1">
+                          {liveGamesLoading ? (
+                            <div className="text-center py-2">
+                              <span className="loading loading-spinner loading-sm"></span>
+                            </div>
+                          ) : liveGames.length > 0 ? (
+                            liveGames.map((game) => (
+                              <Link
+                                key={game.id}
+                                href={`/game-viewer?gameId=${game.id}`}
+                                className="block px-3 py-2 text-base text-gray-300 hover:bg-gray-700 hover:text-white rounded-md"
+                              >
+                                <div className="w-full">
+                                  <div className="flex justify-between items-center mb-1">
+                                    <span>Game #{game.id.slice(-4)}</span>
+                                    <span className="text-sm opacity-70">
+                                      {game.progress}%
+                                    </span>
+                                  </div>
+                                  <div className="w-full bg-gray-700 rounded-full h-1.5">
+                                    <div 
+                                      className="bg-emerald-600 h-1.5 rounded-full transition-all duration-500"
+                                      style={{ width: `${game.progress}%` }}
+                                    />
+                                  </div>
+                                </div>
+                              </Link>
+                            ))
+                          ) : (
+                            <div className="text-center py-2 text-gray-500">
+                              No live games
+                            </div>
+                          )}
                         </Disclosure.Panel>
                       </>
                     )}
