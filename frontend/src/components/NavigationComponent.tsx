@@ -120,7 +120,7 @@ const NavigationComponent = () => {
                       className="h-10 w-auto"
                       priority
                     />
-                    <div className='text-xl font-bold text-white ml-4 tracking-tight'>
+                    <div className='text-base sm:text-xl font-bold text-white ml-2 sm:ml-4 tracking-tight truncate'>
                       Dutch Lankan Shuttle Masters
                     </div>
                   </Link>
@@ -206,13 +206,14 @@ const NavigationComponent = () => {
                               ) : liveGames.length > 0 ? (
                                 liveGames.map((game) => (
                                   <Menu.Item key={game.id}>
-                                    {({ active }) => (
+                                    {({ active, close }) => (
                                       <Link
                                         href={`/game-viewer?gameId=${game.id}`}
                                         className={classNames(
                                           active ? 'bg-gray-100' : '',
                                           'block px-4 py-2 text-sm text-gray-700'
                                         )}
+                                        onClick={() => close()}
                                       >
                                         <div className="w-full">
                                           <div className="flex justify-between items-center mb-1">
@@ -391,6 +392,7 @@ const NavigationComponent = () => {
                                 key={game.id}
                                 href={`/game-viewer?gameId=${game.id}`}
                                 className="block px-3 py-2 text-base text-gray-300 hover:bg-gray-700 hover:text-white rounded-md"
+                                onClick={() => close()}
                               >
                                 <div className="w-full">
                                   <div className="flex justify-between items-center mb-1">
