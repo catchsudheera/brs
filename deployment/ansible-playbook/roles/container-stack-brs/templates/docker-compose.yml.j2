@@ -23,6 +23,8 @@ services:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/brs
       HOST_FRONTEND: {{ frontend_host_url }}
       API_KEY: {{ backend_api_key }}
+      API_ADMIN_EMAILS: {{ api_admin_emails }}
+      GOOGLE_CLIENT_ID: {{ google_client_id }}
     ports:
       - "8080:8080"
 
