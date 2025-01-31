@@ -72,6 +72,7 @@ public class EncounterController {
     }
 
     @PostMapping("/v2/encounters/{date}/add")
+    @Parameter(name = "x-api-key", required = false, example = "sample-api-key", in = ParameterIn.HEADER)
     private String addEncountersV2(
             @PathVariable LocalDate date,
             @RequestBody EncounterResultV2 result
@@ -133,6 +134,7 @@ public class EncounterController {
     }
 
     @PostMapping("/v2/validate")
+    @Parameter(name = "x-api-key", required = false, example = "sample-api-key", in = ParameterIn.HEADER)
     private String processToken() {
         return "Wade Goda";
     }
@@ -177,6 +179,7 @@ public class EncounterController {
     }
 
     @PostMapping("/v2/encounters/{date}/process")
+    @Parameter(name = "x-api-key", required = false, example = "sample-api-key", in = ParameterIn.HEADER)
     private String processEncounterV2(@PathVariable LocalDate date) {
         return processEncounter(date);
     }
