@@ -496,9 +496,12 @@ const ScoreKeeperPage = () => {
     if (!isGameStarted) return;
     
     // Check if match already has scores
-    const existingScore = gameData?.scores?.[groupName]?.[matchIndex];
-    if (existingScore && (existingScore.team1Score > 0 || existingScore.team2Score > 0)) {
-      // Store the match details and show password modal
+    const existingScore = scores[groupName]?.[matchIndex];
+    const hasRealScores = existingScore && 
+      (existingScore.team1Score > 0 || existingScore.team2Score > 0);
+
+    if (hasRealScores) {
+      // Store the match details and show password modal for existing non-zero scores
       setPendingMatch({
         groupName,
         matchIndex,
@@ -507,7 +510,7 @@ const ScoreKeeperPage = () => {
       });
       setPasswordModalOpen(true);
     } else {
-      // For new scores, no password needed
+      // For new scores or 0-0 scores, no password needed
       setSelectedMatch({
         groupName,
         matchIndex,
