@@ -39,6 +39,11 @@ interface SelectedMatch {
   team2: string[];
 }
 
+// Add interface for the error response
+interface SubmitErrorResponse {
+  errors: Array<{ group: string; match: string; error: string; }>;
+}
+
 const getMatchCombinations = (players: string[]): MatchCombination[] => {
   if (players.length === 4) {
     const [a, b, c, d] = players;
@@ -310,9 +315,9 @@ const ScoreKeeperPage = () => {
     try {
       const response = await gameService.submitGame(gameId);
       
-      // Handle partial success
-      if ('errors' in response) {
-        setFailedMatches(response.errors);
+      // Update the condition to check response type
+      if ('errors' in response && Array.isArray((response as SubmitErrorResponse).errors)) {
+        setFailedMatches((response as SubmitErrorResponse).errors);
         setSubmitError('Some matches failed to submit. Please check the errors below and try again.');
         return;
       }

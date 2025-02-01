@@ -72,7 +72,7 @@ const GameViewer = () => {
       <div className="flex justify-center items-center min-h-screen">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-700">Game not found</h1>
-          <p className="text-gray-500 mt-2">The game you're looking for doesn't exist</p>
+          <p className="text-gray-500 mt-2">The game you&apos;re looking for doesn&apos;t exist</p>
         </div>
       </div>
     );

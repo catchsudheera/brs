@@ -6,6 +6,8 @@ interface ProcessScoresModalProps {
   onProcess: () => void;
   onRetry: () => void;
   onClose: () => void;
+  title?: string;
+  message?: string;
 }
 
 export const ProcessScoresModal = ({
