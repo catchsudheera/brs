@@ -13,6 +13,20 @@
     owner: "{{ server_data_dir_user }}"
     group: "{{ server_data_dir_group }}"
 
+- name: Create Frontend directories
+  file:
+    path: "{{ frontend_config_path }}"
+    state: directory
+    owner: "{{ server_data_dir_user }}"
+    group: "{{ server_data_dir_group }}"
+
+- name: Create Frontend DB file
+  file:
+    path: "{{ frontend_db_file_path }}"
+    state: directory
+    owner: "{{ server_data_dir_user }}"
+    group: "{{ server_data_dir_group }}"
+
 - name: Create SWAG directories
   file:
     path: "{{ swag_config_path }}"

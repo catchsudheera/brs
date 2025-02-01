@@ -7,6 +7,7 @@ WORKDIR /app
 
 COPY package.json package-lock.json* ./
 RUN npm ci
+RUN npx prisma migrate
 
 # Rebuild the source code only when needed
 FROM base AS builder
