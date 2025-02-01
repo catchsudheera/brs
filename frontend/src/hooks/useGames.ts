@@ -1,17 +1,18 @@
 import useSWR from 'swr';
-import type { Game } from '@/types/game';
+import type { Game } from '@prisma/client';
 
 const fetcher = (url: string) => fetch(url).then(res => res.json());
 
 export function useGames() {
-  const { data: games, error, isLoading } = useSWR<Game[]>(
+  const { data, error, isLoading, mutate } = useSWR<Game[]>(
     '/api/games',
     fetcher
   );
 
   return {
-    games,
+    games: data || [],
     isLoading,
-    isError: error
+    error,
+    mutate
   };
 } 

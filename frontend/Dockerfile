@@ -6,7 +6,10 @@ RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 COPY package.json package-lock.json* ./
+COPY prisma ./prisma
 RUN npm ci
+RUN npx prisma generate
+RUN npx prisma migrate deploy
 
 # Rebuild the source code only when needed
 FROM base AS builder
@@ -16,7 +19,6 @@ COPY . .
 
 ENV NEXT_TELEMETRY_DISABLED 1
 
-RUN npx prisma migrate deploy
 RUN npm run build
 
 # Production image, copy all the files and run next
