@@ -7,7 +7,6 @@ WORKDIR /app
 
 COPY package.json package-lock.json* ./
 RUN npm ci
-RUN npx prisma migrate
 
 # Rebuild the source code only when needed
 FROM base AS builder
@@ -17,6 +16,7 @@ COPY . .
 
 ENV NEXT_TELEMETRY_DISABLED 1
 
+RUN npx prisma migrate
 RUN npm run build
 
 # Production image, copy all the files and run next
