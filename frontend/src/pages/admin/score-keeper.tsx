@@ -314,22 +314,17 @@ const ScoreKeeperPage = () => {
       if ('errors' in response) {
         setFailedMatches(response.errors);
         setSubmitError('Some matches failed to submit. Please check the errors below and try again.');
-        // Keep modal open when there are errors
         return;
       }
 
-      // All matches submitted successfully, proceed to process
+      // Show success message and prompt for processing
       setIsSubmitting(false);
-      await handleProcessScores();
+      setShowProcessModal(true);
     } catch (error) {
       console.error('Submission error:', error);
       setSubmitError('Failed to submit game results');
-      // Keep modal open on error
       return;
     }
-
-    // Only close if we reach here (complete success)
-    setIsSubmitting(false);
   };
 
   const handleStart = async () => {
@@ -1049,6 +1044,8 @@ const ScoreKeeperPage = () => {
         success={processSuccess}
         onProcess={handleProcessScores}
         onRetry={handleProcessScores}
+        title="All Scores Submitted Successfully!"
+        message="Would you like to process the results now?"
         onClose={() => {
           if (processSuccess || (!processError && !isProcessing)) {
             setShowProcessModal(false);

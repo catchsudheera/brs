@@ -6,6 +6,30 @@ function formatDate(date: Date): string {
   return date.toISOString().split('T')[0];
 }
 
+// Helper function to get players for a match
+function getMatchPlayers(groupPlayers: number[], match: number): { team1: number[], team2: number[] } {
+  if (groupPlayers.length === 4) {
+    const [a, b, c, d] = groupPlayers;
+    const combinations = [
+      { team1: [a, b], team2: [c, d] }, // AB-CD
+      { team1: [a, c], team2: [b, d] }, // AC-BD
+      { team1: [a, d], team2: [b, c] }  // AD-BC
+    ];
+    return combinations[match];
+  } else if (groupPlayers.length === 5) {
+    const [a, b, c, d, e] = groupPlayers;
+    const combinations = [
+      { team1: [a, b], team2: [c, d] }, // AB-CD
+      { team1: [a, c], team2: [b, e] }, // AC-BE
+      { team1: [a, e], team2: [b, d] }, // AE-BD
+      { team1: [a, d], team2: [c, e] }, // AD-CE
+      { team1: [b, c], team2: [d, e] }  // BC-DE
+    ];
+    return combinations[match];
+  }
+  throw new Error('Invalid group size');
+}
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
@@ -42,6 +66,7 @@ export default async function handler(
 
     for (const [groupName, groupScores] of Object.entries(scores)) {
       updatedScores[groupName] = { ...groupScores };
+      const groupPlayers = groups[groupName];
       
       for (const [matchIndex, score] of Object.entries(groupScores)) {
         if (score.team1Score === 0 && score.team2Score === 0) continue;
@@ -49,16 +74,17 @@ export default async function handler(
 
         try {
           const gameDate = formatDate(game.createdAt);
+          const { team1, team2 } = getMatchPlayers(groupPlayers, parseInt(matchIndex));
           
           console.log(`Submitting match for Game ${id}:`, {
             group: groupName,
             match: parseInt(matchIndex) + 1,
             team1: {
-              players: [groups[groupName][0], groups[groupName][1]],
+              players: team1,
               score: score.team1Score
             },
             team2: {
-              players: [groups[groupName][2], groups[groupName][3]],
+              players: team2,
               score: score.team2Score
             },
             date: gameDate
@@ -74,13 +100,13 @@ export default async function handler(
               },
               body: JSON.stringify({
                 team1: {
-                  player1: groups[groupName][0],
-                  player2: groups[groupName][1],
+                  player1: team1[0],
+                  player2: team1[1],
                   setPoints: score.team1Score
                 },
                 team2: {
-                  player1: groups[groupName][2],
-                  player2: groups[groupName][3],
+                  player1: team2[0],
+                  player2: team2[1],
                   setPoints: score.team2Score
                 }
               })
