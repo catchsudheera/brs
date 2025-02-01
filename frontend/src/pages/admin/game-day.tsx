@@ -1,37 +1,47 @@
 import React from 'react';
 import { useRouter } from 'next/router';
-import { gameStorageService } from '@/services/gameStorageService';
+import { usePlayers } from '@/hooks/usePlayers';
+import { useGame } from '@/hooks/useGame';
 import { GroupCard } from '@/components/game-day/GroupCard';
 import { NavigationButtons } from '@/components/game-day/NavigationButtons';
-import type { GameScore } from '@/services/gameStorageService';
 import type { Player } from '@/types/player';
-import { usePlayers } from '@/hooks/usePlayers';
 
 const GameDayPage = () => {
   const router = useRouter();
-  const { players, isLoading: playersLoading } = usePlayers();
   const { gameId } = router.query;
-  const [gameData, setGameData] = React.useState<GameScore | null>(null);
-  const [isLoading, setIsLoading] = React.useState(true);
+  const { players, isLoading: playersLoading } = usePlayers();
+  const { game, isLoading: gameLoading } = useGame(gameId as string);
 
-  // Fetch game data from IndexedDB
-  React.useEffect(() => {
-    const fetchGame = async () => {
-      if (typeof gameId !== 'string') return;
-      
-      try {
-        const game = await gameStorageService.getGame(gameId);
-        setGameData(game);
-      } catch (error) {
-        console.error('Failed to fetch game:', error);
-        // TODO: Show error toast/notification
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  if (gameLoading || playersLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="loading loading-spinner loading-lg"></div>
+      </div>
+    );
+  }
 
-    fetchGame();
-  }, [gameId]);
+  if (!game) {
+    return (
+      <div className="container mx-auto p-4 text-center">
+        <h1 className="text-2xl font-bold text-error">Game not found</h1>
+        <button 
+          className="btn btn-primary mt-4"
+          onClick={() => router.push('/admin/game-planner')}
+        >
+          Back to Game Planner
+        </button>
+      </div>
+    );
+  }
+
+  // Convert player IDs to full player objects
+  const groups = Object.entries(game.groups as Record<string, number[]>).reduce((acc, [groupName, playerIds]) => {
+    acc[groupName] = playerIds
+      .map(id => players.find(p => p.id === id))
+      .filter((player): player is NonNullable<typeof player> => player !== undefined)
+      .sort((a, b) => a.playerRank - b.playerRank);
+    return acc;
+  }, {} as Record<string, Player[]>);
 
   const handleBack = () => {
     router.push({
@@ -47,49 +57,18 @@ const GameDayPage = () => {
     });
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="loading loading-spinner loading-lg"></div>
-      </div>
-    );
-  }
-
-  if (!gameData) {
-    return (
-      <div className="container mx-auto p-4 text-center">
-        <h1 className="text-2xl font-bold text-red-600">Game not found</h1>
-        <button 
-          className="btn btn-primary mt-4"
-          onClick={handleBack}
-        >
-          Back to Game Planner
-        </button>
-      </div>
-    );
-  }
-
-  // Convert player IDs to full player objects
-  const groups = Object.entries(gameData.groups).reduce((acc, [groupName, playerIds]) => {
-    acc[groupName] = playerIds
-      .map(id => players.find(p => p.id === id))
-      .filter((player): player is NonNullable<typeof player> => player !== undefined)
-      .sort((a, b) => a.playerRank - b.playerRank);
-    return acc;
-  }, {} as Record<string, Player[]>);
-
   return (
     <div className="container mx-auto p-4">
       <div className="mb-6 sm:mb-8 text-center">
         <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-emerald-600 to-emerald-400 bg-clip-text text-transparent">
           Game Day Groups
         </h1>
-        <p className="mt-2 text-sm sm:text-base text-gray-600 dark:text-gray-400">
+        <p className="mt-2 text-sm sm:text-base text-base-content/60">
           Players and their groups for the game day
         </p>
       </div>
 
-      <div className="bg-base-100 rounded-lg shadow-lg overflow-hidden">
+      <div className="bg-base-100 rounded-lg shadow-lg overflow-hidden border border-base-200">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-base-200">
           {Object.entries(groups).map(([groupName, groupPlayers]) => (
             <GroupCard

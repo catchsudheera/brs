@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { usePlayers } from '@/hooks/usePlayers';
+import { useGame } from '@/hooks/useGame';
 import { useSession } from 'next-auth/react';
-import { gameStorageService } from '@/services/gameStorageService';
+import { gameService } from '@/services/gameService';
 import { PlayerCard } from '@/components/game-planner/PlayerCard';
 import { ActionPanel } from '@/components/game-planner/ActionPanel';
 import { isValidPlayerCount } from '@/utils/game-validation';
@@ -15,29 +16,19 @@ const GamePlannerPage = () => {
   const [selectedPlayers, setSelectedPlayers] = useState<number[]>([]);
   const { data: session, status } = useSession();
   const [isEditing, setIsEditing] = useState(false);
-  const { gameId } = router.query;
+  const gameId = router.query.gameId as string;
+  const { game, isLoading: gameLoading } = useGame(gameId as string);
 
   // Load existing game data if editing
   useEffect(() => {
-    const loadExistingGame = async () => {
-      if (typeof gameId === 'string') {
-        try {
-          const game = await gameStorageService.getGame(gameId);
-          if (game) {
-            setIsEditing(true);
-            const selectedIds = Object.values(game.groups)
-              .flat()
-              .filter((id, index, self) => self.indexOf(id) === index);
-            setSelectedPlayers(selectedIds);
-          }
-        } catch (error) {
-          console.error('Failed to load game:', error);
-        }
-      }
-    };
-
-    loadExistingGame();
-  }, [gameId]);
+    if (game) {
+      setIsEditing(true);
+      const selectedIds = Object.values(game.groups as Record<string, number[]>)
+        .flat()
+        .filter((id, index, self) => self.indexOf(id) === index);
+      setSelectedPlayers(selectedIds);
+    }
+  }, [game]);
 
   React.useEffect(() => {
     if (status === 'unauthenticated') {
@@ -92,30 +83,23 @@ const GamePlannerPage = () => {
       playerIndex += groupSize;
     });
 
-    // Convert groups to URL query params
-    const queryParams = Object.entries(groups)
-      .reduce((params, [groupName, players]) => {
-        const groupNum = groupName.split(' ')[1];
-        params[`group${groupNum}`] = players.join(',');
-        return params;
-      }, {} as Record<string, string>);
-
     try {
-      let gameIdToUse = gameId;  // Create mutable variable
-      
-      if (isEditing && typeof gameId === 'string') {
-        await gameStorageService.updateGame(gameId, groups);
-      } else {
-        gameIdToUse = await gameStorageService.createGame(groups);
-      }
+      const gameData = {
+        groups,
+        scores: {},
+        status: 'DRAFT' as const
+      };
 
-      router.push({
-        pathname: '/admin/game-day',
-        query: { gameId: gameIdToUse }
-      });
+      if (isEditing && gameId) {
+        await gameService.updateGame(gameId, gameData);
+        router.push(`/admin/game-day?gameId=${gameId}`);
+      } else {
+        const newGame = await gameService.createGame(gameData);
+        router.push(`/admin/game-day?gameId=${newGame.id}`);
+      }
     } catch (error) {
-      console.error('Failed to save game:', error);
-      // TODO: Show error toast/notification
+      console.error('Failed to create/update game:', error);
+      // Show error toast/notification
     }
   };
 

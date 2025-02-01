@@ -1,9 +1,10 @@
-import NextAuth from 'next-auth';
-import GoogleProvider from 'next-auth/providers/google';
+import { NextAuthOptions } from "next-auth";
+import NextAuth from "next-auth/next";
+import GoogleProvider from "next-auth/providers/google";
 
 const ALLOWED_EMAILS = process.env.ALLOWED_ADMIN_EMAILS?.split(',') || [];
 
-export default NextAuth({
+export const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
@@ -71,6 +72,10 @@ export default NextAuth({
       return token;
     },
     async session({ session, token }) {
+      if (session?.user?.email) {
+        // Set isAdmin based on allowed emails
+        session.user.isAdmin = ALLOWED_EMAILS.includes(session.user.email);
+      }
       session.accessToken = token.id_token as string;
       session.error = token.error;
       return session;
@@ -80,4 +85,6 @@ export default NextAuth({
     signIn: '/admin/login',
     error: '/admin/login',
   },
-}); 
+};
+
+export default NextAuth(authOptions); 

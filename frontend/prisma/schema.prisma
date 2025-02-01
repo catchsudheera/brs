@@ -1,0 +1,17 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Game {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  groups    Json     // Store groups as JSON
+  scores    Json     @default("{}") // Default empty object for scores
+  status    String   @default("DRAFT") // DRAFT, IN_PROGRESS, COMPLETED
+} 
