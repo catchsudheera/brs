@@ -16,7 +16,7 @@ COPY . .
 
 ENV NEXT_TELEMETRY_DISABLED 1
 
-RUN npx prisma migrate
+RUN npx prisma migrate deploy
 RUN npm run build
 
 # Production image, copy all the files and run next
