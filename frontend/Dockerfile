@@ -15,6 +15,8 @@ RUN npx prisma migrate deploy
 FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
+# Copy the dev.db from deps stage to builder
+COPY --from=deps /app/dev.db ./dev.db
 COPY . .
 
 ENV NEXT_TELEMETRY_DISABLED 1
@@ -41,6 +43,9 @@ RUN chown nextjs:nodejs .next
 # https://nextjs.org/docs/advanced-features/output-file-tracing
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+
+# Copy dev.db into the final image as well
+COPY --from=builder /app/dev.db ./dev.db
 
 USER nextjs
 
