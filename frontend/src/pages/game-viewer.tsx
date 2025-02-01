@@ -41,15 +41,57 @@ const LiveIndicator = () => (
   </div>
 );
 
+// Add proper type for the game
+interface LiveGame {
+  id: string;
+  groups: Record<string, number[]>;
+  scores: Record<string, Record<string, { team1Score: number; team2Score: number }>>;
+  status: string;
+}
+
+const useGameLiveUpdates = (gameId: string | undefined) => {
+  const [liveGame, setLiveGame] = useState<LiveGame | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    if (!gameId) return;
+
+    try {
+      const eventSource = new EventSource(`/api/games/${gameId}/live`);
+
+      eventSource.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        setLiveGame(data);
+        setIsLoading(false);
+      };
+
+      eventSource.onerror = (error) => {
+        console.error('SSE Error:', error);
+        eventSource.close();
+        setIsLoading(false);
+      };
+
+      return () => {
+        eventSource.close();
+      };
+    } catch (error) {
+      console.error('SSE Setup Error:', error);
+      setIsLoading(false);
+    }
+  }, [gameId]);
+
+  return { liveGame, isLoading };
+};
+
 const GameViewer = () => {
   const router = useRouter();
   const gameId = router.query.gameId as string;
-  const { game, isLoading: gameLoading } = useGame(gameId);
   const { players, isLoading: playersLoading } = usePlayers();
+  const { liveGame, isLoading: gameLoading } = useGameLiveUpdates(gameId);
   const [activeGroup, setActiveGroup] = useState<string>('Group 1');
 
   // Convert player IDs to full player objects
-  const groups = Object.entries(game?.groups as Record<string, number[]> || {}).reduce((acc, [groupName, playerIds]) => {
+  const groups = Object.entries(liveGame?.groups as Record<string, number[]> || {}).reduce((acc, [groupName, playerIds]) => {
     acc[groupName] = playerIds
       .map(id => players.find(p => p.id === id))
       .filter((player): player is NonNullable<typeof player> => player !== undefined)
@@ -57,9 +99,10 @@ const GameViewer = () => {
     return acc;
   }, {} as Record<string, Player[]>);
 
-  const scores = game?.scores as Record<string, Record<string, { team1Score: number; team2Score: number }>> || {};
+  const scores = liveGame?.scores as Record<string, Record<string, { team1Score: number; team2Score: number }>> || {};
 
-  if (gameLoading || playersLoading) {
+  // Show loading state while either data is loading
+  if (playersLoading || gameLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <div className="loading loading-spinner loading-lg"></div>
@@ -67,7 +110,7 @@ const GameViewer = () => {
     );
   }
 
-  if (!game) {
+  if (!liveGame) {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <div className="text-center">
@@ -92,7 +135,7 @@ const GameViewer = () => {
           
           {/* Last updated indicator */}
           <p className="mt-2 text-sm text-gray-500">
-            Auto-refreshing every 30 seconds
+            Live updates enabled
           </p>
         </div>
 
