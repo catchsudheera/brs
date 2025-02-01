@@ -27,6 +27,10 @@ frontend_host_url: "{{ gv_frontend_host_url }}"
 google_client_id: "{{ gv_google_client_id }}"
 api_admin_emails: "{{ gv_api_admin_emails }}"
 
+# Frontend
+frontend_config_path: "{{ container_data_root }}/frontend/config"
+frontend_db_file_path: "{{ frontend_config_path }}/prisma/prod.db"
+
 # common for SWAG and CLOUDFLARE DDNS
 cloudflare_api_token: "{{ gv_cloudflare_api_token }}"
 
