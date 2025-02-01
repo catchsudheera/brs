@@ -17,11 +17,9 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -82,10 +80,9 @@ public class EncounterController {
             Encounter saved = persistEncounterResultV2(date, result);
             return "ok";
         } catch (RuntimeException e) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST, "Could not save the entry", e);
+            log.error("Encounter adding failed with error [{}]", e.getMessage(), e);
+            throw e;
         }
-
     }
 
     @PostMapping(value = "/encounters/add-by-file", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -181,7 +178,12 @@ public class EncounterController {
     @PostMapping("/v2/encounters/{date}/process")
     @Parameter(name = "x-api-key", required = false, example = "sample-api-key", in = ParameterIn.HEADER)
     private String processEncounterV2(@PathVariable LocalDate date) {
-        return processEncounter(date);
+        try {
+            return processEncounter(date);
+        } catch (RuntimeException e) {
+            log.error("Encounter processing failed with error [{}]", e.getMessage(), e);
+            throw e;
+        }
     }
 
 
