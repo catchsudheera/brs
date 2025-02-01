@@ -32,6 +32,8 @@ services:
     image: ghcr.io/catchsudheera/brs-frontend:v2.0
     container_name: frontend
     restart: unless-stopped
+    volumes:
+     - {{ frontend_config_path }}:/app/config
     ports:
       - "3000:3000"
 
