@@ -88,7 +88,6 @@ const GameViewer = () => {
   const gameId = router.query.gameId as string;
   const { players, isLoading: playersLoading } = usePlayers();
   const { liveGame, isLoading: gameLoading } = useGameLiveUpdates(gameId);
-  const [activeGroup, setActiveGroup] = useState<string>('Group 1');
 
   // Convert player IDs to full player objects
   const groups = Object.entries(liveGame?.groups as Record<string, number[]> || {}).reduce((acc, [groupName, playerIds]) => {
@@ -141,30 +140,28 @@ const GameViewer = () => {
 
         {/* Progress Card with enhanced styling */}
         <div className="mt-6">
-          <div className="bg-base-200 p-6 rounded-lg border border-base-300 shadow-lg">
-            <div className="text-center mb-4">
-              <div className="flex justify-center items-center gap-3 mb-2">
-                <div className="text-3xl font-bold text-primary">
+          <div className="bg-base-200 px-4 py-3 rounded-lg border border-base-300 shadow-sm">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-medium text-base-content/70">Matches Completed</span>
+              <div className="flex items-center gap-1 font-mono">
+                <span className="text-lg font-bold text-primary">
                   {Object.values(scores).reduce((total, groupScores) => {
                     return total + Object.values(groupScores).filter(score => 
                       score.team1Score > 0 || score.team2Score > 0
                     ).length;
                   }, 0)}
-                </div>
-                <div className="text-2xl font-bold text-base-content/50">
-                  /
-                </div>
-                <div className="text-3xl font-bold text-primary/70">
+                </span>
+                <span className="text-base-content/50">/</span>
+                <span className="text-lg font-bold text-primary/70">
                   {Object.values(groups).reduce((total, group) => {
                     return total + (group.length === 4 ? 3 : 5);
                   }, 0)}
-                </div>
+                </span>
               </div>
-              <div className="text-base text-base-content/70 font-medium">Matches Completed</div>
             </div>
-            <div className="w-full bg-base-300 rounded-full h-3">
+            <div className="w-full bg-base-300 rounded-full h-1.5">
               <div 
-                className="bg-primary h-3 rounded-full transition-all duration-1000"
+                className="bg-primary h-1.5 rounded-full transition-all duration-1000"
                 style={{ 
                   width: `${Math.round((Object.values(scores).reduce((total, groupScores) => {
                     return total + Object.values(groupScores).filter(score => 
@@ -180,120 +177,75 @@ const GameViewer = () => {
         </div>
       </div>
 
-      {/* Group Tabs */}
-      <div className="overflow-x-auto mb-6">
-        <div className="tabs tabs-boxed inline-flex min-w-full justify-center">
-          {Object.keys(groups).map((groupName) => (
-            <button
-              key={groupName}
-              className={`tab tab-lg ${activeGroup === groupName ? 'tab-active' : ''}`}
-              onClick={() => setActiveGroup(groupName)}
-            >
-              {groupName}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Matches */}
+      {/* All Groups and Matches */}
       <div className="space-y-4">
-        {(() => {
-          const groupPlayers = groups[activeGroup] || [];
-          const matches = getMatchCombinations(groupPlayers.map(p => p.name));
+        {Object.entries(groups).map(([groupName, groupPlayers]) => (
+          <div key={groupName} className="bg-base-200 p-4 rounded-lg">
+            <h2 className="text-base font-semibold mb-3 text-base-content/70">{groupName}</h2>
+            <div className="space-y-2">
+              {(() => {
+                const matches = getMatchCombinations(groupPlayers.map(p => p.name));
 
-          return matches.map((match, idx) => {
-            const matchScore = scores[activeGroup]?.[idx];
-            const hasScore = !!matchScore;
-            const isPlayed = hasScore && (matchScore.team1Score > 0 || matchScore.team2Score > 0);
-            const team1Won = isPlayed && matchScore.team1Score > matchScore.team2Score;
+                return matches.map((match, idx) => {
+                  const matchScore = scores[groupName]?.[idx];
+                  const hasScore = !!matchScore;
+                  const isPlayed = hasScore && (matchScore.team1Score > 0 || matchScore.team2Score > 0);
+                  const team1Won = isPlayed && matchScore.team1Score > matchScore.team2Score;
 
-            return (
-              <div key={idx} className="bg-base-200 rounded-lg p-4">
-                <div className="grid grid-cols-11 gap-4 items-center">
-                  <div className="col-span-4">
-                    <div className={`text-center p-3 rounded ${
-                      isPlayed 
-                        ? (team1Won ? 'bg-green-100 dark:bg-green-900/30' : 'bg-red-100 dark:bg-red-900/30') 
-                        : 'bg-base-100'
-                    }`}>
-                      <div className="sm:flex sm:items-center sm:justify-center sm:gap-2">
-                        {isPlayed && (
-                          <>
-                            {/* Mobile indicator (above text) */}
-                            <div className="flex justify-center mb-2 sm:hidden">
-                              <span className={`flex items-center justify-center w-5 h-5 rounded-full ${
-                                team1Won 
-                                  ? 'bg-emerald-600 text-white' 
-                                  : 'bg-red-600 text-white'
-                              }`}>
-                                {team1Won ? '✓' : '×'}
-                              </span>
+                  return (
+                    <div key={idx} className="bg-base-100 rounded p-2">
+                      <div className="grid grid-cols-11 gap-2 items-center">
+                        <div className="col-span-4">
+                          <div className={`text-center py-1.5 px-2 rounded ${isPlayed
+                            ? (team1Won ? 'bg-green-100 dark:bg-green-900/30' : 'bg-red-100 dark:bg-red-900/30')
+                            : 'bg-base-100'
+                          }`}>
+                            <div className="flex items-center justify-center gap-1">
+                              {isPlayed && (
+                                <span className={`flex items-center justify-center w-3.5 h-3.5 rounded-full text-[10px] ${
+                                  team1Won ? 'bg-emerald-600 text-white' : 'bg-red-600 text-white'
+                                }`}>
+                                  {team1Won ? '✓' : '×'}
+                                </span>
+                              )}
+                              <div className="font-medium text-xs">
+                                {match.team1.map(capitalizeFirstLetter).join(' & ')}
+                              </div>
                             </div>
-                            {/* Desktop indicator (inline) */}
-                            <div className="hidden sm:block">
-                              <span className={`flex items-center justify-center w-5 h-5 rounded-full ${
-                                team1Won 
-                                  ? 'bg-emerald-600 text-white' 
-                                  : 'bg-red-600 text-white'
-                              }`}>
-                                {team1Won ? '✓' : '×'}
-                              </span>
+                          </div>
+                        </div>
+                        <div className="col-span-3 text-center">
+                          <div className="font-bold text-base">
+                            {hasScore ? `${matchScore.team1Score} - ${matchScore.team2Score}` : 'vs'}
+                          </div>
+                        </div>
+                        <div className="col-span-4">
+                          <div className={`text-center py-1.5 px-2 rounded ${isPlayed
+                            ? (!team1Won ? 'bg-green-100 dark:bg-green-900/30' : 'bg-red-100 dark:bg-red-900/30')
+                            : 'bg-base-100'
+                          }`}>
+                            <div className="flex items-center justify-center gap-1">
+                              {isPlayed && (
+                                <span className={`flex items-center justify-center w-3.5 h-3.5 rounded-full text-[10px] ${
+                                  !team1Won ? 'bg-emerald-600 text-white' : 'bg-red-600 text-white'
+                                }`}>
+                                  {!team1Won ? '✓' : '×'}
+                                </span>
+                              )}
+                              <div className="font-medium text-xs">
+                                {match.team2.map(capitalizeFirstLetter).join(' & ')}
+                              </div>
                             </div>
-                          </>
-                        )}
-                        <div className="font-medium">
-                          {match.team1.map(capitalizeFirstLetter).join(' & ')}
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                  <div className="col-span-3 text-center">
-                    <div className="font-bold text-2xl">
-                      {hasScore ? `${matchScore.team1Score} - ${matchScore.team2Score}` : 'vs'}
-                    </div>
-                  </div>
-                  <div className="col-span-4">
-                    <div className={`text-center p-3 rounded ${
-                      isPlayed 
-                        ? (!team1Won ? 'bg-green-100 dark:bg-green-900/30' : 'bg-red-100 dark:bg-red-900/30') 
-                        : 'bg-base-100'
-                    }`}>
-                      <div className="sm:flex sm:items-center sm:justify-center sm:gap-2">
-                        {isPlayed && (
-                          <>
-                            {/* Mobile indicator (above text) */}
-                            <div className="flex justify-center mb-2 sm:hidden">
-                              <span className={`flex items-center justify-center w-5 h-5 rounded-full ${
-                                !team1Won 
-                                  ? 'bg-emerald-600 text-white' 
-                                  : 'bg-red-600 text-white'
-                              }`}>
-                                {!team1Won ? '✓' : '×'}
-                              </span>
-                            </div>
-                            {/* Desktop indicator (inline) */}
-                            <div className="hidden sm:block">
-                              <span className={`flex items-center justify-center w-5 h-5 rounded-full ${
-                                !team1Won 
-                                  ? 'bg-emerald-600 text-white' 
-                                  : 'bg-red-600 text-white'
-                              }`}>
-                                {!team1Won ? '✓' : '×'}
-                              </span>
-                            </div>
-                          </>
-                        )}
-                        <div className="font-medium">
-                          {match.team2.map(capitalizeFirstLetter).join(' & ')}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            );
-          });
-        })()}
+                  );
+                });
+              })()}
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
