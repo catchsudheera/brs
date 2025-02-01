@@ -1,16 +1,12 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/router';
 import { capitalizeFirstLetter } from '@/utils/string';
-import { gameStorageService } from '@/services/gameStorageService';
-import type { GameScore } from '@/services/gameStorageService';
 import { validateEditPassword } from '@/utils/password';
 import { useSession } from 'next-auth/react';
 import { ProcessScoresModal } from '@/components/score-keeper/ProcessScoresModal';
-import { getRefreshedSession } from '@/utils/auth';
 import { usePlayers } from '@/hooks/usePlayers';
 import { useGame } from '@/hooks/useGame';
 import { gameService } from '@/services/gameService';
-import { NavigationButtons } from '@/components/game-day/NavigationButtons';
 import type { Player } from '@/types/player';
 
 interface MatchCombination {
@@ -85,7 +81,6 @@ const ScoreKeeperPage = () => {
   const gameId = router.query.gameId as string;
   const { data: session, status } = useSession();
   const { game, isLoading: gameLoading, mutate } = useGame(gameId as string);
-  const [gameData, setGameData] = React.useState<GameScore | null>(null);
   const [isLoading, setIsLoading] = React.useState(true);
   const [activeGroup, setActiveGroup] = useState<string>('Group 1');
   const [isGameStarted, setIsGameStarted] = useState(false);
@@ -134,13 +129,13 @@ const ScoreKeeperPage = () => {
       if (!groupPlayers) return acc;
 
       const matches = getMatchCombinations(groupPlayers.map(p => p.name));
-      
+
       acc[groupName] = matches.reduce((matchScores, _, index) => {
         const existingScore = (game.scores as any)?.[groupName]?.[index.toString()] || { team1Score: 0, team2Score: 0 };
         matchScores[index.toString()] = existingScore;
         return matchScores;
       }, {} as Record<string, MatchScore>);
-      
+
       return acc;
     }, {} as Record<string, Record<string, MatchScore>>);
 
@@ -155,45 +150,12 @@ const ScoreKeeperPage = () => {
       router.push('/admin/login');
     }
   }, [status, router]);
-  
-  // Fetch game data from IndexedDB
-  React.useEffect(() => {
-    const fetchGame = async () => {
-      if (typeof gameId !== 'string' || playersLoading) return;
-      
-      try {
-        const game = await gameStorageService.getGame(gameId);
-        if (game) {
-          const gameWithScores = {
-            ...game,
-            scores: game.scores || {}
-          };
-          setGameData(gameWithScores);
-          setIsGameStarted(!!game.isStarted); // Set from stored value
-          
-          // Set initial active group
-          if (Object.keys(game.groups).length > 0 && !activeGroup) {
-            setActiveGroup('Group 1');
-          }
-        } else {
-          setGameData(null);
-        }
-      } catch (error) {
-        console.error('Failed to fetch game:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
 
-    fetchGame();
-  }, [gameId, activeGroup, playersLoading]);
 
-  // Add cleanup effect
   useEffect(() => {
     // Cleanup function
     return () => {
       setScores({});
-      setGameData(null);
       setSelectedMatch(null);
       setPendingMatch(null);
       setActiveGroup('Group 1');
@@ -209,13 +171,13 @@ const ScoreKeeperPage = () => {
 
     try {
       // Update local state
-    const newScores = {
+      const newScores = {
         ...scores,
-      [selectedMatch.groupName]: {
+        [selectedMatch.groupName]: {
           ...scores[selectedMatch.groupName],
-        [selectedMatch.matchIndex]: { team1Score, team2Score }
-      }
-    };
+          [selectedMatch.matchIndex]: { team1Score, team2Score }
+        }
+      };
       setScores(newScores);
 
       // Update DB
@@ -226,7 +188,7 @@ const ScoreKeeperPage = () => {
 
       // Refresh game data
       await mutate();
-      
+
       // Close score input
       setSelectedMatch(null);
     } catch (error) {
@@ -288,12 +250,13 @@ const ScoreKeeperPage = () => {
 
   const handleProcessScores = async () => {
     if (!gameId) return;
-    
+
     setIsProcessing(true);
     setProcessError(null);
-    
+
     try {
       await gameService.processGame(gameId);
+      await gameService.deleteGame(gameId);
       setProcessSuccess(true);
       router.push('/admin/dashboard', undefined, { shallow: false });
     } catch (error) {
@@ -314,7 +277,7 @@ const ScoreKeeperPage = () => {
 
     try {
       const response = await gameService.submitGame(gameId);
-      
+
       // Update the condition to check response type
       if ('errors' in response && Array.isArray((response as SubmitErrorResponse).errors)) {
         setFailedMatches((response as SubmitErrorResponse).errors);
@@ -357,7 +320,7 @@ const ScoreKeeperPage = () => {
     return (
       <div className="container mx-auto p-4 text-center">
         <h1 className="text-2xl font-bold text-error">Game not found</h1>
-        <button 
+        <button
           className="btn btn-primary mt-4"
           onClick={() => router.push('/admin/game-planner')}
         >
@@ -367,23 +330,12 @@ const ScoreKeeperPage = () => {
     );
   }
 
-  // Update score for a specific match
-  const handleScoreChange = (groupName: string, matchIndex: string, score: MatchScore) => {
-    setScores(prev => ({
-      ...prev,
-      [groupName]: {
-        ...prev[groupName],
-        [matchIndex]: score
-      }
-    }));
-  };
-
   const handleMatchClick = (groupName: string, matchIndex: number, match: MatchCombination) => {
     if (!isGameStarted) return;
-    
+
     // Check if match already has scores
     const existingScore = scores[groupName]?.[matchIndex];
-    const hasRealScores = existingScore && 
+    const hasRealScores = existingScore &&
       (existingScore.team1Score > 0 || existingScore.team2Score > 0);
 
     if (hasRealScores) {
@@ -409,7 +361,7 @@ const ScoreKeeperPage = () => {
   const handlePasswordSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const passwordInput = (document.getElementById('edit-password') as HTMLInputElement).value;
-    
+
     if (validateEditPassword(passwordInput)) {
       setPasswordModalOpen(false);
       setPasswordError(false);
@@ -422,7 +374,7 @@ const ScoreKeeperPage = () => {
 
   const handleSubmitResults = () => {
     const { totalGames, completedGames } = getGameStats(groups, scores);
-    
+
     if (completedGames < totalGames) {
       setShowSubmitWarning(true);
     } else {
@@ -433,7 +385,7 @@ const ScoreKeeperPage = () => {
   const handleSubmitPasswordVerify = (e: React.FormEvent) => {
     e.preventDefault();
     const passwordInput = (document.getElementById('submit-password') as HTMLInputElement).value;
-    
+
     if (validateEditPassword(passwordInput)) {
       setShowSubmitPasswordModal(false);
       setSubmitPasswordError(false);
@@ -515,7 +467,7 @@ const ScoreKeeperPage = () => {
               {!isGameStarted ? (
                 <div className="text-center p-6 bg-base-200 rounded-lg">
                   <p className="text-gray-600">Click Start Games to begin recording scores</p>
-                  <button 
+                  <button
                     className="btn btn-primary mt-4"
                     onClick={handleStart}
                   >
@@ -527,7 +479,7 @@ const ScoreKeeperPage = () => {
                   {(() => {
                     const { totalGames, completedGames } = getGameStats(groups, scores);
                     const progressPercent = Math.round((completedGames / totalGames) * 100);
-                    
+
                     return (
                       <div className="p-6 bg-base-200 rounded-lg">
                         <div className="text-center mb-4">
@@ -537,7 +489,7 @@ const ScoreKeeperPage = () => {
                           <div className="text-sm text-gray-600">Games Completed</div>
                         </div>
                         <div className="w-full bg-base-300 rounded-full h-2.5">
-                          <div 
+                          <div
                             className="bg-primary h-2.5 rounded-full transition-all duration-500"
                             style={{ width: `${progressPercent}%` }}
                           ></div>
@@ -558,13 +510,13 @@ const ScoreKeeperPage = () => {
               <div className="p-6 bg-base-200 rounded-lg space-y-4">
                 {isGameStarted && (
                   <>
-                  <button 
-                    className="btn btn-primary w-full"
+                    <button
+                      className="btn btn-primary w-full"
                       onClick={handleSubmitResults}
-                  >
-                    Submit Results
-                  </button>
-                    <button 
+                    >
+                      Submit Results
+                    </button>
+                    <button
                       className="btn btn-error btn-outline w-full"
                       onClick={handleCancelGame}
                     >
@@ -582,8 +534,8 @@ const ScoreKeeperPage = () => {
             <h2 className="text-lg font-semibold mb-2">Players</h2>
             <div className="flex flex-wrap gap-2">
               {groups[activeGroup].map((player) => (
-                <div 
-                  key={player.id} 
+                <div
+                  key={player.id}
                   className="px-3 py-1 bg-base-200 rounded-lg text-sm font-medium"
                 >
                   {capitalizeFirstLetter(player.name)}
@@ -603,25 +555,23 @@ const ScoreKeeperPage = () => {
                 const team2Won = isPlayed && matchScore.team2Score > matchScore.team1Score;
 
                 return (
-                  <div 
-                    key={idx} 
+                  <div
+                    key={idx}
                     className={`bg-base-200 rounded-lg p-3 ${isGameStarted ? 'cursor-pointer hover:bg-base-300' : ''}`}
                     onClick={() => handleMatchClick(activeGroup, idx, match)}
                   >
                     <div className="grid grid-cols-11 gap-2 items-center">
                       <div className="col-span-4">
-                        <div className={`text-center p-2 rounded ${
-                          isPlayed 
-                            ? (team1Won ? 'bg-green-100 dark:bg-green-900/30' : 'bg-red-100 dark:bg-red-900/30') 
+                        <div className={`text-center p-2 rounded ${isPlayed
+                            ? (team1Won ? 'bg-green-100 dark:bg-green-900/30' : 'bg-red-100 dark:bg-red-900/30')
                             : 'bg-base-100'
-                        }`}>
+                          }`}>
                           <div className="flex items-center justify-center gap-1 mb-1">
                             {isPlayed && (
-                              <span className={`flex items-center justify-center w-4 h-4 rounded-full ${
-                                team1Won 
-                                  ? 'bg-emerald-600 text-white' 
+                              <span className={`flex items-center justify-center w-4 h-4 rounded-full ${team1Won
+                                  ? 'bg-emerald-600 text-white'
                                   : 'bg-red-600 text-white'
-                              }`}>
+                                }`}>
                                 {team1Won ? '✓' : '×'}
                               </span>
                             )}
@@ -636,24 +586,22 @@ const ScoreKeeperPage = () => {
                       </div>
                       <div className="col-span-3 text-center">
                         <div className="font-bold text-lg">
-                          {hasScore ? 
-                            `${matchScore.team1Score} - ${matchScore.team2Score}` 
+                          {hasScore ?
+                            `${matchScore.team1Score} - ${matchScore.team2Score}`
                             : 'vs'}
                         </div>
                       </div>
                       <div className="col-span-4">
-                        <div className={`text-center p-2 rounded ${
-                          isPlayed 
-                            ? (team2Won ? 'bg-green-100 dark:bg-green-900/30' : 'bg-red-100 dark:bg-red-900/30') 
+                        <div className={`text-center p-2 rounded ${isPlayed
+                            ? (team2Won ? 'bg-green-100 dark:bg-green-900/30' : 'bg-red-100 dark:bg-red-900/30')
                             : 'bg-base-100'
-                        }`}>
+                          }`}>
                           <div className="flex items-center justify-center gap-1 mb-1">
                             {isPlayed && (
-                              <span className={`flex items-center justify-center w-4 h-4 rounded-full ${
-                                team2Won 
-                                  ? 'bg-emerald-600 text-white' 
+                              <span className={`flex items-center justify-center w-4 h-4 rounded-full ${team2Won
+                                  ? 'bg-emerald-600 text-white'
                                   : 'bg-red-600 text-white'
-                              }`}>
+                                }`}>
                                 {team2Won ? '✓' : '×'}
                               </span>
                             )}
@@ -696,7 +644,7 @@ const ScoreKeeperPage = () => {
                 )}
               </div>
               <div className="modal-action">
-                <button 
+                <button
                   type="button"
                   className="btn btn-outline"
                   onClick={() => {
@@ -777,7 +725,7 @@ const ScoreKeeperPage = () => {
               * Scores cannot be equal
             </div>
             <div className="modal-action">
-              <button 
+              <button
                 className="btn btn-outline"
                 onClick={() => setSelectedMatch(null)}
               >
@@ -788,12 +736,12 @@ const ScoreKeeperPage = () => {
                 onClick={() => {
                   const team1Score = parseInt((document.getElementById('team1Score') as HTMLInputElement).value);
                   const team2Score = parseInt((document.getElementById('team2Score') as HTMLInputElement).value);
-                  
+
                   if (!areValidMatchScores(team1Score, team2Score)) {
                     alert('Invalid scores. Please check the requirements and try again.');
                     return;
                   }
-                  
+
                   handleScoreSubmit(team1Score, team2Score);
                 }}
               >
@@ -831,7 +779,7 @@ const ScoreKeeperPage = () => {
                 )}
               </div>
               <div className="modal-action">
-                <button 
+                <button
                   type="button"
                   className="btn btn-outline"
                   onClick={() => {
@@ -863,17 +811,17 @@ const ScoreKeeperPage = () => {
         <dialog className="modal modal-open">
           <div className="modal-box border-2 border-warning">
             <div className="flex items-start gap-3 mb-4">
-              <svg 
-                className="w-6 h-6 text-warning flex-shrink-0 mt-1" 
-                fill="none" 
-                viewBox="0 0 24 24" 
+              <svg
+                className="w-6 h-6 text-warning flex-shrink-0 mt-1"
+                fill="none"
+                viewBox="0 0 24 24"
                 stroke="currentColor"
               >
-                <path 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
-                  strokeWidth={2} 
-                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" 
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
                 />
               </svg>
               <div>
@@ -884,13 +832,13 @@ const ScoreKeeperPage = () => {
               </div>
             </div>
             <div className="modal-action">
-              <button 
+              <button
                 className="btn btn-outline"
                 onClick={() => setShowSubmitWarning(false)}
               >
                 Go Back
               </button>
-              <button 
+              <button
                 className="btn btn-warning"
                 onClick={() => {
                   setShowSubmitWarning(false);
@@ -917,13 +865,13 @@ const ScoreKeeperPage = () => {
             Are you sure you want to cancel this game? All scores and progress will be permanently deleted.
           </p>
           <div className="modal-action">
-            <button 
+            <button
               className="btn btn-outline"
               onClick={() => setShowCancelWarning(false)}
             >
               Go Back
             </button>
-            <button 
+            <button
               className="btn btn-error"
               onClick={handleCancelConfirm}
             >
@@ -959,7 +907,7 @@ const ScoreKeeperPage = () => {
               )}
             </div>
             <div className="modal-action">
-              <button 
+              <button
                 type="button"
                 className="btn btn-outline"
                 onClick={() => {
@@ -991,19 +939,19 @@ const ScoreKeeperPage = () => {
           <div className="modal-box">
             <h3 className="font-bold text-lg mb-4">Submitting Results</h3>
             <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700 mb-4">
-              <div 
-                className="bg-emerald-600 h-2.5 rounded-full transition-all duration-300" 
+              <div
+                className="bg-emerald-600 h-2.5 rounded-full transition-all duration-300"
                 style={{ width: `${submitProgress}%` }}
               ></div>
             </div>
             <p className="text-center text-sm text-gray-600 dark:text-gray-400 mb-4">
               {submitProgress.toFixed(0)}% Complete
             </p>
-            
+
             {submitError && (
               <div className="mt-4 p-4 bg-error/10 border border-error rounded-lg">
                 <p className="text-error text-sm mb-2">{submitError}</p>
-                
+
                 {failedMatches.length > 0 && (
                   <div className="mt-4">
                     <h4 className="font-medium mb-2">Failed Matches:</h4>
@@ -1017,9 +965,9 @@ const ScoreKeeperPage = () => {
                     </div>
                   </div>
                 )}
-                
+
                 <div className="mt-4 flex justify-end gap-2">
-                  <button 
+                  <button
                     className="btn btn-sm btn-outline"
                     onClick={() => {
                       setIsSubmitting(false);
@@ -1029,7 +977,7 @@ const ScoreKeeperPage = () => {
                   >
                     Cancel
                   </button>
-                  <button 
+                  <button
                     className="btn btn-sm btn-primary"
                     onClick={() => handleFinalSubmit()}
                   >
