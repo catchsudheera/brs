@@ -8,6 +8,7 @@ import { usePlayers } from '@/hooks/usePlayers';
 import { useGame } from '@/hooks/useGame';
 import { gameService } from '@/services/gameService';
 import type { Player } from '@/types/player';
+import { notificationService } from '@/services/notificationService';
 
 interface MatchCombination {
   team1: string[];
@@ -239,6 +240,7 @@ const ScoreKeeperPage = () => {
           throw new Error('Failed to delete game');
         }
 
+        await notificationService.notifyGameCancelled(gameId);
         // Only redirect after successful deletion
         router.push('/admin/dashboard', undefined, { shallow: false });
       }
@@ -256,6 +258,7 @@ const ScoreKeeperPage = () => {
 
     try {
       await gameService.processGame(gameId);
+      await notificationService.notifyGameCompleted(gameId);
       await gameService.deleteGame(gameId);
       setProcessSuccess(true);
       router.push('/admin/dashboard', undefined, { shallow: false });
@@ -300,6 +303,7 @@ const ScoreKeeperPage = () => {
 
     try {
       await gameService.startGame(gameId as string);
+      await notificationService.notifyGameStarted(gameId);
       setIsGameStarted(true);
       await mutate(); // Refresh game data
     } catch (error) {
