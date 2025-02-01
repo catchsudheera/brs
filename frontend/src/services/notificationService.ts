@@ -36,10 +36,65 @@ class NotificationService {
     }
   }
 
+  private async sendNotificationWithConfirm(options: NotificationOptions): Promise<boolean> {
+    return new Promise((resolve) => {
+      const modal = document.createElement('div');
+      modal.innerHTML = `
+        <dialog class="modal modal-open">
+          <div class="modal-box">
+            <h3 class="font-bold text-lg mb-4">Send Notification</h3>
+            <div class="space-y-4">
+              <div class="p-4 bg-base-200 rounded-lg">
+                <p class="font-semibold">${options.title}</p>
+                <p class="text-sm mt-2 text-base-content/70">Send this notification to all subscribed users?</p>
+              </div>
+              <p class="text-sm text-base-content/70">
+                This notification will be sent to all subscribed users.
+              </p>
+            </div>
+            <div class="modal-action">
+              <button class="btn btn-outline" id="cancel-notify">Cancel</button>
+              <button class="btn btn-primary" id="confirm-notify">Send Notification</button>
+            </div>
+          </div>
+          <form method="dialog" class="modal-backdrop">
+            <button id="close-notify">close</button>
+          </form>
+        </dialog>
+      `;
+      document.body.appendChild(modal);
+
+      const cleanup = () => {
+        document.body.removeChild(modal);
+      };
+
+      modal.querySelector('#cancel-notify')?.addEventListener('click', () => {
+        cleanup();
+        resolve(false);
+      });
+
+      modal.querySelector('#close-notify')?.addEventListener('click', () => {
+        cleanup();
+        resolve(false);
+      });
+
+      modal.querySelector('#confirm-notify')?.addEventListener('click', async () => {
+        cleanup();
+        try {
+          await this.sendNotification(options);
+          resolve(true);
+        } catch (error) {
+          console.error('Notification Error:', error);
+          resolve(false);
+        }
+      });
+    });
+  }
+
   async notifyGameStarted(gameId: string) {
     const gameViewerUrl = encodeURI(`${publicUrl}/game-viewer?gameId=${gameId}`);
     
-    return this.sendNotification({
+    return this.sendNotificationWithConfirm({
       title: `🏸 Game #${gameId.slice(-4)} has started!`,
       message: `Track live scores, groups and game combinations by clicking the button below.`,
       buttons: {
@@ -54,7 +109,7 @@ class NotificationService {
   }
 
   async notifyGameCompleted(gameId: string) {
-    return this.sendNotification({
+    return this.sendNotificationWithConfirm({
       title: `🏆 Game #${gameId.slice(-4)} has been completed!`,
       message: `Game #${gameId.slice(-4)} has been completed and scores have been processed. Check the updated rankings by clicking the button below.`,
       buttons: {
@@ -69,7 +124,7 @@ class NotificationService {
   }
 
   async notifyGameCancelled(gameId: string) {
-    return this.sendNotification({
+    return this.sendNotificationWithConfirm({
       title: '❌ Game Cancelled',
       message: `Game #${gameId.slice(-4)} has been cancelled.`
     });

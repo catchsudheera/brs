@@ -258,7 +258,10 @@ const ScoreKeeperPage = () => {
 
     try {
       await gameService.processGame(gameId);
-      await notificationService.notifyGameCompleted(gameId);
+      const notificationSent = await notificationService.notifyGameCompleted(gameId);
+      if (!notificationSent) {
+        console.warn('Notification was cancelled or failed to send');
+      }
       await gameService.deleteGame(gameId);
       setProcessSuccess(true);
       router.push('/admin/dashboard', undefined, { shallow: false });
