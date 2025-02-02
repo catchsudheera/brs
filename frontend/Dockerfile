@@ -12,7 +12,7 @@ RUN npx prisma generate
 # RUN npx prisma migrate deploy 
 
 # Debug: confirm dev.db is there
-RUN ls -lah /app/prisma
+# RUN ls -lah /app/prisma
 
 
 # Rebuild the source code only when needed
@@ -49,7 +49,7 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
 # If you need dev.db at runtime in the final image:
 # COPY --from=builder --chown=nextjs:nodejs  /app/prisma/dev.db ./prisma/dev.db
-RUN ls -lah /app/prisma
+# RUN ls -lah /app/prisma
 
 USER nextjs
 
