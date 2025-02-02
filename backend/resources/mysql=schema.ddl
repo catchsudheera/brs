@@ -24,6 +24,7 @@ CREATE TABLE `PLAYER` (
   `highest_rank` int DEFAULT NULL,
   `rank_since` date DEFAULT NULL,
   `color_hex` varchar(6) NOT NULL DEFAULT 'aaaaaa',
+  `disabled` BIT NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
