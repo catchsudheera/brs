@@ -89,22 +89,17 @@ const GameViewer = () => {
   const { players, isLoading: playersLoading } = usePlayers();
   const { liveGame, isLoading: gameLoading } = useGameLiveUpdates(gameId);
 
-  // Convert player IDs to full player objects
-  const groups = Object.entries(liveGame?.groups as Record<string, number[]> || {}).reduce((acc, [groupName, playerIds]) => {
-    acc[groupName] = playerIds
-      .map(id => players.find(p => p.id === id))
-      .filter((player): player is NonNullable<typeof player> => player !== undefined)
-      .sort((a, b) => a.playerRank - b.playerRank);
-    return acc;
-  }, {} as Record<string, Player[]>);
-
-  const scores = liveGame?.scores as Record<string, Record<string, { team1Score: number; team2Score: number }>> || {};
+  // Convert player IDs to names
+  const getPlayerName = (id: number) => {
+    const player = players.find(p => p.id === id);
+    return player ? player.name : `Player ${id}`;
+  };
 
   // Show loading state while either data is loading
   if (playersLoading || gameLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
-        <div className="loading loading-spinner loading-lg"></div>
+        <div className="loading loading-spinner loading-lg text-primary"></div>
       </div>
     );
   }
@@ -112,9 +107,15 @@ const GameViewer = () => {
   if (!liveGame) {
     return (
       <div className="flex justify-center items-center min-h-screen">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-700">Game not found</h1>
-          <p className="text-gray-500 mt-2">The game you&apos;re looking for doesn&apos;t exist</p>
+        <div className="text-center space-y-4">
+          <h1 className="text-2xl font-bold text-base-content/70">Game not found</h1>
+          <p className="text-base-content/50">The game you're looking for doesn't exist</p>
+          <button 
+            className="btn btn-primary btn-sm"
+            onClick={() => router.push('/')}
+          >
+            Go Home
+          </button>
         </div>
       </div>
     );
@@ -123,71 +124,100 @@ const GameViewer = () => {
   return (
     <div className="container mx-auto p-4">
       <div className="mb-8">
-        <div className="flex flex-col items-center">
-          {/* Live indicator */}
-          <LiveIndicator />
+        <div className="flex flex-col items-center animate-fadeIn">
+          {/* Live badge with enhanced styling */}
+          <div className="bg-red-500/10 px-3 py-1 rounded-full mb-3 border border-red-500/20">
+            <div className="flex items-center gap-2">
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
+              </span>
+              <span className="text-red-500 font-medium tracking-wider text-sm">LIVE MATCH</span>
+            </div>
+          </div>
           
-          {/* Game title */}
-          <h1 className="mt-2 text-3xl sm:text-4xl font-bold bg-gradient-to-r from-emerald-600 to-emerald-400 bg-clip-text text-transparent">
-            Game #{gameId.slice(-4)}
-          </h1>
+          {/* Game title with badminton icon */}
+          <div className="flex items-center gap-3 mb-2">
+            <span className="text-4xl">🏸</span>
+            <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent">
+              Game #{gameId.slice(-4)}
+            </h1>
+          </div>
           
-          {/* Last updated indicator */}
-          <p className="mt-2 text-sm text-gray-500">
-            Live updates enabled
-          </p>
+          {/* Live updates badge */}
+          <div className="mt-2 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
+            <div className="flex items-center gap-2 text-sm text-emerald-600">
+              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+              <span className="tracking-wide">Live updates enabled</span>
+            </div>
+          </div>
         </div>
 
-        {/* Progress Card with enhanced styling */}
-        <div className="mt-6">
-          <div className="bg-base-200 px-4 py-3 rounded-lg border border-base-300 shadow-sm">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium text-base-content/70">Matches Completed</span>
-              <div className="flex items-center gap-1 font-mono">
-                <span className="text-lg font-bold text-primary">
-                  {Object.values(scores).reduce((total, groupScores) => {
-                    return total + Object.values(groupScores).filter(score => 
-                      score.team1Score > 0 || score.team2Score > 0
-                    ).length;
-                  }, 0)}
-                </span>
-                <span className="text-base-content/50">/</span>
-                <span className="text-lg font-bold text-primary/70">
-                  {Object.values(groups).reduce((total, group) => {
-                    return total + (group.length === 4 ? 3 : 5);
-                  }, 0)}
-                </span>
-              </div>
+        {/* Progress Card with sports theme */}
+        <div className="mt-8 animate-slideUp">
+          <div className="bg-base-200 rounded-lg border border-base-300 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden">
+            <div className="px-4 py-3 border-b border-base-300 bg-base-300/30">
+              <h2 className="font-semibold text-base-content/70">Match Progress</h2>
             </div>
-            <div className="w-full bg-base-300 rounded-full h-1.5">
-              <div 
-                className="bg-primary h-1.5 rounded-full transition-all duration-1000"
-                style={{ 
-                  width: `${Math.round((Object.values(scores).reduce((total, groupScores) => {
-                    return total + Object.values(groupScores).filter(score => 
-                      score.team1Score > 0 || score.team2Score > 0
-                    ).length;
-                  }, 0) / Object.values(groups).reduce((total, group) => {
-                    return total + (group.length === 4 ? 3 : 5);
-                  }, 0)) * 100)}%` 
-                }}
-              />
+            <div className="p-4">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-base-content/70">Matches Completed</span>
+                  <div className="px-2 py-0.5 bg-primary/10 rounded text-xs font-medium text-primary">
+                    {Object.values(liveGame.scores).reduce((total, groupScores) => {
+                      return total + Object.values(groupScores).filter(score => 
+                        score.team1Score > 0 || score.team2Score > 0
+                      ).length;
+                    }, 0)} of {Object.values(liveGame.groups).reduce((total, group) => {
+                      return total + (group.length === 4 ? 3 : 5);
+                    }, 0)}
+                  </div>
+                </div>
+                <div className="text-xs font-medium text-base-content/50">
+                  Updated live
+                </div>
+              </div>
+              <div className="w-full bg-base-300 rounded-full h-2">
+                <div 
+                  className="bg-primary h-2 rounded-full transition-all duration-1000 relative overflow-hidden"
+                  style={{ 
+                    width: `${Math.round((Object.values(liveGame.scores).reduce((total, groupScores) => {
+                      return total + Object.values(groupScores).filter(score => 
+                        score.team1Score > 0 || score.team2Score > 0
+                      ).length;
+                    }, 0) / Object.values(liveGame.groups).reduce((total, group) => {
+                      return total + (group.length === 4 ? 3 : 5);
+                    }, 0)) * 100)}%` 
+                  }}
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer"></div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* All Groups and Matches */}
+      {/* Groups section with enhanced styling */}
       <div className="space-y-4">
-        {Object.entries(groups).map(([groupName, groupPlayers]) => (
-          <div key={groupName} className="bg-base-200 p-4 rounded-lg">
-            <h2 className="text-base font-semibold mb-3 text-base-content/70">{groupName}</h2>
-            <div className="space-y-2">
+        {Object.entries(liveGame.groups).map(([groupName, playerIds], groupIndex) => (
+          <div 
+            key={groupName} 
+            className="bg-base-200 rounded-lg transform opacity-0 animate-slideInFromRight overflow-hidden"
+            style={{ animationDelay: `${groupIndex * 150}ms` }}
+          >
+            <div className="px-4 py-3 bg-base-300/30 border-b border-base-300">
+              <h2 className="font-semibold text-base-content/70 flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-primary"></span>
+                {groupName}
+              </h2>
+            </div>
+            <div className="p-4 space-y-3">
               {(() => {
-                const matches = getMatchCombinations(groupPlayers.map(p => p.name));
+                const matches = getMatchCombinations(playerIds.map(id => getPlayerName(id)));
 
                 return matches.map((match, idx) => {
-                  const matchScore = scores[groupName]?.[idx];
+                  const matchScore = liveGame.scores[groupName]?.[idx];
                   const hasScore = !!matchScore;
                   const isPlayed = hasScore && (matchScore.team1Score > 0 || matchScore.team2Score > 0);
                   const team1Won = isPlayed && matchScore.team1Score > matchScore.team2Score;
