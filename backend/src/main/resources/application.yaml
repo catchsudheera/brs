@@ -2,7 +2,7 @@ spring:
   datasource:
     url: jdbc:mysql://localhost:3306/brs
     username: brs_user
-    password: zuX$Q1SmJC6v@!DO
+    password: local_dev_password
   jpa:
     hibernate:
       naming:
@@ -24,4 +24,4 @@ server:
 
 google:
   client:
-    id: 441369635705-38lnqsu3e312hnhoa1c7eb8flogfm832.apps.googleusercontent.com
+    id: test-client-id
