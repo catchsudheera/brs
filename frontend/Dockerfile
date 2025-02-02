@@ -48,7 +48,8 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
 # If you need dev.db at runtime in the final image:
-COPY --from=builder /app/prisma/dev.db ./prisma/dev.db
+COPY --from=builder --chown=nextjs:nodejs  /app/prisma/dev.db ./prisma/dev.db
+RUN ls -lah /app/prisma
 
 USER nextjs
 
