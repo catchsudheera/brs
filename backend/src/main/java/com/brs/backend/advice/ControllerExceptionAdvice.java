@@ -1,5 +1,6 @@
 package com.brs.backend.advice;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -13,12 +14,15 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 import java.sql.SQLIntegrityConstraintViolationException;
 
 @ControllerAdvice
+@Slf4j
 public class ControllerExceptionAdvice extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(value = {MethodArgumentTypeMismatchException.class})
     protected ResponseEntity<Object> handleMethodArgumentTypeMismatch(MethodArgumentTypeMismatchException ex, WebRequest request)
     {
+
         String bodyOfResponse = ex.getMessage();
+        log.error("Request [{}] failed with method argument error with message {}", request.getContextPath(), bodyOfResponse, ex);
         return handleExceptionInternal(ex, bodyOfResponse,
                 new HttpHeaders(), HttpStatus.UNPROCESSABLE_ENTITY, request);
     }
@@ -27,6 +31,7 @@ public class ControllerExceptionAdvice extends ResponseEntityExceptionHandler {
     protected ResponseEntity<Object> handleDuplicates(RuntimeException ex, WebRequest request)
     {
         String bodyOfResponse = ex.getMessage();
+        log.error("Request [{}] failed with SQL error with message {}", request.getContextPath(), bodyOfResponse, ex);
         return handleExceptionInternal(ex, bodyOfResponse,
                 new HttpHeaders(), HttpStatus.CONFLICT, request);
     }
@@ -36,6 +41,7 @@ public class ControllerExceptionAdvice extends ResponseEntityExceptionHandler {
     protected ResponseEntity<Object> handleRuntimeException(RuntimeException ex, WebRequest request)
     {
         String bodyOfResponse = ex.getMessage();
+        log.error("Request [{}] failed with error message {}", request.getContextPath(), bodyOfResponse, ex);
         return handleExceptionInternal(ex, bodyOfResponse,
                 new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR, request);
     }
