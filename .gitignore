@@ -31,3 +31,5 @@ frontend/.env.local
 
 frontend/prisma/dev.db
 frontend/.env.sentry-build-plugin
+
+frontend/.env

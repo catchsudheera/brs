@@ -9,7 +9,7 @@ COPY package.json package-lock.json* ./
 COPY prisma ./prisma
 RUN npm ci
 RUN npx prisma generate
-RUN npx prisma migrate deploy 
+# RUN npx prisma migrate deploy 
 
 # Debug: confirm dev.db is there
 RUN ls -lah /app/prisma
@@ -19,7 +19,7 @@ RUN ls -lah /app/prisma
 FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/prisma/dev.db ./prisma/dev.db
+# COPY --from=deps /app/prisma/dev.db ./prisma/dev.db
 COPY . .
 
 ENV NEXT_TELEMETRY_DISABLED 1
@@ -48,7 +48,7 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
 # If you need dev.db at runtime in the final image:
-COPY --from=builder --chown=nextjs:nodejs  /app/prisma/dev.db ./prisma/dev.db
+# COPY --from=builder --chown=nextjs:nodejs  /app/prisma/dev.db ./prisma/dev.db
 RUN ls -lah /app/prisma
 
 USER nextjs
