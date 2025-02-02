@@ -109,7 +109,7 @@ const GameViewer = () => {
       <div className="flex justify-center items-center min-h-screen">
         <div className="text-center space-y-4">
           <h1 className="text-2xl font-bold text-base-content/70">Game not found</h1>
-          <p className="text-base-content/50">The game you're looking for doesn't exist</p>
+          <p className="text-base-content/50">The game you&apos;re looking for doesn&apos;t exist</p>
           <button 
             className="btn btn-primary btn-sm"
             onClick={() => router.push('/')}
