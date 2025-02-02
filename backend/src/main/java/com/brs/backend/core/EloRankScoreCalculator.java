@@ -3,22 +3,22 @@ package com.brs.backend.core;
 import com.brs.backend.model.Encounter;
 import com.brs.backend.model.Player;
 import com.brs.backend.util.PlayerUtil;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.LocalDate;
 import java.util.List;
 
 @Component
+@RequiredArgsConstructor
 public class EloRankScoreCalculator implements RankScoreCalculator {
 
-    @Autowired
-    private PlayerUtil playerUtil;
+    private final PlayerUtil playerUtil;
 
-    @Autowired
-    private ScorePersister scorePersister;
+    private final ScorePersister scorePersister;
+
+    private final CommonAbsenteeManager commonAbsenteeManager;
 
     @Override
     public void calculateAndPersist(Encounter encounter) {
@@ -35,7 +35,7 @@ public class EloRankScoreCalculator implements RankScoreCalculator {
 
         // K value lowered to 20 from 40 in Sep, 2024
         double team1Score = BigDecimal.valueOf(20 * (team1WinActual - team1WinExpected)).setScale(2, RoundingMode.HALF_UP).doubleValue();
-        double team2Score =  -1 * team1Score;
+        double team2Score = -1 * team1Score;
 
         scorePersister.persistScores(encounter.getId(), team1Score, team2Score);
 
@@ -43,12 +43,7 @@ public class EloRankScoreCalculator implements RankScoreCalculator {
 
     @Override
     public void calculateAbsenteeScoreAndPersist(List<Player> players) {
-        // Demerit points chnaged to -22 from -10 in Sep, 2024
-        int demeritPoints = -22;
-
-        for (Player player : players) {
-            scorePersister.updatePlayer(demeritPoints, -1, LocalDate.now(),player);
-        }
+        commonAbsenteeManager.calculateAbsenteeScoreAndPersist(players);
     }
 
     private double getTeamAverageRankScore(List<Player> team1Players) {

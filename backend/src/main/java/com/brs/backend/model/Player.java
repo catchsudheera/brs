@@ -28,4 +28,6 @@ public class Player {
     private Integer highestRank;
     @Column(name = "rank_since")
     private LocalDate rankSince;
+    @Column(name = "disabled")
+    private boolean disabled;
 }
