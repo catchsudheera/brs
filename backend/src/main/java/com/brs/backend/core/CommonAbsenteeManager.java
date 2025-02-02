@@ -29,13 +29,13 @@ public class CommonAbsenteeManager {
     public void calculateAbsenteeScoreAndPersist(List<Player> players) {
         var absentees = new ArrayList<Player>();
         var longTermAbsentees = new ArrayList<Player>();
-        var encounters = encounterRepository.findAllDistinctEncounterDateOrdered();
-        if (encounters.size() <= 6) {
+        var encountersDates = encounterRepository.findAllDistinctEncounterDateOrdered();
+        if (encountersDates.size() <= 6) {
             log.info("There are not enough encounters played to disable players");
             deductPointsForAbsentees(players);
             return;
         }
-        var cutOverDate = encounters.get(6);
+        var cutOverDate = encountersDates.get(6);
         for (Player player : players) {
             var games = scoreHistoryRepository.findAllByPlayerId(player.getId());
             var lastActiveGame = games.stream().filter(g -> g.getEncounterId() > 0).max(Comparator.comparing(ScoreHistory::getEncounterDate));
