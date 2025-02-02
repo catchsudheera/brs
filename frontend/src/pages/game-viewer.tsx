@@ -89,22 +89,17 @@ const GameViewer = () => {
   const { players, isLoading: playersLoading } = usePlayers();
   const { liveGame, isLoading: gameLoading } = useGameLiveUpdates(gameId);
 
-  // Convert player IDs to full player objects
-  const groups = Object.entries(liveGame?.groups as Record<string, number[]> || {}).reduce((acc, [groupName, playerIds]) => {
-    acc[groupName] = playerIds
-      .map(id => players.find(p => p.id === id))
-      .filter((player): player is NonNullable<typeof player> => player !== undefined)
-      .sort((a, b) => a.playerRank - b.playerRank);
-    return acc;
-  }, {} as Record<string, Player[]>);
-
-  const scores = liveGame?.scores as Record<string, Record<string, { team1Score: number; team2Score: number }>> || {};
+  // Convert player IDs to names
+  const getPlayerName = (id: number) => {
+    const player = players.find(p => p.id === id);
+    return player ? player.name : `Player ${id}`;
+  };
 
   // Show loading state while either data is loading
   if (playersLoading || gameLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
-        <div className="loading loading-spinner loading-lg"></div>
+        <div className="loading loading-spinner loading-lg text-primary"></div>
       </div>
     );
   }
@@ -112,9 +107,15 @@ const GameViewer = () => {
   if (!liveGame) {
     return (
       <div className="flex justify-center items-center min-h-screen">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-700">Game not found</h1>
-          <p className="text-gray-500 mt-2">The game you&apos;re looking for doesn&apos;t exist</p>
+        <div className="text-center space-y-4">
+          <h1 className="text-2xl font-bold text-base-content/70">Game not found</h1>
+          <p className="text-base-content/50">The game you're looking for doesn't exist</p>
+          <button 
+            className="btn btn-primary btn-sm"
+            onClick={() => router.push('/')}
+          >
+            Go Home
+          </button>
         </div>
       </div>
     );
@@ -123,29 +124,36 @@ const GameViewer = () => {
   return (
     <div className="container mx-auto p-4">
       <div className="mb-8">
-        <div className="flex flex-col items-center">
-          {/* Live indicator */}
-          <LiveIndicator />
+        <div className="flex flex-col items-center animate-fadeIn">
+          {/* Live indicator with pulse effect */}
+          <div className="flex items-center gap-2 mb-2">
+            <span className="relative flex h-3 w-3">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+            </span>
+            <span className="text-red-500 font-medium tracking-wide">LIVE</span>
+          </div>
           
-          {/* Game title */}
-          <h1 className="mt-2 text-3xl sm:text-4xl font-bold bg-gradient-to-r from-emerald-600 to-emerald-400 bg-clip-text text-transparent">
+          {/* Game title with gradient */}
+          <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
             Game #{gameId.slice(-4)}
           </h1>
           
-          {/* Last updated indicator */}
-          <p className="mt-2 text-sm text-gray-500">
-            Live updates enabled
-          </p>
+          {/* Live updates indicator */}
+          <div className="mt-2 flex items-center gap-2 text-sm text-base-content/50">
+            <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
+            <span>Live updates enabled</span>
+          </div>
         </div>
 
         {/* Progress Card with enhanced styling */}
-        <div className="mt-6">
-          <div className="bg-base-200 px-4 py-3 rounded-lg border border-base-300 shadow-sm">
+        <div className="mt-6 animate-slideUp">
+          <div className="bg-base-200 px-4 py-3 rounded-lg border border-base-300 shadow-sm hover:shadow-md transition-shadow duration-200">
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm font-medium text-base-content/70">Matches Completed</span>
               <div className="flex items-center gap-1 font-mono">
-                <span className="text-lg font-bold text-primary">
-                  {Object.values(scores).reduce((total, groupScores) => {
+                <span className="text-lg font-bold text-primary animate-pulse">
+                  {Object.values(liveGame.scores).reduce((total, groupScores) => {
                     return total + Object.values(groupScores).filter(score => 
                       score.team1Score > 0 || score.team2Score > 0
                     ).length;
@@ -153,7 +161,7 @@ const GameViewer = () => {
                 </span>
                 <span className="text-base-content/50">/</span>
                 <span className="text-lg font-bold text-primary/70">
-                  {Object.values(groups).reduce((total, group) => {
+                  {Object.values(liveGame.groups).reduce((total, group) => {
                     return total + (group.length === 4 ? 3 : 5);
                   }, 0)}
                 </span>
@@ -163,11 +171,11 @@ const GameViewer = () => {
               <div 
                 className="bg-primary h-1.5 rounded-full transition-all duration-1000"
                 style={{ 
-                  width: `${Math.round((Object.values(scores).reduce((total, groupScores) => {
+                  width: `${Math.round((Object.values(liveGame.scores).reduce((total, groupScores) => {
                     return total + Object.values(groupScores).filter(score => 
                       score.team1Score > 0 || score.team2Score > 0
                     ).length;
-                  }, 0) / Object.values(groups).reduce((total, group) => {
+                  }, 0) / Object.values(liveGame.groups).reduce((total, group) => {
                     return total + (group.length === 4 ? 3 : 5);
                   }, 0)) * 100)}%` 
                 }}
@@ -177,17 +185,21 @@ const GameViewer = () => {
         </div>
       </div>
 
-      {/* All Groups and Matches */}
+      {/* Groups and Matches with staggered animation */}
       <div className="space-y-4">
-        {Object.entries(groups).map(([groupName, groupPlayers]) => (
-          <div key={groupName} className="bg-base-200 p-4 rounded-lg">
+        {Object.entries(liveGame.groups).map(([groupName, playerIds], groupIndex) => (
+          <div 
+            key={groupName} 
+            className="bg-base-200 p-4 rounded-lg transform opacity-0 animate-slideInFromRight"
+            style={{ animationDelay: `${groupIndex * 150}ms` }}
+          >
             <h2 className="text-base font-semibold mb-3 text-base-content/70">{groupName}</h2>
             <div className="space-y-2">
               {(() => {
-                const matches = getMatchCombinations(groupPlayers.map(p => p.name));
+                const matches = getMatchCombinations(playerIds.map(id => getPlayerName(id)));
 
                 return matches.map((match, idx) => {
-                  const matchScore = scores[groupName]?.[idx];
+                  const matchScore = liveGame.scores[groupName]?.[idx];
                   const hasScore = !!matchScore;
                   const isPlayed = hasScore && (matchScore.team1Score > 0 || matchScore.team2Score > 0);
                   const team1Won = isPlayed && matchScore.team1Score > matchScore.team2Score;
