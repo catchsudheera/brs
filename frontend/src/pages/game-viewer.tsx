@@ -125,76 +125,94 @@ const GameViewer = () => {
     <div className="container mx-auto p-4">
       <div className="mb-8">
         <div className="flex flex-col items-center animate-fadeIn">
-          {/* Live indicator with pulse effect */}
-          <div className="flex items-center gap-2 mb-2">
-            <span className="relative flex h-3 w-3">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
-            </span>
-            <span className="text-red-500 font-medium tracking-wide">LIVE</span>
+          {/* Live badge with enhanced styling */}
+          <div className="bg-red-500/10 px-3 py-1 rounded-full mb-3 border border-red-500/20">
+            <div className="flex items-center gap-2">
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
+              </span>
+              <span className="text-red-500 font-medium tracking-wider text-sm">LIVE MATCH</span>
+            </div>
           </div>
           
-          {/* Game title with gradient */}
-          <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-            Game #{gameId.slice(-4)}
-          </h1>
+          {/* Game title with badminton icon */}
+          <div className="flex items-center gap-3 mb-2">
+            <span className="text-4xl">🏸</span>
+            <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent">
+              Game #{gameId.slice(-4)}
+            </h1>
+          </div>
           
-          {/* Live updates indicator */}
-          <div className="mt-2 flex items-center gap-2 text-sm text-base-content/50">
-            <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
-            <span>Live updates enabled</span>
+          {/* Live updates badge */}
+          <div className="mt-2 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
+            <div className="flex items-center gap-2 text-sm text-emerald-600">
+              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+              <span className="tracking-wide">Live updates enabled</span>
+            </div>
           </div>
         </div>
 
-        {/* Progress Card with enhanced styling */}
-        <div className="mt-6 animate-slideUp">
-          <div className="bg-base-200 px-4 py-3 rounded-lg border border-base-300 shadow-sm hover:shadow-md transition-shadow duration-200">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium text-base-content/70">Matches Completed</span>
-              <div className="flex items-center gap-1 font-mono">
-                <span className="text-lg font-bold text-primary animate-pulse">
-                  {Object.values(liveGame.scores).reduce((total, groupScores) => {
-                    return total + Object.values(groupScores).filter(score => 
-                      score.team1Score > 0 || score.team2Score > 0
-                    ).length;
-                  }, 0)}
-                </span>
-                <span className="text-base-content/50">/</span>
-                <span className="text-lg font-bold text-primary/70">
-                  {Object.values(liveGame.groups).reduce((total, group) => {
-                    return total + (group.length === 4 ? 3 : 5);
-                  }, 0)}
-                </span>
-              </div>
+        {/* Progress Card with sports theme */}
+        <div className="mt-8 animate-slideUp">
+          <div className="bg-base-200 rounded-lg border border-base-300 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden">
+            <div className="px-4 py-3 border-b border-base-300 bg-base-300/30">
+              <h2 className="font-semibold text-base-content/70">Match Progress</h2>
             </div>
-            <div className="w-full bg-base-300 rounded-full h-1.5">
-              <div 
-                className="bg-primary h-1.5 rounded-full transition-all duration-1000"
-                style={{ 
-                  width: `${Math.round((Object.values(liveGame.scores).reduce((total, groupScores) => {
-                    return total + Object.values(groupScores).filter(score => 
-                      score.team1Score > 0 || score.team2Score > 0
-                    ).length;
-                  }, 0) / Object.values(liveGame.groups).reduce((total, group) => {
-                    return total + (group.length === 4 ? 3 : 5);
-                  }, 0)) * 100)}%` 
-                }}
-              />
+            <div className="p-4">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-base-content/70">Matches Completed</span>
+                  <div className="px-2 py-0.5 bg-primary/10 rounded text-xs font-medium text-primary">
+                    {Object.values(liveGame.scores).reduce((total, groupScores) => {
+                      return total + Object.values(groupScores).filter(score => 
+                        score.team1Score > 0 || score.team2Score > 0
+                      ).length;
+                    }, 0)} of {Object.values(liveGame.groups).reduce((total, group) => {
+                      return total + (group.length === 4 ? 3 : 5);
+                    }, 0)}
+                  </div>
+                </div>
+                <div className="text-xs font-medium text-base-content/50">
+                  Updated live
+                </div>
+              </div>
+              <div className="w-full bg-base-300 rounded-full h-2">
+                <div 
+                  className="bg-primary h-2 rounded-full transition-all duration-1000 relative overflow-hidden"
+                  style={{ 
+                    width: `${Math.round((Object.values(liveGame.scores).reduce((total, groupScores) => {
+                      return total + Object.values(groupScores).filter(score => 
+                        score.team1Score > 0 || score.team2Score > 0
+                      ).length;
+                    }, 0) / Object.values(liveGame.groups).reduce((total, group) => {
+                      return total + (group.length === 4 ? 3 : 5);
+                    }, 0)) * 100)}%` 
+                  }}
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer"></div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Groups and Matches with staggered animation */}
+      {/* Groups section with enhanced styling */}
       <div className="space-y-4">
         {Object.entries(liveGame.groups).map(([groupName, playerIds], groupIndex) => (
           <div 
             key={groupName} 
-            className="bg-base-200 p-4 rounded-lg transform opacity-0 animate-slideInFromRight"
+            className="bg-base-200 rounded-lg transform opacity-0 animate-slideInFromRight overflow-hidden"
             style={{ animationDelay: `${groupIndex * 150}ms` }}
           >
-            <h2 className="text-base font-semibold mb-3 text-base-content/70">{groupName}</h2>
-            <div className="space-y-2">
+            <div className="px-4 py-3 bg-base-300/30 border-b border-base-300">
+              <h2 className="font-semibold text-base-content/70 flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-primary"></span>
+                {groupName}
+              </h2>
+            </div>
+            <div className="p-4 space-y-3">
               {(() => {
                 const matches = getMatchCombinations(playerIds.map(id => getPlayerName(id)));
 
