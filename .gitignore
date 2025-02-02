@@ -30,3 +30,4 @@ replay_pid*
 frontend/.env.local
 
 frontend/prisma/dev.db
+frontend/.env.sentry-build-plugin
