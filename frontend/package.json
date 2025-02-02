@@ -22,17 +22,19 @@
     "@heroicons/react": "^2.1.1",
     "@material-tailwind/react": "^2.1.8",
     "@prisma/client": "^6.3.0",
+    "@sentry/nextjs": "^8.53.0",
     "axios": "^1.6.7",
     "date-fns": "^3.3.1",
     "next": "^14.2.23",
     "next-auth": "^4.24.11",
+    "prisma": "^6.3.0",
     "react": "^18",
     "react-dom": "^18",
     "recharts": "^2.11.0",
+    "sharp": "^0.33.5",
     "sqlite": "^5.1.1",
     "sqlite3": "^5.1.7",
-    "swr": "^2.3.0",
-    "prisma": "^6.3.0"
+    "swr": "^2.3.0"
   },
   "devDependencies": {
     "@types/node": "^20",
