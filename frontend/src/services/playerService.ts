@@ -13,4 +13,16 @@ export const getPlayers = async (): Promise<Player[]> => {
     ...player,
     name: capitalizeFirstLetter(player.name)
   }));
+};
+
+export const getInactivePlayers = async (): Promise<Player[]> => {
+  const response = await fetch(
+    `${process.env.NEXT_PUBLIC_BACKEND_URL}/players/inactive`
+  );
+  
+  if (!response.ok) {
+    throw new Error('Failed to fetch inactive players');
+  }
+  
+  return response.json();
 }; 
