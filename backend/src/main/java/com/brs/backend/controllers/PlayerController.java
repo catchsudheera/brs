@@ -1,10 +1,8 @@
 package com.brs.backend.controllers;
 
+import com.brs.backend.configuration.ApiKeyAuth;
 import com.brs.backend.core.CommonAbsenteeManager;
-import com.brs.backend.dto.HistoryType;
-import com.brs.backend.dto.PlayerEncounterHistory;
-import com.brs.backend.dto.PlayerHistory;
-import com.brs.backend.dto.PlayerInfo;
+import com.brs.backend.dto.*;
 import com.brs.backend.model.Player;
 import com.brs.backend.services.EncounterService;
 import com.brs.backend.services.PlayerService;
@@ -13,6 +11,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -62,7 +61,7 @@ public class PlayerController {
         }
     }
 
-    @PostMapping("/v2/players/activate/{playerId}")
+    @PostMapping("/v2/players/{playerId}/activate")
     @Parameter(name = "x-api-key", required = true, example = "sample-api-key", in = ParameterIn.HEADER)
     public void activatePlayer(@PathVariable int playerId) {
         playerService.activatePlayer(playerId);
@@ -74,9 +73,20 @@ public class PlayerController {
         return playerService.updatePlayerRanking();
     }
 
-    @PostMapping("/v2/players/add/{playerName}")
+    @PostMapping("/v2/players")
     @Parameter(name = "x-api-key", required = true, example = "sample-api-key", in = ParameterIn.HEADER)
-    public void updateRanking(@PathVariable String playerName) {
-        playerService.addPlayer(playerName);
+    public PlayerInfo addNewPlayer(@RequestBody NewPlayer player) {
+        return playerService.addPlayer(player);
+    }
+
+    @PutMapping("/v2/players")
+    @Parameter(name = "x-api-key", required = true, example = "sample-api-key", in = ParameterIn.HEADER)
+    public PlayerInfo updatePlayer(@RequestBody UpdatePlayer player) {
+        return playerService.updatePlayer(player);
+    }
+
+    @GetMapping("/v2/auth")
+    public PlayerAuth authPlayer(){
+       return playerService.getPlayerAuth();
     }
 }

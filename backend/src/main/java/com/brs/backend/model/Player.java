@@ -30,4 +30,6 @@ public class Player {
     private LocalDate rankSince;
     @Column(name = "disabled")
     private boolean disabled;
+    @Column(name = "email")
+    private String email;
 }
