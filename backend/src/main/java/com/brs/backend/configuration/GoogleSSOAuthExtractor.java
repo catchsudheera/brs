@@ -1,5 +1,7 @@
 package com.brs.backend.configuration;
 
+import com.brs.backend.common.AuthEmailProvider;
+import com.brs.backend.dto.AccessLevel;
 import com.brs.backend.util.Constants;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.Payload;
@@ -9,27 +11,25 @@ import com.google.api.client.json.gson.GsonFactory;
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.stereotype.Component;
 
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Optional;
-import java.util.Set;
 
 @Component
 @Slf4j
 public class GoogleSSOAuthExtractor {
 
-    @Value("${api.admin.emails}")
-    private String authenticatedEmailsString;
 
     @Value("${google.client.id}")
     private String clientId;
 
-    private Set<String> authenticatedEmails;
+    @Autowired
+    private AuthEmailProvider authEmailProvider;
 
     private GoogleIdTokenVerifier verifier;
 
@@ -38,15 +38,6 @@ public class GoogleSSOAuthExtractor {
         verifier = new GoogleIdTokenVerifier.Builder(new NetHttpTransport(), new GsonFactory())
                 .setAudience(Collections.singletonList(clientId))
                 .build();
-
-        authenticatedEmails = new HashSet<>();
-        if (authenticatedEmailsString == null) {
-            log.warn("No list of admin emails provided");
-            return;
-        }
-        for (String email : authenticatedEmailsString.split(",")) {
-            authenticatedEmails.add(email.trim().toLowerCase());
-        }
     }
 
 
@@ -75,11 +66,17 @@ public class GoogleSSOAuthExtractor {
                 return Optional.empty();
             }
 
-            if (authenticatedEmails.contains(email.toLowerCase())) {
-                return Optional.of(new ApiKeyAuth(idTokenString, AuthorityUtils.NO_AUTHORITIES));
+            if (authEmailProvider.getAuthenticatedEmails().contains(email.toLowerCase())) {
+                return Optional.of(new ApiKeyAuth(idTokenString, AccessLevel.ADMIN, email.toLowerCase(), AuthorityUtils.NO_AUTHORITIES));
             } else {
-                log.error("Email not in authorized list");
-                return Optional.empty();
+                if (request.getRequestURI().equals("/v2/auth")) {
+                    log.error("Email not in admin list");
+                    return Optional.of(new ApiKeyAuth(idTokenString, AccessLevel.USER, email.toLowerCase(), AuthorityUtils.NO_AUTHORITIES));
+                } else {
+                    log.error("Email not valid admin email");
+                    return Optional.empty();
+                }
+
             }
 
         } catch (Exception e) {
