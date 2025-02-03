@@ -22,6 +22,7 @@ export default async function handler(
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.accessToken}`,
         },
         body: JSON.stringify({ name, email }),
       });
