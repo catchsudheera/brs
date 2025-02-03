@@ -6,6 +6,7 @@ import { useInactivePlayers } from '@/hooks/useInactivePlayers';
 import { capitalizeFirstLetter } from '@/utils/string';
 import { PlusIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
 import type { Player } from '@/types/player';
+import { AddPlayerModal } from '@/components/player-management/AddPlayerModal';
 
 const PlayerTable = ({ players, onEdit, onDelete }: {
   players: Player[];
@@ -143,6 +144,28 @@ const PlayerManagementPage = () => {
     // Implementation coming soon
   };
 
+  const handleAddPlayer = async (data: { name: string; email: string }) => {
+    try {
+      const response = await fetch('/api/players', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to add player');
+      }
+
+      // Refresh both active and inactive player lists
+      await Promise.all([mutateActive(), mutateInactive()]);
+    } catch (error) {
+      throw error;
+    }
+  };
+
   return (
     <div className="min-h-screen bg-base-100">
       <div className="container mx-auto px-4 py-8">
@@ -192,7 +215,11 @@ const PlayerManagementPage = () => {
           </div>
         </div>
 
-        {/* Add/Edit Modals will be added here */}
+        <AddPlayerModal
+          isOpen={showAddModal}
+          onClose={() => setShowAddModal(false)}
+          onSubmit={handleAddPlayer}
+        />
       </div>
     </div>
   );
