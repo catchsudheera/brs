@@ -6,6 +6,6 @@ import lombok.Data;
 @Data
 @JsonSerialize
 public class PlayerAuth {
-    private PlayerInfo playerInfo;
+    private PlayerInfo player;
     private AccessLevel[] accessLevel;
 }
