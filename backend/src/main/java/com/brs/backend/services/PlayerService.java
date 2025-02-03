@@ -140,7 +140,7 @@ public class PlayerService {
             throw new AccessDeniedException("User has no access to this player with email: " + email);
         }
         var playerAuth = new PlayerAuth();
-        playerAuth.setPlayerInfo(convert(player.get()));
+        playerAuth.setPlayer(convert(player.get()));
         if (auth.getAccessLevel() == AccessLevel.ADMIN) {
             playerAuth.setAccessLevel(new AccessLevel[]{AccessLevel.ADMIN, AccessLevel.USER});
         } else {
