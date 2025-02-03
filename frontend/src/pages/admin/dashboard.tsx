@@ -2,7 +2,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import { useGames } from '@/hooks/useGames';
 import { DashboardHeader } from '@/components/dashboard/Header';
-import { PlusIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, UserGroupIcon } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 import { useEffect } from 'react';
 import { format } from 'date-fns';
@@ -101,7 +101,13 @@ const DashboardPage = () => {
                   <PlusIcon className="h-5 w-5 mr-2" />
                   Create New Game
                 </Link>
-                {/* Add more action buttons as needed */}
+                <Link
+                  href="/admin/players"
+                  className="btn btn-secondary w-full justify-start"
+                >
+                  <UserGroupIcon className="h-5 w-5 mr-2" />
+                  Manage Players
+                </Link>
               </div>
             </div>
           </div>
