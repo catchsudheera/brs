@@ -96,9 +96,7 @@ public class PlayerService {
         player.setColorHex(generateRandomColorHex());
         player.setEmail(newPlayer.getEmail() != null ? newPlayer.getEmail().toLowerCase() : null);
         player = playerRepository.save(player);
-        return new PlayerInfo(player.getId(), player.getName(), player.getRankScore(), player.getPlayerRank(),
-                player.getPlayerRank(), player.getColorHex(), player.getHighestRank(),
-                0 + " day(s)");
+        return convert(player);
 
     }
 
@@ -142,8 +140,7 @@ public class PlayerService {
             throw new AccessDeniedException("User has no access to this player with email: " + email);
         }
         var playerAuth = new PlayerAuth();
-        playerAuth.setPlayerId(player.get().getId());
-        playerAuth.setPlayerName(player.get().getName());
+        playerAuth.setPlayerInfo(convert(player.get()));
         if (auth.getAccessLevel() == AccessLevel.ADMIN) {
             playerAuth.setAccessLevel(new AccessLevel[]{AccessLevel.ADMIN, AccessLevel.USER});
         } else {
@@ -162,5 +159,10 @@ public class PlayerService {
         Random random = new Random();
         int nextInt = random.nextInt(0xffffff + 1);
         return String.format("%06x", nextInt);
+    }
+
+    private PlayerInfo convert(Player player) {
+        return new PlayerInfo(player.getId(), player.getName(), player.getRankScore(), player.getPlayerRank(),
+                player.getPlayerRank(), player.getColorHex(), player.getHighestRank(), null);
     }
 }
