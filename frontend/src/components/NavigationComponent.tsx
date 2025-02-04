@@ -326,7 +326,7 @@ const NavigationComponent = () => {
                         </Menu>
                       ) : (
                         <Link
-                          href="/admin/login"
+                          href="/login"
                           className="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium"
                         >
                           Sign In
@@ -513,8 +513,10 @@ const NavigationComponent = () => {
                               {session.user.accessLevel?.includes('USER') && (
                                 <Link
                                   href="/user/management"
-                                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
-                                  onClick={() => close()}
+                                  className={classNames(
+                                    active ? 'bg-gray-100' : '',
+                                    'block px-4 py-2 text-sm text-gray-700'
+                                  )}
                                 >
                                   Management
                                 </Link>
@@ -522,8 +524,10 @@ const NavigationComponent = () => {
                               {session.user.accessLevel?.includes('ADMIN') && (
                                 <Link
                                   href="/admin/dashboard"
-                                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
-                                  onClick={() => close()}
+                                  className={classNames(
+                                    active ? 'bg-gray-100' : '',
+                                    'block px-4 py-2 text-sm text-gray-700'
+                                  )}
                                 >
                                   Admin Dashboard
                                 </Link>
@@ -543,7 +547,7 @@ const NavigationComponent = () => {
 
                   {!session && (
                     <Link
-                      href="/admin/login"
+                      href="/login"
                       className="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
                       onClick={() => close()}
                     >

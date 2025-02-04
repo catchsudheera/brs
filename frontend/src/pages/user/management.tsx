@@ -9,7 +9,7 @@ const UserManagementPage = () => {
   // Auth check
   useEffect(() => {
     if (status === 'unauthenticated') {
-      router.push('/admin/login');
+      router.push('/login');
     } else if (session?.user && !session.user.accessLevel?.includes('USER')) {
       router.push('/');
     }

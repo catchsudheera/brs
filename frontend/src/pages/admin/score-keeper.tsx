@@ -148,7 +148,7 @@ const ScoreKeeperPage = () => {
   // Auth check
   useEffect(() => {
     if (status === 'unauthenticated') {
-      router.push('/admin/login');
+      router.push('/login');
     }
   }, [status, router]);
 

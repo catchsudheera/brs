@@ -18,7 +18,7 @@ export default withAuth(
       },
     },
     pages: {
-      signIn: '/admin/login',
+      signIn: '/login',
     },
   }
 );
