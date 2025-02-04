@@ -1,6 +1,7 @@
 import { NextAuthOptions } from "next-auth";
 import NextAuth from "next-auth/next";
 import GoogleProvider from "next-auth/providers/google";
+import { validateUserAccess } from '@/services/authService';
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -20,25 +21,8 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async signIn({ user, account }) {
       try {
-        // Call auth/user endpoint with the id_token
-        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/v2/auth`, {
-          headers: {
-            'Authorization': `Bearer ${account?.id_token}`
-          }
-        });
-
-        if (!response.ok) {
-          return false;
-        }
-
-        const userData = await response.json();
-        console.log(userData);
-        const accessLevel = userData.accessLevel || [];
-
-        // Allow sign in if user has USER or ADMIN role
-        const isAllowed = accessLevel.some((role: string) => ['USER', 'ADMIN'].includes(role));
-        console.log('isAllowed', isAllowed);
-        return isAllowed;
+        const authData = await validateUserAccess(account?.id_token!);
+        return authData?.isAllowed ?? false;
       } catch (error) {
         console.error('Auth validation error:', error);
         return false;
@@ -93,18 +77,9 @@ export const authOptions: NextAuthOptions = {
     },
     async session({ session, token }) {
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/v2/auth`, {
-          headers: {
-            'Authorization': `Bearer ${token.id_token}`
-          }
-        });
-
-        if (response.ok) {
-          const userData = await response.json();
-          const accessLevel = userData.accessLevel || [];
-          const isAdmin = accessLevel.includes('ADMIN');
-          console.log('isAdmin', isAdmin);
-          session.user.isAdmin = isAdmin;
+        const authData = await validateUserAccess(token.id_token as string);
+        if (authData) {
+          session.user.isAdmin = authData.isAdmin;
         }
       } catch (error) {
         console.error('Session auth error:', error);
