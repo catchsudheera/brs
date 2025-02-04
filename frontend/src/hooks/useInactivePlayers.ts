@@ -3,16 +3,16 @@ import type { Player } from '@/types/player';
 
 const fetcher = (url: string) => fetch(url).then(res => res.json());
 
-export function usePlayers() {
+export function useInactivePlayers() {
   const { data, error, isLoading, mutate } = useSWR<Player[]>(
-    '/api/players',
+    '/api/players/inactive',
     fetcher
   );
 
   return {
-    players: data || [],
+    inactivePlayers: data || [],
     isLoading,
     error,
     mutate
   };
-}
+} 

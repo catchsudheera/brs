@@ -1,12 +1,14 @@
 export interface Player {
   id: number;
   name: string;
+  email?: string;
   rankScore: number;
   playerRank: number;
   previousRank: number;
   colorHex: string;
   highestRank: number;
   timeInHighestRank: string;
+  isActive: boolean;
 }
 
 export interface PlayerContextType {
