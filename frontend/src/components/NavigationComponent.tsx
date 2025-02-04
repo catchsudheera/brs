@@ -1,6 +1,6 @@
 import { Fragment, useEffect, useState } from 'react';
 import { Disclosure, Menu, Transition } from '@headlessui/react';
-import { Bars3Icon, BellIcon, XMarkIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
+import { Bars3Icon, BellIcon, XMarkIcon, ChevronDownIcon, UserCircleIcon } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { capitalizeFirstLetter } from '@/utils/string';
@@ -148,7 +148,7 @@ const NavigationComponent = () => {
                             isEncountersPage()
                               ? 'bg-emerald-600 text-white'
                               : 'text-gray-300 hover:bg-gray-700 hover:text-white',
-                            'px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150 inline-flex items-center'
+                            'px-3 py-2 rounded-md text-sm font-medium inline-flex items-center'
                           )}
                         >
                           Encounters
@@ -263,18 +263,73 @@ const NavigationComponent = () => {
                     {/* Right side items */}
                     <div className="flex items-center space-x-4">
                       {session ? (
-                        <Link
-                          href="/admin/dashboard"
-                          className="bg-gray-700 text-white hover:bg-gray-600 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150"
-                        >
-                          Admin
-                        </Link>
+                        <Menu as="div" className="relative">
+                          <Menu.Button className="flex items-center gap-2 text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium">
+                            <UserCircleIcon className="h-6 w-6" />
+                            <span>{session.user.name}</span>
+                          </Menu.Button>
+                          <Transition
+                            as={Fragment}
+                            enter="transition ease-out duration-100"
+                            enterFrom="transform opacity-0 scale-95"
+                            enterTo="transform opacity-100 scale-100"
+                            leave="transition ease-in duration-75"
+                            leaveFrom="transform opacity-100 scale-100"
+                            leaveTo="transform opacity-0 scale-95"
+                          >
+                            <Menu.Items className="absolute right-0 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                              {session.user.accessLevel?.includes('USER') && (
+                                <Menu.Item>
+                                  {({ active }) => (
+                                    <Link
+                                      href="/user/management"
+                                      className={classNames(
+                                        active ? 'bg-gray-100' : '',
+                                        'block px-4 py-2 text-sm text-gray-700'
+                                      )}
+                                    >
+                                      Management
+                                    </Link>
+                                  )}
+                                </Menu.Item>
+                              )}
+                              {session.user.accessLevel?.includes('ADMIN') && (
+                                <Menu.Item>
+                                  {({ active }) => (
+                                    <Link
+                                      href="/admin/dashboard"
+                                      className={classNames(
+                                        active ? 'bg-gray-100' : '',
+                                        'block px-4 py-2 text-sm text-gray-700'
+                                      )}
+                                    >
+                                      Admin Dashboard
+                                    </Link>
+                                  )}
+                                </Menu.Item>
+                              )}
+                              <Menu.Item>
+                                {({ active }) => (
+                                  <button
+                                    onClick={() => signOut()}
+                                    className={classNames(
+                                      active ? 'bg-gray-100' : '',
+                                      'block w-full text-left px-4 py-2 text-sm text-gray-700'
+                                    )}
+                                  >
+                                    Sign Out
+                                  </button>
+                                )}
+                              </Menu.Item>
+                            </Menu.Items>
+                          </Transition>
+                        </Menu>
                       ) : (
                         <Link
                           href="/admin/login"
-                          className="bg-gray-700 text-white hover:bg-gray-600 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150"
+                          className="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium"
                         >
-                          Login
+                          Sign In
                         </Link>
                       )}
 
@@ -437,6 +492,65 @@ const NavigationComponent = () => {
                     </Disclosure.Button>
                   ))}
 
+                  {/* Add user section before theme switcher */}
+                  {session && (
+                    <div className="border-t border-gray-700 mt-4 pt-4">
+                      <Disclosure>
+                        {({ open }) => (
+                          <>
+                            <Disclosure.Button
+                              className="flex w-full justify-between items-center px-3 py-2 text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white rounded-md"
+                            >
+                              <div className="flex items-center gap-2">
+                                <UserCircleIcon className="h-6 w-6" />
+                                <span>{session.user.name}</span>
+                              </div>
+                              <ChevronDownIcon
+                                className={`${open ? 'transform rotate-180' : ''} w-5 h-5 text-gray-400`}
+                              />
+                            </Disclosure.Button>
+                            <Disclosure.Panel className="px-4 pt-2 pb-2 space-y-1">
+                              {session.user.accessLevel?.includes('USER') && (
+                                <Link
+                                  href="/user/management"
+                                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
+                                  onClick={() => close()}
+                                >
+                                  Management
+                                </Link>
+                              )}
+                              {session.user.accessLevel?.includes('ADMIN') && (
+                                <Link
+                                  href="/admin/dashboard"
+                                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
+                                  onClick={() => close()}
+                                >
+                                  Admin Dashboard
+                                </Link>
+                              )}
+                              <button
+                                onClick={() => signOut()}
+                                className="w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
+                              >
+                                Sign Out
+                              </button>
+                            </Disclosure.Panel>
+                          </>
+                        )}
+                      </Disclosure>
+                    </div>
+                  )}
+
+                  {!session && (
+                    <Link
+                      href="/admin/login"
+                      className="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
+                      onClick={() => close()}
+                    >
+                      Sign In
+                    </Link>
+                  )}
+
                   {/* Theme Switcher for Mobile */}
                   <div className="px-3 py-2 flex items-center justify-between text-gray-300">
                     <span className="text-base font-medium">Theme</span>
@@ -466,30 +580,6 @@ const NavigationComponent = () => {
                         </svg>
                       )}
                     </button>
-                  </div>
-
-                  {/* Login/Admin button remains at the bottom */}
-                  {session ? (
-                    <Disclosure.Button
-                      as={Link}
-                      href="/admin/dashboard"
-                      className="bg-gray-700 text-white hover:bg-gray-600 block px-3 py-2 rounded-md text-base font-medium"
-                    >
-                      Admin
-                    </Disclosure.Button>
-                  ) : (
-                    <Disclosure.Button
-                      as={Link}
-                      href="/admin/login"
-                      className="bg-gray-700 text-white hover:bg-gray-600 block px-3 py-2 rounded-md text-base font-medium w-full text-left"
-                    >
-                      Login
-                    </Disclosure.Button>
-                  )}
-
-                  {/* Add build identifier for mobile */}
-                  <div className="px-3 py-2 text-sm text-gray-500">
-                    Build: {BUILD_IDENTIFIER}
                   </div>
                 </div>
               )}
