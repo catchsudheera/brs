@@ -2,8 +2,6 @@ import { NextAuthOptions } from "next-auth";
 import NextAuth from "next-auth/next";
 import GoogleProvider from "next-auth/providers/google";
 
-const ALLOWED_EMAILS = process.env.ALLOWED_ADMIN_EMAILS?.split(',') || [];
-
 export const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
@@ -20,9 +18,31 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async signIn({ user }) {
-      // Only allow specific emails to sign in
-      return ALLOWED_EMAILS.includes(user.email!);
+    async signIn({ user, account }) {
+      try {
+        // Call auth/user endpoint with the id_token
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/v2/auth`, {
+          headers: {
+            'Authorization': `Bearer ${account?.id_token}`
+          }
+        });
+
+        if (!response.ok) {
+          return false;
+        }
+
+        const userData = await response.json();
+        console.log(userData);
+        const accessLevel = userData.accessLevel || [];
+
+        // Allow sign in if user has USER or ADMIN role
+        const isAllowed = accessLevel.some((role: string) => ['USER', 'ADMIN'].includes(role));
+        console.log('isAllowed', isAllowed);
+        return isAllowed;
+      } catch (error) {
+        console.error('Auth validation error:', error);
+        return false;
+      }
     },
     async redirect({ url, baseUrl }) {
       // Allows relative callback URLs
@@ -72,10 +92,24 @@ export const authOptions: NextAuthOptions = {
       return token;
     },
     async session({ session, token }) {
-      if (session?.user?.email) {
-        // Set isAdmin based on allowed emails
-        session.user.isAdmin = ALLOWED_EMAILS.includes(session.user.email);
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/v2/auth`, {
+          headers: {
+            'Authorization': `Bearer ${token.id_token}`
+          }
+        });
+
+        if (response.ok) {
+          const userData = await response.json();
+          const accessLevel = userData.accessLevel || [];
+          const isAdmin = accessLevel.includes('ADMIN');
+          console.log('isAdmin', isAdmin);
+          session.user.isAdmin = isAdmin;
+        }
+      } catch (error) {
+        console.error('Session auth error:', error);
       }
+
       session.accessToken = token.id_token as string;
       session.error = token.error;
       return session;
