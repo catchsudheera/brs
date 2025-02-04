@@ -80,6 +80,9 @@ export const authOptions: NextAuthOptions = {
         const authData = await validateUserAccess(token.id_token as string);
         if (authData) {
           session.user.isAdmin = authData.isAdmin;
+          session.user.accessLevel = authData.accessLevel;
+          session.user.playerId = authData.playerId;
+          session.user.email = authData.email;
         }
       } catch (error) {
         console.error('Session auth error:', error);
