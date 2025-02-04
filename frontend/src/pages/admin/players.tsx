@@ -50,12 +50,12 @@ const PlayerTable = ({ players, onEdit, onDelete }: {
                   >
                     <PencilIcon className="h-4 w-4" />
                   </button>
-                  <button
+                  {/* <button
                     className="btn btn-ghost btn-sm text-error"
                     onClick={() => onDelete(player.id)}
                   >
                     <TrashIcon className="h-4 w-4" />
-                  </button>
+                  </button> */}
                 </div>
               </td>
             </tr>
