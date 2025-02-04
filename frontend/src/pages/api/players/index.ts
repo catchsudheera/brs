@@ -11,10 +11,10 @@ export default async function handler(
     const session = await requireAuth(req, res);
     if (!session) return;
 
-    const { name, email } = req.body;
+    const { name, email, initialScore } = req.body;
 
-    if (!name || !email) {
-      return res.status(400).json({ message: 'Name and email are required' });
+    if (!name || !email || initialScore === undefined || initialScore <= 0) {
+      return res.status(400).json({ message: 'Name, email and initial score are required' });
     }
 
     try {
@@ -24,7 +24,11 @@ export default async function handler(
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${session.accessToken}`,
         },
-        body: JSON.stringify({ name, email }),
+        body: JSON.stringify({ 
+          name, 
+          email, 
+          initialScore: Number(initialScore)
+        }),
       });
 
       if (!response.ok) {

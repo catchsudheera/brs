@@ -1,6 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { useRankings } from '@/hooks/useRankings';
+import { capitalizeFirstLetter } from '@/utils/string';
 
 const RankingsComponent = () => {
   const { rankings, error, isLoading } = useRankings();
@@ -90,7 +91,7 @@ const RankingsComponent = () => {
                     href={`/player/${player.id}/encounters`}
                     className='hover:text-emerald-500 transition-colors duration-150'
                   >
-                    {player.name}
+                    {capitalizeFirstLetter(player.name)}
                   </Link>
                 </td>
                 <td className='px-4 py-3 items-center text-center'>

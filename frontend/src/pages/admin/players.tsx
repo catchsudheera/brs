@@ -7,6 +7,7 @@ import { capitalizeFirstLetter } from '@/utils/string';
 import { PlusIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
 import type { Player } from '@/types/player';
 import { AddPlayerModal } from '@/components/player-management/AddPlayerModal';
+import { EditPlayerModal } from '@/components/player-management/EditPlayerModal';
 
 const PlayerTable = ({ players, onEdit, onDelete }: {
   players: Player[];
@@ -94,13 +95,13 @@ const PlayerTable = ({ players, onEdit, onDelete }: {
               <PencilIcon className="h-4 w-4" />
               <span className="ml-1">Edit</span>
             </button>
-            <button
+            {/* <button
               className="btn btn-sm btn-ghost text-error"
               onClick={() => onDelete(player.id)}
             >
               <TrashIcon className="h-4 w-4" />
               <span className="ml-1">Delete</span>
-            </button>
+            </button> */}
           </div>
         </div>
       ))}
@@ -144,7 +145,7 @@ const PlayerManagementPage = () => {
     // Implementation coming soon
   };
 
-  const handleAddPlayer = async (data: { name: string; email: string }) => {
+  const handleAddPlayer = async (data: { name: string; email: string; initialScore: number }) => {
     try {
       const response = await fetch('/api/players', {
         method: 'POST',
@@ -157,6 +158,28 @@ const PlayerManagementPage = () => {
       if (!response.ok) {
         const error = await response.json();
         throw new Error(error.message || 'Failed to add player');
+      }
+
+      // Refresh both active and inactive player lists
+      await Promise.all([mutateActive(), mutateInactive()]);
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const handleUpdatePlayer = async (playerId: number, data: { name: string; email: string }) => {
+    try {
+      const response = await fetch(`/api/players/${playerId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to update player');
       }
 
       // Refresh both active and inactive player lists
@@ -219,6 +242,13 @@ const PlayerManagementPage = () => {
           isOpen={showAddModal}
           onClose={() => setShowAddModal(false)}
           onSubmit={handleAddPlayer}
+        />
+
+        <EditPlayerModal
+          isOpen={showEditModal}
+          onClose={() => setShowEditModal(false)}
+          onSubmit={handleUpdatePlayer}
+          player={selectedPlayer}
         />
       </div>
     </div>
