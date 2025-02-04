@@ -1,15 +1,18 @@
 package com.brs.backend.services;
 
+import com.brs.backend.configuration.ApiKeyAuth;
 import com.brs.backend.core.ScorePersister;
-import com.brs.backend.dto.PlayerInfo;
+import com.brs.backend.dto.*;
 import com.brs.backend.model.Player;
 import com.brs.backend.model.ScoreHistory;
-import com.brs.backend.repositories.EncounterRepository;
 import com.brs.backend.repositories.PlayerRepository;
 import com.brs.backend.repositories.ScoreHistoryRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.Period;
@@ -20,9 +23,6 @@ import java.util.*;
 public class PlayerService {
     @Autowired
     private PlayerRepository playerRepository;
-
-    @Autowired
-    private EncounterRepository encounterRepository;
 
     @Autowired
     private ScoreHistoryRepository scoreHistoryRepository;
@@ -56,6 +56,10 @@ public class PlayerService {
         return playerRepository.findAll();
     }
 
+    public Optional<Player> getPlayerByEmail(String email) {
+        return playerRepository.findByEmail(email);
+    }
+
     public List<PlayerInfo> getPlayerInfoByStatus(boolean disabled) {
         return getAllPlayers().stream()
                 .filter(p -> p.isDisabled() == disabled)
@@ -79,18 +83,70 @@ public class PlayerService {
         scorePersister.activatePlayer(player);
     }
 
-    public void addPlayer(String name) {
+    public PlayerInfo addPlayer(NewPlayer newPlayer) {
         var lastActivePlayer = playerRepository.findAll().stream()
                 .filter(p -> !p.isDisabled()).max(Comparator.comparingInt(Player::getPlayerRank)).orElseThrow();
 
         Player player = new Player();
-        player.setName(name);
+        player.setName(newPlayer.getName());
         player.setPlayerRank(lastActivePlayer.getPlayerRank() + 1);
         player.setHighestRank(lastActivePlayer.getPlayerRank() + 1);
-        player.setRankScore(lastActivePlayer.getRankScore());
+        player.setRankScore(Double.valueOf(newPlayer.getInitialScore()));
         player.setRankSince(LocalDate.now());
         player.setColorHex(generateRandomColorHex());
-        playerRepository.save(player);
+        player.setEmail(newPlayer.getEmail() != null ? newPlayer.getEmail().toLowerCase() : null);
+        player = playerRepository.save(player);
+        return convert(player);
+
+    }
+
+    @Transactional
+    public PlayerInfo updatePlayer(UpdatePlayer updatePlayer) {
+        if (updatePlayer.getId() == null) {
+            throw new IllegalArgumentException("Player is is mandatory");
+        }
+        var player = playerRepository.findById(updatePlayer.getId()).orElseThrow();
+        var updated = false;
+        if (updatePlayer.getName() != null) {
+            player.setName(updatePlayer.getName());
+            updated = true;
+        }
+        if (updatePlayer.getEmail() != null) {
+            player.setEmail(updatePlayer.getEmail().toLowerCase());
+            updated = true;
+        }
+        if (updated) {
+            player = playerRepository.save(player);
+        }
+        return new PlayerInfo(player.getId(), player.getName(), player.getRankScore(), player.getPlayerRank(),
+                player.getPlayerRank(), player.getColorHex(), player.getHighestRank(),
+                0 + " day(s)");
+    }
+
+    public PlayerAuth getPlayerAuth() {
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+        ApiKeyAuth auth;
+        if (authentication instanceof ApiKeyAuth) {
+            auth = (ApiKeyAuth) authentication;
+        } else {
+            log.error("No Authnetication found");
+            throw new AccessDeniedException("");
+        }
+
+        var email = auth.getLoggedInEmail();
+        var player = getPlayerByEmail(email);
+        if (player.isEmpty()) {
+            log.error("No player found for email: " + email);
+            throw new AccessDeniedException("User has no access to this player with email: " + email);
+        }
+        var playerAuth = new PlayerAuth();
+        playerAuth.setPlayer(convert(player.get()));
+        if (auth.getAccessLevel() == AccessLevel.ADMIN) {
+            playerAuth.setAccessLevel(new AccessLevel[]{AccessLevel.ADMIN, AccessLevel.USER});
+        } else {
+            playerAuth.setAccessLevel(new AccessLevel[]{AccessLevel.USER});
+        }
+        return playerAuth;
     }
 
     private ScoreHistory getMaxRank(Player e) {
@@ -103,5 +159,10 @@ public class PlayerService {
         Random random = new Random();
         int nextInt = random.nextInt(0xffffff + 1);
         return String.format("%06x", nextInt);
+    }
+
+    private PlayerInfo convert(Player player) {
+        return new PlayerInfo(player.getId(), player.getName(), player.getRankScore(), player.getPlayerRank(),
+                player.getPlayerRank(), player.getColorHex(), player.getHighestRank(), null);
     }
 }
