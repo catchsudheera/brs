@@ -79,9 +79,10 @@ public class PlayerController {
         return playerService.addPlayer(player);
     }
 
-    @PutMapping("/v2/players")
+    @PutMapping("/v2/players/{id}")
     @Parameter(name = "x-api-key", required = true, example = "sample-api-key", in = ParameterIn.HEADER)
-    public PlayerInfo updatePlayer(@RequestBody UpdatePlayer player) {
+    public PlayerInfo updatePlayer(@PathVariable int id, @RequestBody UpdatePlayer player) {
+        player.setId(id);
         return playerService.updatePlayer(player);
     }
 
