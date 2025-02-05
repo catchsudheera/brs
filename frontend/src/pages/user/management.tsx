@@ -1,4 +1,4 @@
-import { useSession } from 'next-auth/react';
+import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { useMyMatches } from '@/hooks/useMyMatches';
@@ -7,6 +7,7 @@ import { capitalizeFirstLetter } from '@/utils/string';
 import { userScoreService } from '@/services/userScoreService';
 import { MatchSelector } from '@/components/score-keeper/MatchSelector';
 import { ScoreInput } from '@/components/score-keeper/ScoreInput';
+import { useRankings } from '@/hooks/useRankings';
 
 interface SelectedMatch {
   gameId: string;
@@ -52,6 +53,8 @@ const UserManagementPage = () => {
   }>({ team1Score: 0, team2Score: 0 });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showScoreModal, setShowScoreModal] = useState(false);
+  const { rankings } = useRankings();
+  const currentUser = rankings?.players.find(p => p.id === session?.user?.playerId);
 
   // Auth check
   useEffect(() => {
@@ -129,6 +132,92 @@ const UserManagementPage = () => {
   return (
     <div className="min-h-screen bg-base-100">
       <div className="container mx-auto px-4 py-8">
+        {/* User Stats Section - Compact version */}
+        {currentUser && (
+          <div className="mb-8 bg-base-200 rounded-lg border border-base-300">
+            {/* Header with profile and rank */}
+            <div className="p-4 border-b border-base-300 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                {session?.user?.image ? (
+                  <img
+                    src={session.user.image}
+                    alt="Profile"
+                    className="w-10 h-10 rounded-full border-2 border-emerald-500"
+                  />
+                ) : (
+                  <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center border-2 border-emerald-500">
+                    <span className="text-emerald-700 text-base font-medium">
+                      {currentUser.name.charAt(0).toUpperCase()}
+                    </span>
+                  </div>
+                )}
+                <div>
+                  <div className="font-semibold">
+                    {capitalizeFirstLetter(currentUser.name)}
+                  </div>
+                  <div className="text-xs text-base-content/60">
+                    {session?.user?.email}
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={() => signOut({ callbackUrl: '/login' })}
+                className="btn btn-ghost btn-sm btn-square"
+                title="Logout"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 001 1h12a1 1 0 001-1V4a1 1 0 00-1-1H3zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clipRule="evenodd" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Stats in a single row */}
+            <div className="grid grid-cols-4 divide-x divide-base-300">
+              {/* Current Rank */}
+              <div className="p-3 text-center">
+                <div className="text-sm text-base-content/60">Rank</div>
+                <div className="text-lg font-bold text-emerald-600">
+                  #{currentUser.playerRank}
+                </div>
+              </div>
+
+              {/* Rank Change */}
+              <div className="p-3 text-center">
+                <div className="text-sm text-base-content/60">Change</div>
+                <div className="flex items-center justify-center gap-1">
+                  {currentUser.rankChange.direction === 'up' ? (
+                    <span className="text-emerald-500">↑</span>
+                  ) : currentUser.rankChange.direction === 'down' ? (
+                    <span className="text-red-500">↓</span>
+                  ) : (
+                    <span className="text-base-content/60">–</span>
+                  )}
+                  <span className="font-semibold">
+                    {currentUser.rankChange.amount || 0}
+                  </span>
+                </div>
+              </div>
+
+              {/* Score */}
+              <div className="p-3 text-center">
+                <div className="text-sm text-base-content/60">Score</div>
+                <div className="font-semibold">
+                  {currentUser.rankScore.toFixed(1)}
+                </div>
+              </div>
+
+              {/* Highest Rank */}
+              <div className="p-3 text-center">
+                <div className="text-sm text-base-content/60">Highest</div>
+                <div className="font-semibold">
+                  #{currentUser.highestRank}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Existing Matches Section */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold bg-gradient-to-r from-emerald-600 to-emerald-400 bg-clip-text text-transparent">
             Your Matches
