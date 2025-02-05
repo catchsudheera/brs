@@ -1,31 +1,24 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import prisma from '@/lib/prisma';
 import { requireAuth } from '@/lib/auth';
+import { getMatchCombinations } from '@/utils/match';
 
 function formatDate(date: Date): string {
   return date.toISOString().split('T')[0];
 }
 
-// Helper function to get players for a match
-function getMatchPlayers(groupPlayers: number[], match: number): { team1: number[], team2: number[] } {
-  if (groupPlayers.length === 4) {
-    const [a, b, c, d] = groupPlayers;
-    const combinations = [
-      { team1: [a, b], team2: [c, d] }, // AB-CD
-      { team1: [a, c], team2: [b, d] }, // AC-BD
-      { team1: [a, d], team2: [b, c] }  // AD-BC
-    ];
-    return combinations[match];
-  } else if (groupPlayers.length === 5) {
-    const [a, b, c, d, e] = groupPlayers;
-    const combinations = [
-      { team1: [a, b], team2: [c, d] }, // AB-CD
-      { team1: [a, c], team2: [b, e] }, // AC-BE
-      { team1: [a, e], team2: [b, d] }, // AE-BD
-      { team1: [a, d], team2: [c, e] }, // AD-CE
-      { team1: [b, c], team2: [d, e] }  // BC-DE
-    ];
-    return combinations[match];
+// Helper function to get players for a match using IDs instead of names
+function getMatchPlayersById(groupPlayers: number[], matchIndex: number): { team1: number[], team2: number[] } {
+  if (groupPlayers.length === 4 || groupPlayers.length === 5) {
+    // Get combinations using player IDs
+    const combinations = getMatchCombinations(groupPlayers.map(id => id.toString()));
+    const match = combinations[matchIndex];
+    
+    // Convert string IDs back to numbers
+    return {
+      team1: match.team1.map(id => parseInt(id)),
+      team2: match.team2.map(id => parseInt(id))
+    };
   }
   throw new Error('Invalid group size');
 }
@@ -74,7 +67,7 @@ export default async function handler(
 
         try {
           const gameDate = formatDate(game.createdAt);
-          const { team1, team2 } = getMatchPlayers(groupPlayers, parseInt(matchIndex));
+          const { team1, team2 } = getMatchPlayersById(groupPlayers, parseInt(matchIndex));
           
           console.log(`Submitting match for Game ${id}:`, {
             group: groupName,
