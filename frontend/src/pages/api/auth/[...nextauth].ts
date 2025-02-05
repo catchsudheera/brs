@@ -1,8 +1,7 @@
 import { NextAuthOptions } from "next-auth";
 import NextAuth from "next-auth/next";
 import GoogleProvider from "next-auth/providers/google";
-
-const ALLOWED_EMAILS = process.env.ALLOWED_ADMIN_EMAILS?.split(',') || [];
+import { validateUserAccess } from '@/services/authService';
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -20,9 +19,14 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async signIn({ user }) {
-      // Only allow specific emails to sign in
-      return ALLOWED_EMAILS.includes(user.email!);
+    async signIn({ user, account }) {
+      try {
+        const authData = await validateUserAccess(account?.id_token!);
+        return authData?.isAllowed ?? false;
+      } catch (error) {
+        console.error('Auth validation error:', error);
+        return false;
+      }
     },
     async redirect({ url, baseUrl }) {
       // Allows relative callback URLs
@@ -72,18 +76,26 @@ export const authOptions: NextAuthOptions = {
       return token;
     },
     async session({ session, token }) {
-      if (session?.user?.email) {
-        // Set isAdmin based on allowed emails
-        session.user.isAdmin = ALLOWED_EMAILS.includes(session.user.email);
+      try {
+        const authData = await validateUserAccess(token.id_token as string);
+        if (authData) {
+          session.user.isAdmin = authData.isAdmin;
+          session.user.accessLevel = authData.accessLevel;
+          session.user.playerId = authData.playerId;
+          session.user.email = authData.email;
+        }
+      } catch (error) {
+        console.error('Session auth error:', error);
       }
+
       session.accessToken = token.id_token as string;
       session.error = token.error;
       return session;
     },
   },
   pages: {
-    signIn: '/admin/login',
-    error: '/admin/login',
+    signIn: '/login',
+    error: '/login',
   },
 };
 

@@ -35,7 +35,7 @@ export const DashboardHeader = () => {
               {session?.user?.email}
             </p>
             <button
-              onClick={() => signOut({ callbackUrl: '/admin/login' })}
+              onClick={() => signOut({ callbackUrl: '/login' })}
               className="btn btn-sm btn-error btn-outline text-xs normal-case"
             >
               Logout

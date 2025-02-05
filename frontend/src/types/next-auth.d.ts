@@ -7,6 +7,8 @@ declare module 'next-auth' {
       name: string;
       image?: string;
       isAdmin: boolean;
+      playerId?: number;
+      accessLevel: string[];
     };
     accessToken?: string;
     error?: string;
