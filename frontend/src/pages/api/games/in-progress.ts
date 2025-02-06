@@ -27,10 +27,16 @@ export default async function handler(
       let totalMatches = 0;
       let completedMatches = 0;
 
-      Object.entries(groups).forEach(([groupName]) => {
+      // Calculate total matches and completed matches for each group
+      Object.entries(groups).forEach(([groupName, players]) => {
+        // Calculate number of matches in this group
+        const n = players.length;
+        const matchesInGroup = (n * (n - 1)) / 4; // Formula for number of matches in a group
+        totalMatches += matchesInGroup;
+
+        // Count completed matches
         const groupScores = scores[groupName] || {};
         Object.values(groupScores).forEach(score => {
-          totalMatches++;
           if (score.team1Score > 0 || score.team2Score > 0) {
             completedMatches++;
           }

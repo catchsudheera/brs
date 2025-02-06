@@ -18,7 +18,6 @@ export const validateUserAccess = async (token: string): Promise<AuthResponse | 
   }
 
   const userData = await response.json();
-  console.log(userData);
   const accessLevel = userData.accessLevel || [];
   
   return {

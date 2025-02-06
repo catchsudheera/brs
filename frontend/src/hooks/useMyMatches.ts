@@ -1,5 +1,5 @@
 import useSWR from 'swr';
-import type { GameWithMatches } from '@/types/game'; // You'll need to add these types
+import type { GameWithMatches } from '@/types/game';
 
 const fetcher = (url: string) => fetch(url).then(res => res.json());
 

@@ -288,7 +288,7 @@ const NavigationComponent = () => {
                                         'block px-4 py-2 text-sm text-gray-700'
                                       )}
                                     >
-                                      Management
+                                      My Matches
                                     </Link>
                                   )}
                                 </Menu.Item>
@@ -513,21 +513,15 @@ const NavigationComponent = () => {
                               {session.user.accessLevel?.includes('USER') && (
                                 <Link
                                   href="/user/management"
-                                  className={classNames(
-                                    active ? 'bg-gray-100' : '',
-                                    'block px-4 py-2 text-sm text-gray-700'
-                                  )}
+                                  className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white rounded-md"
                                 >
-                                  Management
+                                  My Matches
                                 </Link>
                               )}
                               {session.user.accessLevel?.includes('ADMIN') && (
                                 <Link
                                   href="/admin/dashboard"
-                                  className={classNames(
-                                    active ? 'bg-gray-100' : '',
-                                    'block px-4 py-2 text-sm text-gray-700'
-                                  )}
+                                  className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white rounded-md"
                                 >
                                   Admin Dashboard
                                 </Link>
