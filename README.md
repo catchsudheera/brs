@@ -63,4 +63,4 @@ MIT License
 
 - [Amila Banuka](https://github.com/amilabanuka) - Backend Developer
 - [Nishan Karunarathna](https://github.com/digitizelab) - Frontend Developer
-- [Sudheera Sampath](https://github.com/catchsudheera) - DevOps & Infrastructure
+- [Sudheera Palihakkara](https://github.com/catchsudheera) - DevOps & Infrastructure
