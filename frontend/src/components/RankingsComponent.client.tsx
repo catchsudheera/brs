@@ -21,6 +21,7 @@ const RankingsComponent = () => {
   if (!rankings) return null;
 
   const { stats, players } = rankings;
+  const activePlayers = players.filter((player) => player.playerRank > 0);
 
   const renderRankChange = (change: { direction: string; amount: number }) => {
     if (change.direction === 'up') {
@@ -71,7 +72,7 @@ const RankingsComponent = () => {
             </tr>
           </thead>
           <tbody>
-            {players.map((player) => (
+            {activePlayers.map((player) => (
               <tr 
                 key={player.id} 
                 className={`hover:bg-base-200 transition-colors duration-150 ${
