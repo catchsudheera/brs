@@ -11,16 +11,15 @@ export const getPlayers = async (): Promise<Player[]> => {
   }
   
   const players = await response.json();
-  // Mark all players from /players endpoint as active
+  console.log(players);
   return players.map((player: Player) => ({
-    ...player,
-    isActive: true
+    ...player
   }));
 };
 
 export const getInactivePlayers = async (): Promise<Player[]> => {
   const response = await fetch(
-    `${process.env.NEXT_PUBLIC_BACKEND_URL}/players/inactive`
+    `${process.env.NEXT_PUBLIC_BACKEND_URL}/players?status=inactive`
   );
   
   if (!response.ok) {
@@ -28,9 +27,7 @@ export const getInactivePlayers = async (): Promise<Player[]> => {
   }
   
   const players = await response.json();
-  // Mark all players from /players/inactive endpoint as inactive
   return players.map((player: Player) => ({
-    ...player,
-    isActive: false
+    ...player
   }));
 }; 
