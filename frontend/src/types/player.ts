@@ -8,7 +8,7 @@ export interface Player {
   colorHex: string;
   highestRank: number;
   timeInHighestRank: string;
-  isActive: boolean;
+  active: boolean;
 }
 
 export interface PlayerContextType {

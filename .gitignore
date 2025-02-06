@@ -33,3 +33,7 @@ frontend/prisma/dev.db
 frontend/.env.sentry-build-plugin
 
 frontend/.env
+
+frontend/.cursor/rules/
+
+frontend/.cursor/llmstxt/

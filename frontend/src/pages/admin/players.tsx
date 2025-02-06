@@ -37,9 +37,9 @@ const PlayerTable = ({ players, onEdit, onDelete }: {
               <td>{player.rankScore.toFixed(1)}</td>
               <td>
                 <span className={`badge ${
-                  player.isActive ? 'badge-success' : 'badge-error'
+                  player.active ? 'badge-success' : 'badge-error'
                 }`}>
-                  {player.isActive ? 'Active' : 'Inactive'}
+                  {player.active ? 'Active' : 'Inactive'}
                 </span>
               </td>
               <td>
@@ -113,7 +113,6 @@ const PlayerManagementPage = () => {
   const router = useRouter();
   const { data: session, status } = useSession();
   const { players, isLoading: activeLoading, mutate: mutateActive } = usePlayers();
-  const { inactivePlayers, isLoading: inactiveLoading, mutate: mutateInactive } = useInactivePlayers();
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
@@ -122,11 +121,11 @@ const PlayerManagementPage = () => {
   // Auth check
   useEffect(() => {
     if (status === 'unauthenticated') {
-      router.push('/admin/login');
+      router.push('/login');
     }
   }, [status, router]);
 
-  if (status === 'loading' || activeLoading || inactiveLoading) {
+  if (status === 'loading' || activeLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <div className="loading loading-spinner loading-lg"></div>
@@ -161,7 +160,7 @@ const PlayerManagementPage = () => {
       }
 
       // Refresh both active and inactive player lists
-      await Promise.all([mutateActive(), mutateInactive()]);
+      await Promise.all([mutateActive()]);
     } catch (error) {
       throw error;
     }
@@ -183,11 +182,14 @@ const PlayerManagementPage = () => {
       }
 
       // Refresh both active and inactive player lists
-      await Promise.all([mutateActive(), mutateInactive()]);
+      await Promise.all([mutateActive()]);
     } catch (error) {
       throw error;
     }
   };
+
+  const activePlayers = players.filter((player) => player.active);
+  const inactivePlayers = players.filter((player) => !player.active);
 
   return (
     <div className="min-h-screen bg-base-100">
@@ -216,7 +218,7 @@ const PlayerManagementPage = () => {
             </div>
             <div className="p-4">
               <PlayerTable 
-                players={players}
+                players={activePlayers}
                 onEdit={handleEditPlayer}
                 onDelete={handleDeletePlayer}
               />
