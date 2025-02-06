@@ -1,6 +1,5 @@
 package com.brs.backend.controllers;
 
-import com.brs.backend.configuration.ApiKeyAuth;
 import com.brs.backend.core.CommonAbsenteeManager;
 import com.brs.backend.dto.*;
 import com.brs.backend.model.Player;
@@ -11,10 +10,10 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequiredArgsConstructor
@@ -29,14 +28,15 @@ public class PlayerController {
     private final CommonAbsenteeManager commonAbsenteeManager;
 
     @GetMapping("/players")
-    public List<PlayerInfo> getActivePlayers() {
-        return playerService.getPlayerInfoByStatus(false);
+    public List<PlayerInfo> getPlayers(@RequestParam Optional<String> status) {
+        return playerService.getPlayerInfoByStatus(status);
     }
 
-    @GetMapping("/players/inactive")
-    public List<PlayerInfo> getInactivePlayers() {
-        return playerService.getPlayerInfoByStatus(true);
+    @GetMapping("/v2/auth/players")
+    public List<SecurePlayerInfo> getPlayersAuth(@RequestParam Optional<String> status) {
+        return playerService.getSecurePlayerInfoByStatus(status);
     }
+
 
     @GetMapping("/players/history")
     public List<PlayerHistory> getAllPlayersHistory(@RequestParam(defaultValue = "RANK") HistoryType type) {
