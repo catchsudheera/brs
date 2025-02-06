@@ -60,9 +60,17 @@ public class PlayerService {
         return playerRepository.findByEmail(email);
     }
 
-    public List<PlayerInfo> getPlayerInfoByStatus(boolean disabled) {
+    public List<PlayerInfo> getPlayerInfoByStatus(List<String> statusList) {
         return getAllPlayers().stream()
-                .filter(p -> p.isDisabled() == disabled)
+                .filter(p -> {
+                    boolean isActive = !p.isDisabled();
+                    return statusList.stream()
+                            .map(String::toLowerCase)
+                            .anyMatch(status -> 
+                                (status.equals("active") && isActive) || 
+                                (status.equals("inactive") && !isActive)
+                            );
+                })
                 .map(e -> {
                     Optional<ScoreHistory> h = scoreHistoryRepository.findFirstByPlayerIdOrderByEncounterDateDesc(e.getId());
                     Period period = Period.between(LocalDate.now(), e.getRankSince());
@@ -73,6 +81,9 @@ public class PlayerService {
                 .toList();
     }
 
+    public List<PlayerInfo> getPlayerInfoByStatus(boolean disabled) {
+        return getPlayerInfoByStatus(List.of(disabled ? "inactive" : "active"));
+    }
 
     public void activatePlayer(int playerId) {
         Player player = playerRepository.findById(playerId).orElseThrow();

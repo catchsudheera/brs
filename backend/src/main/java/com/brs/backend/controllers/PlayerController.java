@@ -29,13 +29,18 @@ public class PlayerController {
     private final CommonAbsenteeManager commonAbsenteeManager;
 
     @GetMapping("/players")
-    public List<PlayerInfo> getActivePlayers() {
-        return playerService.getPlayerInfoByStatus(false);
-    }
-
-    @GetMapping("/players/inactive")
-    public List<PlayerInfo> getInactivePlayers() {
-        return playerService.getPlayerInfoByStatus(true);
+    public List<PlayerInfo> getPlayers(@RequestParam(required = false) List<String> status) {
+        if (status == null || status.isEmpty()) {
+            return playerService.getPlayerInfoByStatus(List.of("active"));
+        }
+        
+        status.forEach(s -> {
+            if (!s.equalsIgnoreCase("active") && !s.equalsIgnoreCase("inactive")) {
+                throw new IllegalArgumentException("Invalid status parameter. Use 'active' or 'inactive'");
+            }
+        });
+        
+        return playerService.getPlayerInfoByStatus(status);
     }
 
     @GetMapping("/players/history")
