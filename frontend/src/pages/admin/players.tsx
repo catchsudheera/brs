@@ -81,9 +81,9 @@ const PlayerTable = ({ players, onEdit, onDelete }: {
               </div>
             </div>
             <span className={`badge ${
-              player.isActive ? 'badge-success' : 'badge-error'
+              player.active ? 'badge-success' : 'badge-error'
             }`}>
-              {player.isActive ? 'Active' : 'Inactive'}
+              {player.active ? 'Active' : 'Inactive'}
             </span>
           </div>
           
