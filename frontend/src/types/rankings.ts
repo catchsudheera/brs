@@ -17,6 +17,7 @@ export interface PlayerRankingData {
     amount: number;
   };
   isAboveAverage: boolean;
+  active: boolean;
 }
 
 export interface RankingsResponse {

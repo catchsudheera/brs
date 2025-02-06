@@ -16,3 +16,17 @@ export function usePlayers() {
     mutate
   };
 }
+
+export function useActivePlayers() {
+  const { data, error, isLoading, mutate } = useSWR<Player[]>(
+    '/api/players',
+    fetcher
+  );
+
+  return {
+    players: data?.filter((player) => player.active) || [],
+    isLoading,
+    error,
+    mutate
+  };
+}

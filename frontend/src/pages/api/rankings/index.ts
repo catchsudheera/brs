@@ -20,6 +20,7 @@ interface PlayerRankingData {
     amount: number;
   };
   isAboveAverage: boolean;
+  active: boolean;
 }
 
 interface RankingsResponse {
@@ -59,7 +60,8 @@ export default async function handler(
             direction: rankChange > 0 ? 'up' : rankChange < 0 ? 'down' : 'none',
             amount: Math.abs(rankChange)
           },
-          isAboveAverage: player.rankScore > averageScore
+          isAboveAverage: player.rankScore > averageScore,
+          active: player.active
         };
       })
       .sort((a, b) => a.playerRank - b.playerRank);

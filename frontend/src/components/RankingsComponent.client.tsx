@@ -21,7 +21,7 @@ const RankingsComponent = () => {
   if (!rankings) return null;
 
   const { stats, players } = rankings;
-  const activePlayers = players.filter((player) => player.playerRank > 0);
+  const activePlayers = players.filter((player) => player.active);
 
   const renderRankChange = (change: { direction: string; amount: number }) => {
     if (change.direction === 'up') {

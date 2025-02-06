@@ -11,8 +11,9 @@ export const getPlayers = async (): Promise<Player[]> => {
   }
   
   const players = await response.json();
-  console.log(players);
-  return players.map((player: Player) => ({
+  // Sort the players by id ascending
+  const sortedPlayers = players.sort((a: Player, b: Player) => a.id - b.id);
+  return sortedPlayers.map((player: Player) => ({
     ...player
   }));
 };
