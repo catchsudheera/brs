@@ -8,6 +8,7 @@ import com.brs.backend.model.ScoreHistory;
 import com.brs.backend.repositories.PlayerRepository;
 import com.brs.backend.repositories.ScoreHistoryRepository;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -60,15 +61,30 @@ public class PlayerService {
         return playerRepository.findByEmail(email);
     }
 
-    public List<PlayerInfo> getPlayerInfoByStatus(boolean disabled) {
-        return getAllPlayers().stream()
-                .filter(p -> p.isDisabled() == disabled)
+    public List<PlayerInfo> getPlayerInfoByStatus(Optional<String> status) {
+        var eligiblePlayers = getPlayerListByStatus(status);
+        return eligiblePlayers.stream()
                 .map(e -> {
                     Optional<ScoreHistory> h = scoreHistoryRepository.findFirstByPlayerIdOrderByEncounterDateDesc(e.getId());
                     Period period = Period.between(LocalDate.now(), e.getRankSince());
                     int diff = Math.abs(period.getDays());
                     return new PlayerInfo(e.getId(), e.getName(), e.getRankScore(), e.getPlayerRank(),
-                            h.orElseGet(() -> getMaxRank(e)).getPlayerOldRank(), e.getColorHex(), e.getHighestRank(), diff + " day(s)");
+                            h.orElseGet(() -> getMaxRank(e)).getPlayerOldRank(), e.getColorHex(),
+                            e.getHighestRank(), diff + " day(s)", !e.isDisabled());
+                })
+                .toList();
+    }
+
+    public List<SecurePlayerInfo> getSecurePlayerInfoByStatus(Optional<String> status) {
+        var eligiblePlayers = getPlayerListByStatus(status);
+        return eligiblePlayers.stream()
+                .map(e -> {
+                    Optional<ScoreHistory> h = scoreHistoryRepository.findFirstByPlayerIdOrderByEncounterDateDesc(e.getId());
+                    Period period = Period.between(LocalDate.now(), e.getRankSince());
+                    int diff = Math.abs(period.getDays());
+                    return new SecurePlayerInfo(e.getId(), e.getName(), e.getRankScore(), e.getPlayerRank(),
+                            h.orElseGet(() -> getMaxRank(e)).getPlayerOldRank(), e.getColorHex(),
+                            e.getHighestRank(), diff + " day(s)", !e.isDisabled(), e.getEmail());
                 })
                 .toList();
     }
@@ -120,7 +136,7 @@ public class PlayerService {
         }
         return new PlayerInfo(player.getId(), player.getName(), player.getRankScore(), player.getPlayerRank(),
                 player.getPlayerRank(), player.getColorHex(), player.getHighestRank(),
-                0 + " day(s)");
+                0 + " day(s)", !player.isDisabled());
     }
 
     public PlayerAuth getPlayerAuth() {
@@ -161,8 +177,24 @@ public class PlayerService {
         return String.format("%06x", nextInt);
     }
 
-    private PlayerInfo convert(Player player) {
-        return new PlayerInfo(player.getId(), player.getName(), player.getRankScore(), player.getPlayerRank(),
-                player.getPlayerRank(), player.getColorHex(), player.getHighestRank(), null);
+    private SecurePlayerInfo convert(Player player) {
+        return new SecurePlayerInfo(player.getId(), player.getName(), player.getRankScore(), player.getPlayerRank(),
+                player.getPlayerRank(), player.getColorHex(),
+                player.getHighestRank(), null, !player.isDisabled(), player.getEmail());
+    }
+
+    private @NotNull List<Player> getPlayerListByStatus(Optional<String> status) {
+        var eligiblePlayers = getAllPlayers().stream().filter(p -> {
+            if (status.isEmpty() || status.get().isEmpty() || status.get().equalsIgnoreCase("ALL")) {
+                return true;
+            } else if (status.get().equalsIgnoreCase("INACTIVE")) {
+                return p.isDisabled();
+            } else if (status.get().equalsIgnoreCase("ACTIVE")) {
+                return !p.isDisabled();
+            } else {
+                return true;
+            }
+        }).toList();
+        return eligiblePlayers;
     }
 }
