@@ -8,6 +8,7 @@ import { userScoreService } from '@/services/userScoreService';
 import { MatchSelector } from '@/components/score-keeper/MatchSelector';
 import { ScoreInput } from '@/components/score-keeper/ScoreInput';
 import { useRankings } from '@/hooks/useRankings';
+import Image from 'next/image';
 
 interface SelectedMatch {
   gameId: string;
@@ -139,9 +140,11 @@ const UserManagementPage = () => {
             <div className="p-4 border-b border-base-300 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 {session?.user?.image ? (
-                  <img
+                  <Image
                     src={session.user.image}
                     alt="Profile"
+                    width={40}
+                    height={40}
                     className="w-10 h-10 rounded-full border-2 border-emerald-500"
                   />
                 ) : (
