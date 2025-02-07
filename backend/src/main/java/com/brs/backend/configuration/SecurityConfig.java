@@ -37,6 +37,7 @@ public class SecurityConfig {
                         authorizationManagerRequestMatcherRegistry
                                 .requestMatchers(HttpMethod.GET).permitAll()
                                 .requestMatchers(HttpMethod.GET, "/v2/auth/**").authenticated()
+                                .requestMatchers(HttpMethod.GET, "/v2/game/**").authenticated()
                                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                                 .anyRequest().authenticated())
                 .addFilterBefore(hybridSecurityFilter, UsernamePasswordAuthenticationFilter.class)

@@ -1,7 +1,9 @@
 package com.brs.backend.controllers;
 
-import com.brs.backend.core.CommonAbsenteeManager;
 import com.brs.backend.dto.*;
+import com.brs.backend.dto.request.ActivateUser;
+import com.brs.backend.dto.request.NewPlayer;
+import com.brs.backend.dto.request.UpdatePlayer;
 import com.brs.backend.model.Player;
 import com.brs.backend.services.EncounterService;
 import com.brs.backend.services.PlayerService;
@@ -25,8 +27,6 @@ public class PlayerController {
 
     private final EncounterService encounterService;
 
-    private final CommonAbsenteeManager commonAbsenteeManager;
-
     @GetMapping("/players")
     public List<PlayerInfo> getPlayers(@RequestParam Optional<String> status) {
         return playerService.getPlayerInfoByStatus(status);
@@ -37,11 +37,10 @@ public class PlayerController {
         return playerService.getSecurePlayerInfoByStatus(status);
     }
 
-
     @GetMapping("/players/history")
     public List<PlayerHistory> getAllPlayersHistory(@RequestParam(defaultValue = "RANK") HistoryType type) {
         return playerService.getAllPlayers().stream()
-                .filter(p -> !p.isDisabled())
+                .filter(Player::isActive)
                 .map(e -> scoreHistoryService.getPlayerHistory(e.getId(), type))
                 .toList();
     }
@@ -63,8 +62,13 @@ public class PlayerController {
 
     @PostMapping("/v2/players/{playerId}/activate")
     @Parameter(name = "x-api-key", required = true, example = "sample-api-key", in = ParameterIn.HEADER)
-    public void activatePlayer(@PathVariable int playerId) {
-        playerService.activatePlayer(playerId);
+    public void activatePlayer(@PathVariable int playerId, @RequestBody Optional<ActivateUser> activateUser) {
+        Double requestedScore = null;
+        if(activateUser.isPresent()) {
+            requestedScore = activateUser.get().getScore();
+        }
+        playerService.activatePlayer(playerId, requestedScore);
+
     }
 
     @PostMapping("/v2/players/update-ranking")
