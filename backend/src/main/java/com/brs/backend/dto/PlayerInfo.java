@@ -14,5 +14,5 @@ public class PlayerInfo {
     private String colorHex;
     private Integer highestRank;
     private String timeInHighestRank;
-    private boolean active;
+    private PlayerStatus status;
 }

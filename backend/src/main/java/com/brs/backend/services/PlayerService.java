@@ -3,6 +3,8 @@ package com.brs.backend.services;
 import com.brs.backend.configuration.ApiKeyAuth;
 import com.brs.backend.core.ScorePersister;
 import com.brs.backend.dto.*;
+import com.brs.backend.dto.request.NewPlayer;
+import com.brs.backend.dto.request.UpdatePlayer;
 import com.brs.backend.model.Player;
 import com.brs.backend.model.ScoreHistory;
 import com.brs.backend.repositories.PlayerRepository;
@@ -34,7 +36,7 @@ public class PlayerService {
     public List<Player> updatePlayerRanking() {
         List<Player> playerList = playerRepository.findAll()
                 .stream()
-                .filter(p -> !p.isDisabled())
+                .filter(Player::isActive)
                 .sorted(Comparator.comparingInt(Player::getPlayerRank)) // First with the current ranking to keep consistent ranking when scores are the same
                 .sorted((d1, d2) -> Double.compare(d2.getRankScore(), d1.getRankScore())) // Second with the descending order of rank setPoints
                 .toList();
@@ -68,40 +70,41 @@ public class PlayerService {
                     Optional<ScoreHistory> h = scoreHistoryRepository.findFirstByPlayerIdOrderByEncounterDateDesc(e.getId());
                     Period period = Period.between(LocalDate.now(), e.getRankSince());
                     int diff = Math.abs(period.getDays());
-                    return new PlayerInfo(e.getId(), e.getName(), e.getRankScore(), e.getPlayerRank(),
+                    return new PlayerInfo(e.getId(), e.getName(), e.isActive() ? e.getRankScore() : null, e.isActive() ? e.getPlayerRank() : null,
                             h.orElseGet(() -> getMaxRank(e)).getPlayerOldRank(), e.getColorHex(),
-                            e.getHighestRank(), diff + " day(s)", !e.isDisabled());
+                            e.getHighestRank(), diff + " day(s)", getPlayerStatus(e));
                 })
                 .toList();
     }
 
     public List<SecurePlayerInfo> getSecurePlayerInfoByStatus(Optional<String> status) {
         var eligiblePlayers = getPlayerListByStatus(status);
-        return eligiblePlayers.stream()
+        var players = eligiblePlayers.stream()
                 .map(e -> {
                     Optional<ScoreHistory> h = scoreHistoryRepository.findFirstByPlayerIdOrderByEncounterDateDesc(e.getId());
                     Period period = Period.between(LocalDate.now(), e.getRankSince());
                     int diff = Math.abs(period.getDays());
-                    return new SecurePlayerInfo(e.getId(), e.getName(), e.getRankScore(), e.getPlayerRank(),
+                    return new SecurePlayerInfo(e.getId(), e.getName(), e.isActive() ? e.getRankScore() : null, e.isActive() ? e.getPlayerRank() : null,
                             h.orElseGet(() -> getMaxRank(e)).getPlayerOldRank(), e.getColorHex(),
-                            e.getHighestRank(), diff + " day(s)", !e.isDisabled(), e.getEmail());
+                            e.getHighestRank(), diff + " day(s)", getPlayerStatus(e), e.getEmail());
                 })
                 .toList();
+        return players;
     }
 
 
-    public void activatePlayer(int playerId) {
+    public void activatePlayer(int playerId, Double activateScore) {
         Player player = playerRepository.findById(playerId).orElseThrow();
-        if (!player.isDisabled()) {
+        if (player.isActive()) {
             log.info("Player is already active");
             return;
         }
-        scorePersister.activatePlayer(player);
+        scorePersister.activatePlayer(player, activateScore);
     }
 
     public PlayerInfo addPlayer(NewPlayer newPlayer) {
         var lastActivePlayer = playerRepository.findAll().stream()
-                .filter(p -> !p.isDisabled()).max(Comparator.comparingInt(Player::getPlayerRank)).orElseThrow();
+                .filter(Player::isActive).max(Comparator.comparingInt(Player::getPlayerRank)).orElseThrow();
 
         Player player = new Player();
         player.setName(newPlayer.getName());
@@ -136,7 +139,7 @@ public class PlayerService {
         }
         return new PlayerInfo(player.getId(), player.getName(), player.getRankScore(), player.getPlayerRank(),
                 player.getPlayerRank(), player.getColorHex(), player.getHighestRank(),
-                0 + " day(s)", !player.isDisabled());
+                0 + " day(s)", getPlayerStatus(player));
     }
 
     public PlayerAuth getPlayerAuth() {
@@ -180,21 +183,32 @@ public class PlayerService {
     private SecurePlayerInfo convert(Player player) {
         return new SecurePlayerInfo(player.getId(), player.getName(), player.getRankScore(), player.getPlayerRank(),
                 player.getPlayerRank(), player.getColorHex(),
-                player.getHighestRank(), null, !player.isDisabled(), player.getEmail());
+                player.getHighestRank(), null, getPlayerStatus(player), player.getEmail());
     }
 
     private @NotNull List<Player> getPlayerListByStatus(Optional<String> status) {
-        var eligiblePlayers = getAllPlayers().stream().filter(p -> {
+        return getAllPlayers().stream().filter(p -> {
             if (status.isEmpty() || status.get().isEmpty() || status.get().equalsIgnoreCase("ALL")) {
                 return true;
             } else if (status.get().equalsIgnoreCase("INACTIVE")) {
                 return p.isDisabled();
             } else if (status.get().equalsIgnoreCase("ACTIVE")) {
-                return !p.isDisabled();
+                return p.isActive();
+            } else if (status.get().equalsIgnoreCase("ENABLED")) {
+                return p.isAvailableForGame() && !p.isDisabled();
             } else {
                 return true;
             }
         }).toList();
-        return eligiblePlayers;
+    }
+
+
+    private PlayerStatus getPlayerStatus(Player player) {
+        if(player.isActive()){
+            return PlayerStatus.ACTIVE;
+        }else if(player.isAvailableForGame()){
+            return PlayerStatus.ENABLED;
+        }
+        return PlayerStatus.DISABLED;
     }
 }

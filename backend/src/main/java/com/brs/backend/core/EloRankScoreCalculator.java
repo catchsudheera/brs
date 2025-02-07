@@ -1,14 +1,18 @@
 package com.brs.backend.core;
 
+import com.brs.backend.dto.PlayerStatus;
 import com.brs.backend.model.Encounter;
 import com.brs.backend.model.Player;
+import com.brs.backend.repositories.PlayerRepository;
 import com.brs.backend.util.PlayerUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
 
 @Component
 @RequiredArgsConstructor
@@ -19,6 +23,8 @@ public class EloRankScoreCalculator implements RankScoreCalculator {
     private final ScorePersister scorePersister;
 
     private final CommonAbsenteeManager commonAbsenteeManager;
+
+    private final PlayerRepository playerRepository;
 
     @Override
     public void calculateAndPersist(Encounter encounter) {
@@ -39,6 +45,8 @@ public class EloRankScoreCalculator implements RankScoreCalculator {
 
         scorePersister.persistScores(encounter.getId(), team1Score, team2Score);
 
+        ensurePlayersAreActive(Stream.concat(team1Players.stream(), team2Players.stream()).toList());
+
     }
 
     @Override
@@ -51,5 +59,18 @@ public class EloRankScoreCalculator implements RankScoreCalculator {
                 .stream()
                 .mapToDouble(Player::getRankScore)
                 .average().orElseThrow();
+    }
+
+    private void ensurePlayersAreActive(List<Player> players) {
+        var playersToUpdate = new ArrayList<>(players);
+        for(Player player : players) {
+            if(!player.isActive()){
+                player.setStatus(PlayerStatus.ACTIVE);
+                playersToUpdate.add(player);
+            }
+        }
+        if(!playersToUpdate.isEmpty()){
+            playerRepository.saveAll(playersToUpdate);
+        }
     }
 }

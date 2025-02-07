@@ -1,4 +1,4 @@
-package com.brs.backend.dto;
+package com.brs.backend.dto.request;
 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import lombok.Data;

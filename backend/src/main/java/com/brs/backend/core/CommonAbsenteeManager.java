@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
-import static com.brs.backend.common.Constants.DEMERIT_POINTS_ABSENTEE;
+import static com.brs.backend.common.Constants.*;
 
 @Service
 @RequiredArgsConstructor
@@ -54,12 +54,12 @@ public class CommonAbsenteeManager {
     }
 
     public void deactivateLongTermAbsentees(ArrayList<Player> longTermAbsentees) {
-        longTermAbsentees.forEach(player -> scorePersister.deactivatePlayer(player, -2, LocalDate.now()));
+        longTermAbsentees.forEach(player -> scorePersister.deactivatePlayer(player, DISABLE_PLAYER_ENCOUNTER_ID, LocalDate.now()));
     }
 
     private void deductPointsForAbsentees(List<Player> players) {
         for (Player player : players) {
-            scorePersister.updatePlayer(DEMERIT_POINTS_ABSENTEE, -1, LocalDate.now(), player);
+            scorePersister.updatePlayer(DEMERIT_POINTS_ABSENTEE, ABSENTEE_ENCOUNTER_ID, LocalDate.now(), player);
         }
     }
 

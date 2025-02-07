@@ -1,5 +1,6 @@
 package com.brs.backend.core;
 
+import com.brs.backend.dto.PlayerStatus;
 import com.brs.backend.model.Encounter;
 import com.brs.backend.model.Player;
 import com.brs.backend.model.ScoreHistory;
@@ -15,6 +16,7 @@ import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
 
+import static com.brs.backend.common.Constants.ACTIVATE_PLAYER_ENCOUNTER_ID;
 import static com.brs.backend.common.Constants.DEMERIT_POINTS_ABSENTEE;
 
 @Component
@@ -68,7 +70,7 @@ public class ScorePersister {
     public void deactivatePlayer(Player player, int encounterId, LocalDate encounterDate) {
         // Loading again in the current transactional context
         player = playerRepository.findById(player.getId()).orElseThrow();
-        player.setDisabled(true);
+        player.setStatus(PlayerStatus.DISABLED);
         player.setPlayerRank(-1);
         player.setRankSince(encounterDate);
         playerRepository.save(player);
@@ -76,18 +78,23 @@ public class ScorePersister {
     }
 
     @Transactional
-    public void activatePlayer(Player player) {
+    public void activatePlayer(Player player, Double activateScore) {
         // Loading again in the current transactional context
         player = playerRepository.findById(player.getId()).orElseThrow();
-        player.setDisabled(false);
-        var games = scoreHistoryRepository.findAllByPlayerId(player.getId());
-        var lastActiveGame = games.stream().filter(g -> g.getEncounterId() > 0).max(Comparator.comparing(ScoreHistory::getEncounterDate)).orElseThrow();
-        var lastActiveGameScore = lastActiveGame.getNewRankScore();
+        player.setStatus(PlayerStatus.ENABLED);
+        var newScore = player.getRankScore();
+        if (activateScore != null) {
+            newScore = activateScore;
+        } else {
+            var games = scoreHistoryRepository.findAllByPlayerId(player.getId());
+            var lastActiveGame = games.stream().filter(g -> g.getEncounterId() > 0).max(Comparator.comparing(ScoreHistory::getEncounterDate)).orElseThrow();
+            var lastActiveGameScore = lastActiveGame.getNewRankScore();
+            newScore = lastActiveGameScore - (DEMERIT_POINTS_ABSENTEE * 4);
+        }
         var lastRankScore = player.getRankScore();
-        var newScore = lastActiveGameScore - (DEMERIT_POINTS_ABSENTEE * 4);
         player.setRankScore(newScore);
         playerRepository.save(player);
-        updateScoreHistory(player, -3, LocalDate.now(), lastRankScore, newScore);
+        updateScoreHistory(player, ACTIVATE_PLAYER_ENCOUNTER_ID, LocalDate.now(), lastRankScore, newScore);
     }
 
     private void updateScoreHistory(Player player, int encounterId, LocalDate encounterDate, Double oldScore, Double newScore) {
