@@ -58,4 +58,12 @@ public class PlayerUtil {
           throw new RuntimeException("Player with name '" + playerName + "' not found");
         }
     }
+
+    public List<Player> getRankedPlayers(List<Player> players) {
+        return players.stream()
+                .filter(Player::isActive)
+                .sorted(Comparator.comparingInt(Player::getPlayerRank)) // First with the current ranking to keep consistent ranking when scores are the same
+                .sorted((d1, d2) -> Double.compare(d2.getRankScore(), d1.getRankScore())) // Second with the descending order of rank setPoints
+                .toList();
+    }
 }
