@@ -1,8 +1,7 @@
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
-import { usePlayers } from '@/hooks/usePlayers';
-import { useInactivePlayers } from '@/hooks/useInactivePlayers';
+import { useAdminPlayers } from '@/hooks/useAdminPlayers';
 import { capitalizeFirstLetter } from '@/utils/string';
 import { PlusIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
 import type { Player } from '@/types/player';
@@ -21,6 +20,7 @@ const PlayerTable = ({ players, onEdit, onDelete }: {
         <thead>
           <tr>
             <th>Name</th>
+            <th>Email</th>
             <th>Rank</th>
             <th>Score</th>
             <th>Status</th>
@@ -33,8 +33,9 @@ const PlayerTable = ({ players, onEdit, onDelete }: {
               <td className="font-medium">
                 {capitalizeFirstLetter(player.name)}
               </td>
+              <td>{player?.email}</td>
               <td>#{player.playerRank}</td>
-              <td>{player.rankScore.toFixed(1)}</td>
+              <td>{player.rankScore?.toFixed(1)}</td>
               <td>
                 <span className={`badge ${
                   player.active ? 'badge-success' : 'badge-error'
@@ -77,7 +78,10 @@ const PlayerTable = ({ players, onEdit, onDelete }: {
                 {capitalizeFirstLetter(player.name)}
               </h3>
               <div className="text-sm text-base-content/70 mt-1">
-                Rank #{player.playerRank} • Score {player.rankScore.toFixed(1)}
+                {player?.email}
+              </div>
+              <div className="text-sm text-base-content/70 mt-1">
+                Rank #{player.playerRank} • Score {player.rankScore?.toFixed(1)}
               </div>
             </div>
             <span className={`badge ${
@@ -112,7 +116,8 @@ const PlayerTable = ({ players, onEdit, onDelete }: {
 const PlayerManagementPage = () => {
   const router = useRouter();
   const { data: session, status } = useSession();
-  const { players, isLoading: activeLoading, mutate: mutateActive } = usePlayers();
+  const { players: activePlayers, isLoading: activeLoading, mutate: mutateActive } = useAdminPlayers('active');
+  const { players: inactivePlayers, isLoading: inactiveLoading, mutate: mutateInactive } = useAdminPlayers('inactive');
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
@@ -125,7 +130,7 @@ const PlayerManagementPage = () => {
     }
   }, [status, router]);
 
-  if (status === 'loading' || activeLoading) {
+  if (status === 'loading' || activeLoading || inactiveLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <div className="loading loading-spinner loading-lg"></div>
@@ -148,9 +153,7 @@ const PlayerManagementPage = () => {
     try {
       const response = await fetch('/api/players', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       });
 
@@ -160,7 +163,7 @@ const PlayerManagementPage = () => {
       }
 
       // Refresh both active and inactive player lists
-      await Promise.all([mutateActive()]);
+      await Promise.all([mutateActive(), mutateInactive()]);
     } catch (error) {
       throw error;
     }
@@ -182,14 +185,11 @@ const PlayerManagementPage = () => {
       }
 
       // Refresh both active and inactive player lists
-      await Promise.all([mutateActive()]);
+      await Promise.all([mutateActive(), mutateInactive()]);
     } catch (error) {
       throw error;
     }
   };
-
-  const activePlayers = players.filter((player) => player.active);
-  const inactivePlayers = players.filter((player) => !player.active);
 
   return (
     <div className="min-h-screen bg-base-100">
