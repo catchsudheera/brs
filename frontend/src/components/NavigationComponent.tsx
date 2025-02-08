@@ -82,6 +82,11 @@ const NavigationComponent = () => {
       ));
   };
 
+  // Add close handler
+  const handleMobileItemClick = (close: () => void) => {
+    close();
+  };
+
   return (
     <>
       {/* Placeholder div to prevent content jump when nav becomes fixed */}
@@ -93,7 +98,7 @@ const NavigationComponent = () => {
             : 'relative z-[100]'
           } bg-gradient-to-r from-gray-900 to-gray-800 shadow-lg`}
       >
-        {({ open }) => (
+        {({ open, close }) => (
           <>
             <div className='mx-auto max-w-7xl px-4 sm:px-6 lg:px-8'>
               <div className='relative flex items-center justify-between h-16'>
@@ -405,7 +410,7 @@ const NavigationComponent = () => {
                                 key={player.id}
                                 href={`/player/${player.id}/encounters`}
                                 className="block px-3 py-2 text-base text-gray-300 hover:bg-gray-700 hover:text-white rounded-md"
-                                onClick={() => close()}
+                                onClick={() => handleMobileItemClick(close)}
                               >
                                 {capitalizeFirstLetter(player.name)}
                               </Link>
@@ -447,7 +452,7 @@ const NavigationComponent = () => {
                                 key={game.id}
                                 href={`/game-viewer?gameId=${game.id}`}
                                 className="block px-3 py-2 text-base text-gray-300 hover:bg-gray-700 hover:text-white rounded-md"
-                                onClick={() => close()}
+                                onClick={() => handleMobileItemClick(close)}
                               >
                                 <div className="w-full">
                                   <div className="flex justify-between items-center mb-1">
@@ -514,6 +519,7 @@ const NavigationComponent = () => {
                                 <Link
                                   href="/user/management"
                                   className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white rounded-md"
+                                  onClick={() => handleMobileItemClick(close)}
                                 >
                                   Management
                                 </Link>
@@ -522,12 +528,16 @@ const NavigationComponent = () => {
                                 <Link
                                   href="/admin/dashboard"
                                   className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white rounded-md"
+                                  onClick={() => handleMobileItemClick(close)}
                                 >
                                   Admin Dashboard
                                 </Link>
                               )}
                               <button
-                                onClick={() => signOut()}
+                                onClick={() => {
+                                  signOut();
+                                  handleMobileItemClick(close);
+                                }}
                                 className="w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
                               >
                                 Sign Out
@@ -555,7 +565,7 @@ const NavigationComponent = () => {
                     <button
                       onClick={() => {
                         toggleTheme();
-                        close();
+                        handleMobileItemClick(close);
                       }}
                       className="p-2 rounded-full hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition duration-150"
                       title={`Switch to ${theme === 'emerald' ? 'dark' : 'light'} mode`}
