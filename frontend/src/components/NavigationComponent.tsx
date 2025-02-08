@@ -288,7 +288,7 @@ const NavigationComponent = () => {
                                         'block px-4 py-2 text-sm text-gray-700'
                                       )}
                                     >
-                                      My Matches
+                                      Management
                                     </Link>
                                   )}
                                 </Menu.Item>
@@ -515,7 +515,7 @@ const NavigationComponent = () => {
                                   href="/user/management"
                                   className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white rounded-md"
                                 >
-                                  My Matches
+                                  Management
                                 </Link>
                               )}
                               {session.user.accessLevel?.includes('ADMIN') && (

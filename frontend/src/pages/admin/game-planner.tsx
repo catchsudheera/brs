@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import { usePlayers } from '@/hooks/usePlayers';
+import { useGamePlayers } from '@/hooks/useGamePlayers';
 import { useGame } from '@/hooks/useGame';
 import { useSession } from 'next-auth/react';
 import { gameService } from '@/services/gameService';
@@ -12,7 +12,7 @@ const MAX_PLAYERS = 20;
 
 const GamePlannerPage = () => {
   const router = useRouter();
-  const { players, isLoading: playersLoading } = usePlayers();
+  const { players, isLoading: playersLoading } = useGamePlayers();
   const [selectedPlayers, setSelectedPlayers] = useState<number[]>([]);
   const { data: session, status } = useSession();
   const [isEditing, setIsEditing] = useState(false);
