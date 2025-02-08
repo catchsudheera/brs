@@ -11,7 +11,6 @@ export const getPlayers = async (): Promise<Player[]> => {
   }
   
   const players = await response.json();
-  console.log(players);
   return players.map((player: Player) => ({
     ...player
   }));
