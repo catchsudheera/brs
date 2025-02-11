@@ -10,6 +10,7 @@ import { gameService } from '@/services/gameService';
 import type { Player } from '@/types/player';
 import { notificationService } from '@/services/notificationService';
 import { getMatchCombinations, type MatchCombination } from '@/utils/match';
+import { isValidMatchScore } from '@/utils/scoreValidation';
 
 interface MatchScore {
   team1Score: number;
@@ -143,7 +144,7 @@ const ScoreKeeperPage = () => {
   }, []);
 
   const handleScoreSubmit = async (team1Score: number, team2Score: number) => {
-    if (!selectedMatch || !gameId) return;
+    if (!selectedMatch || !gameId || !isValidMatchScore(team1Score, team2Score)) return;
 
     try {
       // Update local state

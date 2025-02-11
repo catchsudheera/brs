@@ -9,6 +9,7 @@ import { MatchSelector } from '@/components/score-keeper/MatchSelector';
 import { ScoreInput } from '@/components/score-keeper/ScoreInput';
 import { useRankings } from '@/hooks/useRankings';
 import Image from 'next/image';
+import { isValidMatchScore } from '@/utils/scoreValidation';
 
 interface SelectedMatch {
   gameId: string;
@@ -96,7 +97,7 @@ const UserManagementPage = () => {
   };
 
   const handleScoreSubmit = async () => {
-    if (!selectedMatch || !areValidMatchScores(scores.team1Score, scores.team2Score)) return;
+    if (!selectedMatch || !isValidMatchScore(scores.team1Score, scores.team2Score)) return;
     
     setIsSubmitting(true);
     try {
@@ -348,6 +349,7 @@ const UserManagementPage = () => {
                 <div className="text-lg font-medium text-center">
                   {selectedMatch.team1.map(id => capitalizeFirstLetter(getPlayerName(id))).join(' & ')}
                 </div>
+                <div className="relative">
                 <input
                   type="number"
                   className="input input-bordered w-full text-center text-xl h-16"
@@ -357,6 +359,11 @@ const UserManagementPage = () => {
                   max={30}
                   placeholder="0"
                 />
+                <div className="absolute right-3 inset-y-0 flex flex-col justify-center pointer-events-none opacity-60">
+                    <div className="cursor-pointer">▲</div>
+                    <div className="cursor-pointer">▼</div>
+                  </div>
+                </div>
               </div>
 
               {/* VS */}
@@ -408,7 +415,7 @@ const UserManagementPage = () => {
                 <button
                   className="btn bg-emerald-500 hover:bg-emerald-600 text-white min-w-[120px]"
                   onClick={handleScoreSubmit}
-                  disabled={isSubmitting || !areValidMatchScores(scores.team1Score, scores.team2Score)}
+                  disabled={isSubmitting || !isValidMatchScore(scores.team1Score, scores.team2Score)}
                 >
                   {isSubmitting ? (
                     <>
