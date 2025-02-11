@@ -3,6 +3,10 @@ export const isValidMatchScore = (team1Score: number, team2Score: number): boole
   const minWinningPoints = 21;
   const minLead = 2;
 
+  if (team1Score === team2Score) {
+    return false;
+  }
+
   if (team1Score < 0 || team2Score < 0 || team1Score > maxPoints || team2Score > maxPoints) {
     return false;
   }
