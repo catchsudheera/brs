@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import useSWR from 'swr';
 import type { Player } from '@/types/player';
 
 interface EditPlayerModalProps {
@@ -14,12 +15,41 @@ export const EditPlayerModal = ({ isOpen, onClose, onSubmit, player }: EditPlaye
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Use SWR to manage player data
+  const { mutate } = useSWR('/api/players');
+
   useEffect(() => {
     if (player) {
       setName(player.name);
       setEmail(player.email || '');
     }
   }, [player]);
+
+  const handleActivate = async () => {
+    if (!player) return;
+    setIsSubmitting(true);
+    try {
+      const response = await fetch(`/api/players/${player.id}/activate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to activate player');
+      }
+
+      // Refresh the player list
+      await mutate();
+
+      onClose();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to activate player');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   if (!isOpen || !player) return null;
 
@@ -103,6 +133,27 @@ export const EditPlayerModal = ({ isOpen, onClose, onSubmit, player }: EditPlaye
             </button>
           </div>
         </form>
+        <hr className="my-4"/>
+        <h3 className="font-bold text-lg mb-4">Player Actions</h3>
+        {!player.active && (
+          <div className="mt-4">
+            <button
+              type="button"
+              className="btn btn-neutral"
+              onClick={handleActivate}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <>
+                  <span className="loading loading-spinner loading-sm"></span>
+                  Activating...
+                </>
+              ) : (
+                'Activate Player'
+              )}
+            </button>
+          </div>
+        )}
       </div>
       <form method="dialog" className="modal-backdrop">
         <button onClick={onClose}>close</button>

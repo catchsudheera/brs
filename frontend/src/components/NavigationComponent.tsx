@@ -565,7 +565,7 @@ const NavigationComponent = () => {
                     <button
                       onClick={() => {
                         toggleTheme();
-                        handleMobileItemClick(close);
+                        close();
                       }}
                       className="p-2 rounded-full hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition duration-150"
                       title={`Switch to ${theme === 'emerald' ? 'dark' : 'light'} mode`}
@@ -588,6 +588,11 @@ const NavigationComponent = () => {
                         </svg>
                       )}
                     </button>
+                  </div>
+
+                  {/* Build Identifier for Mobile */}
+                  <div className="px-3 py-2 text-xs text-gray-500">
+                    Build: {BUILD_IDENTIFIER}
                   </div>
                 </div>
               )}
