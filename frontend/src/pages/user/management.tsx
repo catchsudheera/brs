@@ -9,6 +9,7 @@ import { MatchSelector } from '@/components/score-keeper/MatchSelector';
 import { ScoreInput } from '@/components/score-keeper/ScoreInput';
 import { useRankings } from '@/hooks/useRankings';
 import Image from 'next/image';
+import { isValidMatchScore } from '@/utils/scoreValidation';
 
 interface SelectedMatch {
   gameId: string;
@@ -96,7 +97,7 @@ const UserManagementPage = () => {
   };
 
   const handleScoreSubmit = async () => {
-    if (!selectedMatch || !areValidMatchScores(scores.team1Score, scores.team2Score)) return;
+    if (!selectedMatch || !isValidMatchScore(scores.team1Score, scores.team2Score)) return;
     
     setIsSubmitting(true);
     try {
@@ -408,7 +409,7 @@ const UserManagementPage = () => {
                 <button
                   className="btn bg-emerald-500 hover:bg-emerald-600 text-white min-w-[120px]"
                   onClick={handleScoreSubmit}
-                  disabled={isSubmitting || !areValidMatchScores(scores.team1Score, scores.team2Score)}
+                  disabled={isSubmitting || !isValidMatchScore(scores.team1Score, scores.team2Score)}
                 >
                   {isSubmitting ? (
                     <>
