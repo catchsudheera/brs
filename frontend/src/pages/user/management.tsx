@@ -349,6 +349,7 @@ const UserManagementPage = () => {
                 <div className="text-lg font-medium text-center">
                   {selectedMatch.team1.map(id => capitalizeFirstLetter(getPlayerName(id))).join(' & ')}
                 </div>
+                <div className="relative">
                 <input
                   type="number"
                   className="input input-bordered w-full text-center text-xl h-16"
@@ -358,6 +359,11 @@ const UserManagementPage = () => {
                   max={30}
                   placeholder="0"
                 />
+                <div className="absolute right-3 inset-y-0 flex flex-col justify-center pointer-events-none opacity-60">
+                    <div className="cursor-pointer">▲</div>
+                    <div className="cursor-pointer">▼</div>
+                  </div>
+                </div>
               </div>
 
               {/* VS */}
