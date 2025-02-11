@@ -88,8 +88,13 @@ public class ScorePersister {
         } else {
             var games = scoreHistoryRepository.findAllByPlayerId(player.getId());
             var lastActiveGame = games.stream().filter(g -> g.getEncounterId() > 0).max(Comparator.comparing(ScoreHistory::getEncounterDate)).orElseThrow();
-            var lastActiveGameScore = lastActiveGame.getNewRankScore();
-            newScore = lastActiveGameScore - (DEMERIT_POINTS_ABSENTEE * 4);
+            var rankAtLastActiveGame = lastActiveGame.getPlayerNewRank();
+            var currentMinMarks = playerRepository.findAll().stream().filter(Player::isActive).map(Player::getRankScore).min(Double::compareTo).orElseThrow();
+            var currentSameRankPlayer = playerRepository.findAll()
+                    .stream()
+                    .filter(p -> p.getPlayerRank() == rankAtLastActiveGame)
+                    .findFirst();
+            newScore = (currentSameRankPlayer.isPresent() ? currentSameRankPlayer.get().getRankScore() : currentMinMarks) - (DEMERIT_POINTS_ABSENTEE * 3);
         }
         var lastRankScore = player.getRankScore();
         player.setRankScore(newScore);
