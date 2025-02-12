@@ -29,20 +29,6 @@ interface GameMatch {
   isPlayerInTeam1: boolean;
 }
 
-const MAX_POINTS = 30;
-
-const isValidScore = (score: number): boolean => {
-  return Number.isInteger(score) && score >= 0 && score <= MAX_POINTS;
-};
-
-const areValidMatchScores = (team1Score: number, team2Score: number): boolean => {
-  return (
-    isValidScore(team1Score) &&
-    isValidScore(team2Score) &&
-    team1Score !== team2Score
-  );
-};
-
 const UserManagementPage = () => {
   const router = useRouter();
   const { data: session, status } = useSession();
@@ -352,6 +338,13 @@ const UserManagementPage = () => {
                 <div className="relative">
                 <input
                   type="number"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  onKeyDown={(e) => {
+                    if (e.key === '+' || e.key === '-') {
+                      e.preventDefault();
+                    }
+                  }}
                   className="input input-bordered w-full text-center text-xl h-16"
                   value={scores.team1Score || ''}
                   onChange={(e) => handleScoreChange(parseInt(e.target.value) || 0, scores.team2Score)}
@@ -379,6 +372,13 @@ const UserManagementPage = () => {
                 <div className="relative">
                   <input
                     type="number"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    onKeyDown={(e) => {
+                      if (e.key === '+' || e.key === '-') {
+                        e.preventDefault();
+                      }
+                    }}
                     className="input input-bordered w-full text-center text-xl h-16"
                     value={scores.team2Score || ''}
                     onChange={(e) => handleScoreChange(scores.team1Score, parseInt(e.target.value) || 0)}

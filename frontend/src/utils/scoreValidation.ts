@@ -3,6 +3,12 @@ export const isValidMatchScore = (team1Score: number, team2Score: number): boole
   const minWinningPoints = 21;
   const minLead = 2;
 
+  const scoreRegex = /^[0-9]*$/;
+
+  if (!scoreRegex.test(team1Score.toString()) || !scoreRegex.test(team2Score.toString())) {
+    return false;
+  }
+
   if (team1Score === team2Score) {
     return false;
   }
