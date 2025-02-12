@@ -339,6 +339,7 @@ const UserManagementPage = () => {
                 <input
                   type="number"
                   inputMode="numeric"
+                  step="1"
                   pattern="[0-9]*"
                   onKeyDown={(e) => {
                     if (e.key === '+' || e.key === '-') {
@@ -372,6 +373,7 @@ const UserManagementPage = () => {
                 <div className="relative">
                   <input
                     type="number"
+                    step="1"
                     inputMode="numeric"
                     pattern="[0-9]*"
                     onKeyDown={(e) => {
