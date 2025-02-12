@@ -27,11 +27,11 @@ export const GroupCard = ({ groupName, players }: GroupCardProps) => (
               {capitalizeFirstLetter(player.name)}
             </span>
             <span className="text-xs text-gray-500">
-              (#{player.playerRank})
+              (#{player.playerRank ? player.playerRank : 'N/A'})
             </span>
           </div>
           <div className="text-xs font-medium text-gray-500">
-            {player.rankScore.toFixed(1)}
+            {player.rankScore ? player.rankScore.toFixed(1) : 'N/A'}
           </div>
         </div>
       ))}
